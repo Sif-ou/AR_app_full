@@ -13,3 +13,6 @@ Server folder:
   . Contains all API endpoints and logic.
 
   . The client side and server side are hosted separately on different platforms.
+
+
+  visit the web site : https://ar-app-full-ntpk.vercel.app/
