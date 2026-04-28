@@ -20,7 +20,7 @@ export default function Home() {
         <TestimonialsSection />
       </main>
       <Footer />
-      <CartDrawer /> 
+      <CartDrawer />
       <ChatbotWidget />
     </div>
   )

@@ -6,33 +6,11 @@ import { Facebook, Instagram, Twitter, Youtube, Mail } from 'lucide-react'
 export function Footer() {
   return (
     // Changed bg-foreground to bg-muted/50 to be theme-aware
-    <footer className="bg-muted/50 border-t border-border">
-      {/* Newsletter */}
-      <div className="border-b border-border">
-        <div className="container mx-auto px-4 py-12">
-          <div className="max-w-2xl mx-auto text-center">
-            <h3 className="font-serif text-2xl md:text-3xl mb-3 text-foreground">Stay in the loop</h3>
-            <p className="text-muted-foreground mb-6">
-              Subscribe to our newsletter for exclusive offers, design inspiration, and AR updates.
-            </p>
-            <form className="flex gap-2 max-w-md mx-auto">
-              <Input 
-                type="email" 
-                placeholder="Enter your email" 
-                // Updated classes to use theme-aware variables
-                className="bg-background border-border text-foreground placeholder:text-muted-foreground"
-              />
-              <Button className="bg-accent hover:bg-accent/90 text-accent-foreground">
-                Subscribe
-              </Button>
-            </form>
-          </div>
-        </div>
-      </div>
+    <footer className="bg-muted/50 border-t border-border">    
 
       {/* Main footer */}
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-8 mb-12">
           <div>
             <h4 className="font-semibold mb-4 text-foreground">Shop</h4>
             <ul className="space-y-3 text-sm text-muted-foreground">
@@ -63,15 +41,7 @@ export function Footer() {
               <li><Link href="/contact" className="hover:text-accent transition-colors">Contact Us</Link></li>
             </ul>
           </div>
-          <div>
-            <h4 className="font-semibold mb-4 text-foreground">Company</h4>
-            <ul className="space-y-3 text-sm text-muted-foreground">
-              <li><Link href="/about" className="hover:text-accent transition-colors">About Us</Link></li>
-              <li><Link href="/sustainability" className="hover:text-accent transition-colors">Sustainability</Link></li>
-              <li><Link href="/careers" className="hover:text-accent transition-colors">Careers</Link></li>
-              <li><Link href="/press" className="hover:text-accent transition-colors">Press</Link></li>
-            </ul>
-          </div>
+          
         </div>
 
         {/* Bottom */}
@@ -83,19 +53,50 @@ export function Footer() {
           </div>
 
           <div className="flex items-center gap-4 mb-6 md:mb-0">
-            <a href="#" className="p-2 rounded-full bg-background border border-border hover:bg-muted transition-colors text-foreground">
-              <Facebook className="h-5 w-5" />
-            </a>
-            <a href="#" className="p-2 rounded-full bg-background border border-border hover:bg-muted transition-colors text-foreground">
-              <Instagram className="h-5 w-5" />
-            </a>
-            <a href="#" className="p-2 rounded-full bg-background border border-border hover:bg-muted transition-colors text-foreground">
-              <Twitter className="h-5 w-5" />
-            </a>
-            <a href="#" className="p-2 rounded-full bg-background border border-border hover:bg-muted transition-colors text-foreground">
-              <Youtube className="h-5 w-5" />
-            </a>
-          </div>
+  <div className="flex items-center gap-4 mb-6 md:mb-0">
+  
+  {/* Facebook */}
+  <a 
+    href="https://www.facebook.com" 
+    target="_blank" 
+    rel="noopener noreferrer"
+    className="p-2 rounded-full bg-background border border-border text-foreground transition-colors hover:text-white hover:bg-[#1877F2]"
+  >
+    <Facebook className="h-5 w-5" />
+  </a>
+
+  {/* Instagram */}
+  <a 
+    href="https://www.instagram.com" 
+    target="_blank" 
+    rel="noopener noreferrer"
+    className="p-2 rounded-full bg-background border border-border text-foreground transition-colors hover:text-white hover:bg-gradient-to-r hover:from-pink-500 hover:via-red-500 hover:to-yellow-500"
+  >
+    <Instagram className="h-5 w-5" />
+  </a>
+
+  {/* X (Twitter) */}
+  <a 
+    href="https://x.com" 
+    target="_blank" 
+    rel="noopener noreferrer"
+    className="p-2 rounded-full bg-background border border-border text-foreground transition-colors hover:text-white hover:bg-muted"
+  >
+    <Twitter className="h-5 w-5" />
+  </a>
+
+  {/* YouTube */}
+  <a 
+    href="https://www.youtube.com" 
+    target="_blank" 
+    rel="noopener noreferrer"
+    className="p-2 rounded-full bg-background border border-border text-foreground transition-colors hover:text-white hover:bg-red-600"
+  >
+    <Youtube className="h-5 w-5" />
+  </a>
+
+</div>
+</div>
 
           <div className="text-sm text-muted-foreground">
             <p>&copy; 2026 ARSmart. All rights reserved.</p>

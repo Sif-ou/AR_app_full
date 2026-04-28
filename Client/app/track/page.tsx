@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Package, Truck, MapPin, CheckCircle2, Search } from 'lucide-react'
 
-const mockOrder = {
+const mockOrder = {//Order مزيف
   id: 'ORD-2024-001',
   status: 'in-transit',
   estimatedDelivery: 'April 15, 2024',
@@ -24,19 +24,19 @@ const mockOrder = {
     { status: 'Delivered', date: 'Pending', completed: false }
   ],
   shipping: {
-    carrier: 'ARFURN Express',
+    carrier: 'DZ Express',
     trackingNumber: 'ARF1234567890',
     address: '123 Main Street, Apt 4B, New York, NY 10001'
   }
 }
 
 export default function TrackOrderPage() {
-  const [orderNumber, setOrderNumber] = useState('')
-  const [trackedOrder, setTrackedOrder] = useState<typeof mockOrder | null>(null)
-  const [isSearching, setIsSearching] = useState(false)
+  const [orderNumber, setOrderNumber] = useState('')//يخزن input تاع المستخدم
+  const [trackedOrder, setTrackedOrder] = useState<typeof mockOrder | null>(null) //بيانات الطلب بعد البحث
+  const [isSearching, setIsSearching] = useState(false)//حالة loading
 
   const handleTrack = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault()//تمنع reload الصفحة
     setIsSearching(true)
     // Simulate API call
     setTimeout(() => {
@@ -84,7 +84,8 @@ export default function TrackOrderPage() {
           </Card>
 
           {/* Order Status */}
-          {trackedOrder && (
+          {trackedOrder && (//إذا يوجد طلب → يعرض
+//إذا null → ما يعرض والو
             <div className="space-y-6">
               {/* Status Overview */}
               <Card>
@@ -106,7 +107,7 @@ export default function TrackOrderPage() {
                   <div className="relative">
                     <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border" />
                     <div className="space-y-6">
-                      {trackedOrder.timeline.map((step, index) => (
+  //loop 3la lmarahl                    {trackedOrder.timeline.map((step, index) => (
                         <div key={step.status} className="relative flex gap-4">
                           <div className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center ${
                             step.completed 

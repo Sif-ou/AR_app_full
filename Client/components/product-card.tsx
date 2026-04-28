@@ -4,11 +4,12 @@ import Link from 'next/link'
 import { Product } from '@/lib/data'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Heart, Eye, ShoppingBag, Sparkles } from 'lucide-react'
+import { Heart, ShoppingBag, Sparkles } from 'lucide-react'
 import { useState } from 'react'
 import { useCart } from '@/lib/cart-context'
-import { toast } from 'sonner'
-import { cn } from '@/lib/utils'
+import { toast } from 'sonner'//notifications
+import { cn } from '@/lib/utils'//helper باش تجمع classNames بسهولة
+import { useWishlist } from '@/lib/wishlist-context'
 
 interface ProductCardProps {
   product: Product
@@ -17,11 +18,14 @@ interface ProductCardProps {
 
 export function ProductCard({ product, variant = 'default' }: ProductCardProps) {
   const [isHovered, setIsHovered] = useState(false)
-  const [isFavorite, setIsFavorite] = useState(false)
   const [selectedColorIndex, setSelectedColorIndex] = useState(0)
-  const { addItem, setIsOpen } = useCart()
 
-  const formatPrice = (price: number) => {
+  const { addItem, setIsOpen } = useCart()
+  const { toggleWishlist, isInWishlist } = useWishlist()
+
+  const liked = isInWishlist(product.id)
+
+  const formatPrice = (price: number) => {//تحول السعر لصيغة $1,299
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
@@ -32,7 +36,9 @@ export function ProductCard({ product, variant = 'default' }: ProductCardProps) 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
+
     addItem(product, product.colors[selectedColorIndex].name)
+
     toast.success(`${product.name} added to cart`, {
       action: {
         label: 'View Cart',
@@ -44,20 +50,23 @@ export function ProductCard({ product, variant = 'default' }: ProductCardProps) 
   const handleFavorite = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    setIsFavorite(!isFavorite)
-    toast.success(isFavorite ? 'Removed from wishlist' : 'Added to wishlist')
+
+    const wasLiked = isInWishlist(product.id)
+    toggleWishlist(product.id)
+
+    toast.success(wasLiked ? 'Removed from wishlist' : 'Added to wishlist')
   }
 
   return (
     <Link href={`/products/${product.id}`}>
-      <article 
+      <article
         className="group relative bg-card rounded-xl overflow-hidden border border-border hover:border-accent/50 transition-all duration-300 hover:shadow-lg"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
         {/* Image */}
         <div className="relative aspect-square overflow-hidden bg-muted">
-          <img 
+          <img
             src={product.images[isHovered && product.images[1] ? 1 : 0]}
             alt={product.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
@@ -89,24 +98,27 @@ export function ProductCard({ product, variant = 'default' }: ProductCardProps) 
           )}
 
           {/* Quick Actions */}
-          <div className={cn(
-            "absolute bottom-3 left-3 right-3 flex gap-2 transition-all duration-300",
-            isHovered ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-          )}>
-            <Button 
-              size="sm" 
+          <div
+            className={cn(
+              'absolute bottom-3 left-3 right-3 flex gap-2 transition-all duration-300',
+              isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+            )}
+          >
+            <Button
+              size="sm"
               className="flex-1"
               onClick={handleAddToCart}
             >
               <ShoppingBag className="h-4 w-4 mr-2" />
               Add to Cart
             </Button>
-            <Button 
-              size="sm" 
+
+            <Button
+              size="sm"
               variant="secondary"
               onClick={handleFavorite}
             >
-              <Heart className={cn("h-4 w-4", isFavorite && "fill-accent text-accent")} />
+              <Heart className={cn('h-4 w-4', liked && 'fill-accent text-accent')} />
             </Button>
           </div>
         </div>
@@ -125,10 +137,10 @@ export function ProductCard({ product, variant = 'default' }: ProductCardProps) 
                     setSelectedColorIndex(index)
                   }}
                   className={cn(
-                    "w-5 h-5 rounded-full border-2 transition-all",
-                    selectedColorIndex === index 
-                      ? "border-foreground scale-110" 
-                      : "border-transparent hover:scale-105"
+                    'w-5 h-5 rounded-full border-2 transition-all',
+                    selectedColorIndex === index
+                      ? 'border-foreground scale-110'
+                      : 'border-transparent hover:scale-105'
                   )}
                   style={{ backgroundColor: color.hex }}
                   title={color.name}

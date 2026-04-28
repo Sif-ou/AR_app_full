@@ -1,5 +1,6 @@
 'use client'
-
+import { Heart } from 'lucide-react'
+import { useWishlist } from '@/lib/wishlist-context'
 import Link from 'next/link'
 import { useState, useEffect } from 'react' // Added useEffect
 import { Menu, Search, ShoppingBag, User, X, ChevronDown, Moon, Sun } from 'lucide-react' // Added Moon/Sun icons
@@ -15,7 +16,7 @@ export function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const { totalItems, setIsOpen } = useCart()
-  
+  const { totalWishlistItems } = useWishlist()
   // Theme logic
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
@@ -35,15 +36,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-border">
       <div className="container mx-auto px-4">
-        {/* Top bar */}
-        <div className="hidden md:flex items-center justify-between py-2 text-xs text-muted-foreground border-b border-border">
-          <p>Free shipping on orders over $99</p>
-          <div className="flex items-center gap-4">
-            <Link href="/stores" className="hover:text-foreground transition-colors">Find a Store</Link>
-            <Link href="/help" className="hover:text-foreground transition-colors">Help & Support</Link>
-            <Link href="/track" className="hover:text-foreground transition-colors">Track Order</Link>
-          </div>
-        </div>
+        
 
         {/* Main header */}
         <div className="flex items-center justify-between h-16 md:h-20">
@@ -114,6 +107,7 @@ export function Header() {
                 </div>
               </div>
             </div>
+            
             <Link href="/products" className="text-sm font-medium hover:text-accent transition-colors">
               All Products
             </Link>
@@ -123,6 +117,18 @@ export function Header() {
             <Link href="/about" className="text-sm font-medium hover:text-accent transition-colors">
               About
             </Link>
+             
+              <form onSubmit={handleSearch} className="relative ml-4">
+    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+    
+    <Input
+      type="text"
+      placeholder="Search..."
+      value={searchQuery}
+      onChange={(e) => setSearchQuery(e.target.value)}
+      className="pl-9 w-[180px] focus:w-[220px] transition-all duration-200 "
+    />
+  </form>
           </nav>
 
           {/* Actions */}
@@ -150,6 +156,20 @@ export function Header() {
               </Button>
             </Link>
 
+{/* NEW: Wishlist Button */}
+  <Link href="/wishlist">
+    <Button variant="ghost" size="icon" className="relative">
+      <Heart className="h-5 w-5" />
+      {totalWishlistItems > 0 && (
+        <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-accent text-accent-foreground text-xs flex items-center justify-center">
+          {totalWishlistItems}
+        </span>
+      )}
+      <span className="sr-only">Wishlist</span>
+    </Button>
+  </Link>
+
+
             {/* Cart */}
             <Button 
               variant="ghost" 
@@ -165,6 +185,8 @@ export function Header() {
               )}
               <span className="sr-only">Cart</span>
             </Button>
+
+            
           </div>
         </div>
       </div>

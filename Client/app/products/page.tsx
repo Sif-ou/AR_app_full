@@ -1,5 +1,3 @@
-'use client'
-
 import { useState, useMemo, useEffect, Suspense } from 'react'
 import ARViewer from '@/components/ar-viewer'
 import { useSearchParams } from 'next/navigation'

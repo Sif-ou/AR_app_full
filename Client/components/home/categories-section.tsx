@@ -21,7 +21,7 @@ export function CategoriesSection() {
           {categories.map((category, index) => (
             <Link 
               key={category.id}
-              href={`/products?category=${category.id}`}
+              href={`/products?category=${category.id}`}//filter
               className={`group relative overflow-hidden rounded-xl ${
                 index === 0 ? 'md:col-span-2 md:row-span-2' : ''
               }`}

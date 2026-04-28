@@ -1,3 +1,5 @@
+'use client'
+import { useState } from 'react'
 import Link from 'next/link'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
@@ -51,6 +53,7 @@ const benefits = [
 
 export default function ARExperiencePage() {
   const arProducts = products.filter(p => p.arEnabled).slice(0, 8)
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false)
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -79,15 +82,51 @@ export default function ARExperiencePage() {
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
-                <Button size="lg" variant="outline">
-                  <Play className="mr-2 h-5 w-5" />
-                  Watch Demo
+                <Button 
+                 size="lg" 
+                 variant="outline"
+                 onClick={() => setIsVideoPlaying(true)}
+                >
+                <Play className="mr-2 h-5 w-5" />
+                     Watch Demo
                 </Button>
               </div>
             </div>
           </div>
         </section>
+{/* 🎥 Video Modal */}
+{isVideoPlaying && (
+  <div 
+    className="fixed inset-0 bg-black/80 flex items-center justify-center z-50"
+    onClick={() => setIsVideoPlaying(false)}
+  >
+    <div 
+      className="relative bg-background p-4 rounded-xl max-w-3xl w-full"
+      onClick={(e) => e.stopPropagation()}
+    >
 
+      {/* Close Button */}
+      <button 
+        onClick={() => setIsVideoPlaying(false)}
+        className="absolute top-2 right-2 text-white text-lg"
+      >
+        ✕
+      </button>
+
+      {/* YouTube Video */}
+      <div className="aspect-video w-full">
+        <iframe
+          className="w-full h-full rounded-lg"
+          src="https://www.youtube.com/embed/IHbF3nDfBjA?autoplay=1"
+          title="Demo Video"
+          allow="autoplay; encrypted-media"
+          allowFullScreen
+        />
+      </div>
+
+    </div>
+  </div>
+)}
         {/* How It Works */}
         <section id="how-it-works" className="py-20 bg-secondary">
           <div className="container mx-auto px-4">
