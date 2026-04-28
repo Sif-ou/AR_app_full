@@ -4,11 +4,11 @@ import Link from 'next/link'
 import { Product } from '@/lib/data'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Heart, ShoppingBag, Sparkles } from 'lucide-react'
+import { Heart, Eye, ShoppingBag, Sparkles } from 'lucide-react'
 import { useState } from 'react'
 import { useCart } from '@/lib/cart-context'
-import { toast } from 'sonner'//notifications
-import { cn } from '@/lib/utils'//helper باش تجمع classNames بسهولة
+import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
 import { useWishlist } from '@/lib/wishlist-context'
 
 interface ProductCardProps {
