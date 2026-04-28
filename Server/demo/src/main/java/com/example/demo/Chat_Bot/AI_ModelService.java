@@ -47,6 +47,7 @@ public class AI_ModelService {
     }
 
     public String executeReasoningWorkflow(String prompt) {
+
         try {
             AI_Model.ChatResponse response = API_Message(prompt);
             if (response != null && response.choices() != null && !response.choices().isEmpty()) {
@@ -56,7 +57,8 @@ public class AI_ModelService {
             System.err.println("API ERROR: " + e.getMessage());
             e.printStackTrace();
         }
-        return "ERROR: AI failed to respond";
+        return "ERROR: AI failed to respond please try again later";
+
     }
 }
 
