@@ -57,11 +57,11 @@ export function ChatbotWidget() {
     }
   }, [isOpen])
 
-  const handleSend = async (text?: string) => {
+const handleSend = async (text?: string) => {
     const messageText = text || inputValue.trim()
     if (!messageText) return
 
-
+    // Add user message to UI
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
@@ -72,38 +72,33 @@ export function ChatbotWidget() {
     setIsTyping(true)
 
     try {
-  
+      // Create the URL and append the prompt as a query parameter
       const url = new URL(`${access_bot}/api/chat`)
       url.searchParams.append('prompt', messageText)
 
-  
-      const response = await fetch(url.toString(), {
-        method: 'GET',
-        headers: { 'Accept': 'application/json' }
-      })
+      // Fetch the response from your Render backend
+      const response = await fetch(url.toString())
 
       if (!response.ok) {
-        throw new Error(`Server responded with status: ${response.status}`)
+        throw new Error('Connection failed')
       }
 
- 
+      // Get the plain text returned by AI_Service.executeReasoningWorkflow(prompt)
       const botReply = await response.text()
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: botReply,
-        products: [],
-        quickReplies: [] 
+        content: botReply
       }
 
       setMessages(prev => [...prev, assistantMessage])
     } catch (error) {
-      console.error("Chat Connection Error:", error)
+      console.error("Chat Error:", error)
       setMessages(prev => [...prev, {
         id: 'error',
         role: 'assistant',
-        content: "I'm having trouble connecting to my server. It might be waking up from sleep!"
+        content: "Server is unreachable. Please wait a moment for Render to wake up."
       }])
     } finally {
       setIsTyping(false)
