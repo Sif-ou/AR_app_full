@@ -1,5 +1,5 @@
-"use client";
-
+'use client'
+import { useWishlist } from '@/lib/wishlist-context' 
 import { useState, use } from 'react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -39,9 +39,41 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const [selectedColor, setSelectedColor] = useState(0)
   const [quantity, setQuantity] = useState(1)
   const [isAROpen, setIsAROpen] = useState(false)
-  const [isFavorite, setIsFavorite] = useState(false)
+  const { toggleWishlist, isInWishlist } = useWishlist()
+  const isFavorited = product ? isInWishlist(product.id) : false
   const [isZoomed, setIsZoomed] = useState(false)
   const { addItem, setIsOpen } = useCart()
+
+  const [isReviewOpen, setIsReviewOpen] = useState(false)
+  const [reviewsList, setReviewsList] = useState<any[]>([])
+  const [newReview, setNewReview] = useState({
+    name: '',
+    rating: 5,
+    comment: ''
+  })
+
+  const handleSubmitReview = () => {
+    if (!newReview.name || !newReview.comment) {
+      toast.error('Please fill all fields')
+      return
+    }
+
+    const review = {
+      ...newReview,
+      id: Date.now()
+    }
+
+    setReviewsList([review, ...reviewsList])
+    setIsReviewOpen(false)
+
+    setNewReview({
+      name: '',
+      rating: 5,
+      comment: ''
+    })
+
+    toast.success('Review added!')
+  }
 
   if (!product) {
     notFound()
@@ -64,7 +96,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       }
     })
   }
-
 
   const handleShare = async () => {
     try {
@@ -329,9 +360,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 <Button 
                   size="lg" 
                   variant="outline"
-                  onClick={() => setIsFavorite(!isFavorite)}
+                  onClick={() => toggleWishlist(product.id)}
                 >
-                  <Heart className={cn("h-5 w-5", isFavorite && "fill-accent text-accent")} />
+                  <Heart className={cn("h-5 w-5", isFavorited && "fill-accent text-accent")} />
                 </Button>
                 <Button 
                   size="lg" 
@@ -396,7 +427,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                   value="reviews"
                   className="rounded-none border-b-2 border-transparent data-[state=active]:border-accent data-[state=active]:bg-transparent px-6 py-3"
                 >
-                  Reviews ({product.reviews})
+                  Reviews ({product.reviews + reviewsList.length})
                 </TabsTrigger>
               </TabsList>
 
@@ -448,17 +479,20 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               </TabsContent>
 
               <TabsContent value="reviews" className="py-6">
-                <div className="flex items-center gap-8 mb-8">
-                  <div className="text-center">
+                <div className="flex flex-col md:flex-row gap-8 mb-12">
+                  <div className="text-center md:text-left">
                     <p className="text-5xl font-bold">{product.rating}</p>
-                    <div className="flex items-center gap-1 my-2">
+                    <div className="flex items-center justify-center md:justify-start gap-1 my-2">
                       {Array.from({ length: 5 }).map((_, i) => (
                         <span key={i} className={i < Math.round(product.rating) ? 'text-yellow-500' : 'text-muted'}>
                           ★
                         </span>
                       ))}
                     </div>
-                    <p className="text-sm text-muted-foreground">{product.reviews} reviews</p>
+                    <p className="text-sm text-muted-foreground">{product.reviews + reviewsList.length} reviews</p>
+                    <Button variant="outline" className="mt-4" onClick={() => setIsReviewOpen(true)}>
+                      Write a Review
+                    </Button>
                   </div>
                   <div className="flex-1 space-y-2">
                     {[5, 4, 3, 2, 1].map(stars => {
@@ -478,7 +512,70 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                     })}
                   </div>
                 </div>
-                <Button variant="outline">Write a Review</Button>
+
+                {isReviewOpen && (
+                  <div className="mb-12 p-6 border rounded-xl bg-secondary/30 space-y-4 max-w-2xl">
+                    <h3 className="font-semibold text-lg">Write your review</h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-sm font-medium mb-1.5 block">Rating</label>
+                        <div className="flex gap-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              type="button"
+                              onClick={() => setNewReview({ ...newReview, rating: star })}
+                              className="text-2xl transition-transform hover:scale-110"
+                            >
+                              <span className={star <= newReview.rating ? "text-yellow-500" : "text-muted-foreground/30"}>
+                                ★
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Your name"
+                        className="w-full bg-background border border-input p-2.5 rounded-lg focus:ring-2 focus:ring-accent outline-none"
+                        value={newReview.name}
+                        onChange={(e) => setNewReview({ ...newReview, name: e.target.value })}
+                      />
+                      <textarea
+                        placeholder="Share your thoughts about the product..."
+                        rows={4}
+                        className="w-full bg-background border border-input p-2.5 rounded-lg focus:ring-2 focus:ring-accent outline-none resize-none"
+                        value={newReview.comment}
+                        onChange={(e) => setNewReview({ ...newReview, comment: e.target.value })}
+                      />
+                      <div className="flex gap-3 pt-2">
+                        <Button onClick={handleSubmitReview}>Submit Review</Button>
+                        <Button variant="ghost" onClick={() => setIsReviewOpen(false)}>Cancel</Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-6">
+                  {reviewsList.map((r) => (
+                    <div key={r.id} className="border-b border-border pb-6">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <span className="font-semibold block">{r.name}</span>
+                          <div className="flex gap-0.5 mt-1">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <span key={i} className={i < r.rating ? "text-yellow-500 text-sm" : "text-muted text-sm"}>
+                                ★
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                        <span className="text-xs text-muted-foreground">Just now</span>
+                      </div>
+                      <p className="text-muted-foreground">{r.comment}</p>
+                    </div>
+                  ))}
+                </div>
               </TabsContent>
             </Tabs>
           </div>

@@ -34,9 +34,7 @@ export function Footer() {
           <div>
             <h4 className="font-semibold mb-4 text-foreground">Customer Service</h4>
             <ul className="space-y-3 text-sm text-muted-foreground">
-              <li><Link href="/help" className="hover:text-accent transition-colors">Help Center</Link></li>
               <li><Link href="/shipping" className="hover:text-accent transition-colors">Shipping Info</Link></li>
-              <li><Link href="/returns" className="hover:text-accent transition-colors">Returns & Exchanges</Link></li>
               <li><Link href="/track" className="hover:text-accent transition-colors">Track Your Order</Link></li>
               <li><Link href="/contact" className="hover:text-accent transition-colors">Contact Us</Link></li>
             </ul>
