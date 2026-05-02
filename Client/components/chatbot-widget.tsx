@@ -17,8 +17,8 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-// Use the Render URL directly to avoid environment variable confusion
-const access_bot = 'https://ar-app-back-end.onrender.com'
+
+const access_bot = 'https://ar-app-back-end.onrender.com/api/chat'
 
 interface Message {
   id: string
