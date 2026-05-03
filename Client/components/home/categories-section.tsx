@@ -26,7 +26,7 @@ export function CategoriesSection() {
                 index === 0 ? 'md:col-span-2 md:row-span-2' : ''
               }`}
             >
-              <div className={`aspect-square ${index === 0 ? 'md:aspect-[2/1.2]' : ''}`}>
+              <div className="w-full h-full">
                 <img 
                   src={category.image}
                   alt={category.name}

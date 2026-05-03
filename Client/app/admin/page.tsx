@@ -113,12 +113,23 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-secondary flex">
+    <div className="min-h-screen bg-secondary flex relative overflow-x-hidden">
+      {/* Sidebar Overlay for Mobile */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-[45] lg:hidden transition-opacity"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className={cn(
-        "fixed inset-y-0 left-0 z-50 w-64 bg-foreground text-background transform transition-transform duration-200 lg:translate-x-0 lg:static",
-        sidebarOpen ? "translate-x-0" : "-translate-x-full"
-      )}>
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 w-64 bg-foreground text-background transform transition-transform duration-300 ease-in-out",
+          "lg:static lg:translate-x-0",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="flex items-center justify-between p-6 border-b border-background/10">
@@ -128,7 +139,7 @@ export default function AdminDashboard() {
             <Button 
               variant="ghost" 
               size="icon" 
-              className="lg:hidden text-background"
+              className="lg:hidden text-background hover:bg-background/10"
               onClick={() => setSidebarOpen(false)}
             >
               <X className="h-5 w-5" />
@@ -136,7 +147,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-1">
+          <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
             {[
               { id: 'overview', label: 'Overview', icon: LayoutDashboard },
               { id: 'products', label: 'Products', icon: Package },
@@ -148,16 +159,19 @@ export default function AdminDashboard() {
             ].map(item => (
               <button
                 key={item.id}
-                onClick={() => setActiveTab(item.id)}
+                onClick={() => {
+                    setActiveTab(item.id)
+                    if (window.innerWidth < 1024) setSidebarOpen(false)
+                }}
                 className={cn(
-                  "w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
+                  "w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-left",
                   activeTab === item.id 
                     ? "bg-accent text-accent-foreground" 
                     : "text-background/70 hover:bg-background/10 hover:text-background"
                 )}
               >
-                <item.icon className="h-5 w-5" />
-                {item.label}
+                <item.icon className="h-5 w-5 shrink-0" />
+                <span className="truncate">{item.label}</span>
               </button>
             ))}
           </nav>
@@ -165,15 +179,17 @@ export default function AdminDashboard() {
           {/* User */}
           <div className="p-4 border-t border-background/10">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center text-accent-foreground font-semibold">
+              <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center text-accent-foreground font-semibold shrink-0">
                 A
               </div>
-              <div className="flex-1">
-                <p className="font-medium text-sm">Admin User</p>
-                <p className="text-xs text-background/50">admin@arsmart.com</p>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm truncate">Admin User</p>
+                <p className="text-xs text-background/50 truncate">admin@Gmail.com</p>
               </div>
-              <Button variant="ghost" size="icon" className="text-background/50 hover:text-background">
-                <LogOut className="h-4 w-4" />
+              <Button variant="ghost" size="icon" className="text-background/50 hover:text-background shrink-0" asChild>
+                <Link href="/account">
+                  <LogOut className="h-4 w-4" />
+                </Link>
               </Button>
             </div>
           </div>
@@ -181,54 +197,55 @@ export default function AdminDashboard() {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-h-screen">
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         {/* Top Bar */}
-        <header className="bg-background border-b border-border sticky top-0 z-40">
-          <div className="flex items-center justify-between px-6 py-4">
-            <div className="flex items-center gap-4">
+        <header className="bg-background border-b border-border sticky top-0 z-40 shrink-0">
+          <div className="flex items-center justify-between px-4 sm:px-6 py-4">
+            <div className="flex items-center gap-4 flex-1">
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="lg:hidden"
+                className="lg:hidden shrink-0"
                 onClick={() => setSidebarOpen(true)}
               >
                 <Menu className="h-5 w-5" />
               </Button>
-              <div className="relative">
+              <div className="relative w-full max-w-xs">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Search..."
-                  className="w-64 pl-9"
-                />
+                <Input placeholder="Search..." className="w-full pl-9 h-9" />
               </div>
             </div>
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-accent rounded-full" />
-              </Button>
-              <Link href="/" target="_blank">
+            <div className="flex items-center gap-2 sm:gap-4 ml-4">
+              <Link href="/" target="_blank" className="hidden sm:block">
                 <Button variant="outline" size="sm">
                   <Eye className="h-4 w-4 mr-2" />
                   View Store
                 </Button>
               </Link>
+              <Button variant="outline" size="icon" className="sm:hidden">
+                <Eye className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="icon" className="relative">
+                <Bell className="h-5 w-5" />
+                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-background"></span>
+              </Button>
             </div>
           </div>
         </header>
 
-        {/* Page Content */}
-        <main className="flex-1 p-6">
+        {/* Page Content Scroll Area */}
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-secondary/30">
+          
           {activeTab === 'overview' && (
-            <div className="space-y-6">
+            <div className="space-y-6 max-w-[1600px] mx-auto">
               {/* Header */}
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <h1 className="text-2xl font-bold">Dashboard</h1>
-                  <p className="text-muted-foreground">Welcome back! Here&apos;s what&apos;s happening.</p>
+                  <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Dashboard</h1>
+                  <p className="text-sm text-muted-foreground">Welcome back! Here&apos;s what&apos;s happening.</p>
                 </div>
                 <Select defaultValue="7d">
-                  <SelectTrigger className="w-36">
+                  <SelectTrigger className="w-full sm:w-40 h-9">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -241,29 +258,25 @@ export default function AdminDashboard() {
               </div>
 
               {/* Stats Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-4">
                 {stats.map(stat => (
-                  <Card key={stat.title}>
-                    <CardContent className="p-6">
+                  <Card key={stat.title} className="shadow-sm">
+                    <CardContent className="p-4 sm:p-6">
                       <div className="flex items-center justify-between">
-                        <div className="w-12 h-12 rounded-lg bg-secondary flex items-center justify-center">
-                          <stat.icon className="h-6 w-6 text-muted-foreground" />
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-secondary flex items-center justify-center shrink-0">
+                          <stat.icon className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground" />
                         </div>
                         <div className={cn(
-                          "flex items-center gap-1 text-sm",
+                          "flex items-center gap-1 text-xs sm:text-sm font-medium",
                           stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
                         )}>
-                          {stat.trend === 'up' ? (
-                            <ArrowUpRight className="h-4 w-4" />
-                          ) : (
-                            <ArrowDownRight className="h-4 w-4" />
-                          )}
+                          {stat.trend === 'up' ? <ArrowUpRight className="h-3 w-3 sm:h-4 sm:w-4" /> : <ArrowDownRight className="h-3 w-3 sm:h-4 sm:w-4" />}
                           {stat.change}
                         </div>
                       </div>
-                      <div className="mt-4">
-                        <p className="text-2xl font-bold">{stat.value}</p>
-                        <p className="text-sm text-muted-foreground">{stat.title}</p>
+                      <div className="mt-3 sm:mt-4">
+                        <p className="text-xl sm:text-2xl font-bold truncate">{stat.value}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground truncate">{stat.title}</p>
                       </div>
                     </CardContent>
                   </Card>
@@ -271,55 +284,44 @@ export default function AdminDashboard() {
               </div>
 
               {/* Charts Row */}
-              <div className="grid lg:grid-cols-3 gap-6">
-                {/* Revenue Chart Placeholder */}
-                <Card className="lg:col-span-2">
-                  <CardHeader>
-                    <CardTitle>Revenue Overview</CardTitle>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <Card className="lg:col-span-2 shadow-sm">
+                  <CardHeader className="p-4 sm:p-6">
+                    <CardTitle className="text-lg">Revenue Overview</CardTitle>
                     <CardDescription>Monthly revenue for the current year</CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    <div className="h-64 flex items-end justify-between gap-2">
+                  <CardContent className="p-4 sm:p-6 pt-0">
+                    <div className="h-48 sm:h-64 flex items-end justify-between gap-1 sm:gap-2">
                       {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'].map((month, i) => (
-                        <div key={month} className="flex-1 flex flex-col items-center gap-2">
-                          <div 
-                            className="w-full bg-accent/20 rounded-t-sm relative overflow-hidden"
-                            style={{ height: `${40 + Math.random() * 60}%` }}
-                          >
+                        <div key={month} className="flex-1 flex flex-col items-center gap-2 group">
+                          <div className="w-full bg-accent/10 rounded-t-sm relative overflow-hidden h-full flex flex-col justify-end">
                             <div 
-                              className="absolute bottom-0 left-0 right-0 bg-accent"
-                              style={{ height: `${60 + Math.random() * 40}%` }}
+                              className="w-full bg-accent hover:bg-accent/80 transition-all cursor-pointer"
+                              style={{ height: `${50 + (i * 8)}%` }}
                             />
                           </div>
-                          <span className="text-xs text-muted-foreground">{month}</span>
+                          <span className="text-[10px] sm:text-xs text-muted-foreground font-medium">{month}</span>
                         </div>
                       ))}
                     </div>
                   </CardContent>
                 </Card>
 
-                {/* Top Products */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Top Products</CardTitle>
+                <Card className="shadow-sm">
+                  <CardHeader className="p-4 sm:p-6">
+                    <CardTitle className="text-lg">Top Products</CardTitle>
                     <CardDescription>Best selling this month</CardDescription>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="p-4 sm:p-6 pt-0">
                     <div className="space-y-4">
                       {products.filter(p => p.isBestseller).slice(0, 4).map((product, i) => (
                         <div key={product.id} className="flex items-center gap-3">
-                          <span className="text-sm font-medium text-muted-foreground w-4">
-                            {i + 1}
-                          </span>
-                          <div className="w-10 h-10 rounded-lg overflow-hidden bg-muted">
-                            <img 
-                              src={product.images[0]}
-                              alt={product.name}
-                              className="w-full h-full object-cover"
-                            />
+                          <span className="text-xs font-bold text-muted-foreground/50 w-4 shrink-0">{i + 1}</span>
+                          <div className="w-10 h-10 rounded-md overflow-hidden bg-muted shrink-0">
+                            <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{product.name}</p>
+                            <p className="text-sm font-semibold truncate">{product.name}</p>
                             <p className="text-xs text-muted-foreground">{product.reviews} sold</p>
                           </div>
                         </div>
@@ -329,48 +331,45 @@ export default function AdminDashboard() {
                 </Card>
               </div>
 
-              {/* Recent Orders */}
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <div>
-                    <CardTitle>Recent Orders</CardTitle>
-                    <CardDescription>Latest customer orders</CardDescription>
+              {/* Recent Orders Table */}
+              <Card className="shadow-sm overflow-hidden">
+                <CardHeader className="flex flex-row items-center justify-between p-4 sm:p-6">
+                  <div className="min-w-0">
+                    <CardTitle className="text-lg truncate">Recent Orders</CardTitle>
+                    <CardDescription className="truncate">Latest customer orders</CardDescription>
                   </div>
-                  <Button variant="outline" size="sm">
-                    View All
-                    <ChevronRight className="h-4 w-4 ml-1" />
+                  <Button variant="outline" size="sm" className="shrink-0 ml-2">
+                    <span className="hidden xs:inline">View All</span>
+                    <ChevronRight className="h-4 w-4 xs:ml-1" />
                   </Button>
                 </CardHeader>
-                <CardContent>
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto scrollbar-hide">
+                    <table className="w-full min-w-[700px]">
                       <thead>
-                        <tr className="text-left border-b border-border">
-                          <th className="pb-3 font-medium text-muted-foreground">Order ID</th>
-                          <th className="pb-3 font-medium text-muted-foreground">Customer</th>
-                          <th className="pb-3 font-medium text-muted-foreground">Products</th>
-                          <th className="pb-3 font-medium text-muted-foreground">Total</th>
-                          <th className="pb-3 font-medium text-muted-foreground">Status</th>
-                          <th className="pb-3 font-medium text-muted-foreground"></th>
+                        <tr className="text-left bg-muted/50 border-y border-border">
+                          <th className="p-4 text-xs font-semibold text-muted-foreground uppercase">Order ID</th>
+                          <th className="p-4 text-xs font-semibold text-muted-foreground uppercase">Customer</th>
+                          <th className="p-4 text-xs font-semibold text-muted-foreground uppercase">Products</th>
+                          <th className="p-4 text-xs font-semibold text-muted-foreground uppercase">Total</th>
+                          <th className="p-4 text-xs font-semibold text-muted-foreground uppercase">Status</th>
+                          <th className="p-4 text-xs font-semibold text-muted-foreground uppercase w-10"></th>
                         </tr>
                       </thead>
-                      <tbody>
+                      <tbody className="divide-y divide-border">
                         {recentOrders.map(order => (
-                          <tr key={order.id} className="border-b border-border last:border-0">
-                            <td className="py-4 font-mono text-sm">{order.id}</td>
-                            <td className="py-4">{order.customer}</td>
-                            <td className="py-4">{order.products} items</td>
-                            <td className="py-4 font-medium">{formatPrice(order.total)}</td>
-                            <td className="py-4">
-                              <span className={cn(
-                                "px-2 py-1 rounded-full text-xs font-medium capitalize",
-                                getStatusColor(order.status)
-                              )}>
+                          <tr key={order.id} className="hover:bg-muted/30 transition-colors">
+                            <td className="p-4 font-mono text-xs">{order.id}</td>
+                            <td className="p-4 text-sm font-medium">{order.customer}</td>
+                            <td className="p-4 text-sm text-muted-foreground">{order.products} items</td>
+                            <td className="p-4 text-sm font-bold">{formatPrice(order.total)}</td>
+                            <td className="p-4">
+                              <Badge variant="outline" className={cn("text-[10px] px-2 py-0 h-5", getStatusColor(order.status))}>
                                 {order.status}
-                              </span>
+                              </Badge>
                             </td>
-                            <td className="py-4">
-                              <Button variant="ghost" size="icon">
+                            <td className="p-4">
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </td>
@@ -386,63 +385,57 @@ export default function AdminDashboard() {
 
           {activeTab === 'products' && (
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <h1 className="text-2xl font-bold">Products</h1>
                   <p className="text-muted-foreground">{products.length} products in catalog</p>
                 </div>
-                <Button>
+                <Button className="w-full sm:w-auto">
                   <Plus className="h-4 w-4 mr-2" />
                   Add Product
                 </Button>
               </div>
 
-              <Card>
+              <Card className="shadow-sm overflow-hidden">
                 <CardContent className="p-0">
                   <div className="overflow-x-auto">
-                    <table className="w-full">
+                    <table className="w-full min-w-[800px]">
                       <thead>
-                        <tr className="text-left border-b border-border">
-                          <th className="p-4 font-medium text-muted-foreground">Product</th>
-                          <th className="p-4 font-medium text-muted-foreground">Category</th>
-                          <th className="p-4 font-medium text-muted-foreground">Price</th>
-                          <th className="p-4 font-medium text-muted-foreground">Stock</th>
-                          <th className="p-4 font-medium text-muted-foreground">AR</th>
-                          <th className="p-4 font-medium text-muted-foreground"></th>
+                        <tr className="text-left bg-muted/50 border-b border-border">
+                          <th className="p-4 text-xs font-semibold text-muted-foreground uppercase">Product</th>
+                          <th className="p-4 text-xs font-semibold text-muted-foreground uppercase">Category</th>
+                          <th className="p-4 text-xs font-semibold text-muted-foreground uppercase">Price</th>
+                          <th className="p-4 text-xs font-semibold text-muted-foreground uppercase">Stock</th>
+                          <th className="p-4 text-xs font-semibold text-muted-foreground uppercase">AR</th>
+                          <th className="p-4 text-xs font-semibold text-muted-foreground uppercase w-10"></th>
                         </tr>
                       </thead>
-                      <tbody>
+                      <tbody className="divide-y divide-border">
                         {products.map(product => (
-                          <tr key={product.id} className="border-b border-border last:border-0 hover:bg-muted/50">
+                          <tr key={product.id} className="hover:bg-muted/30 transition-colors">
                             <td className="p-4">
                               <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted">
-                                  <img 
-                                    src={product.images[0]}
-                                    alt={product.name}
-                                    className="w-full h-full object-cover"
-                                  />
+                                <div className="w-10 h-10 rounded-md overflow-hidden bg-muted shrink-0 border border-border">
+                                  <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
                                 </div>
-                                <div>
-                                  <p className="font-medium">{product.name}</p>
-                                  <p className="text-sm text-muted-foreground">
-                                    {product.colors.length} colors
-                                  </p>
+                                <div className="min-w-0">
+                                  <p className="text-sm font-semibold truncate">{product.name}</p>
+                                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{product.colors.length} Variants</p>
                                 </div>
                               </div>
                             </td>
-                            <td className="p-4 capitalize">{product.category.replace('-', ' ')}</td>
-                            <td className="p-4 font-medium">{formatPrice(product.price)}</td>
+                            <td className="p-4 text-sm capitalize">{product.category.replace('-', ' ')}</td>
+                            <td className="p-4 text-sm font-bold">{formatPrice(product.price)}</td>
                             <td className="p-4">
-                              <Badge variant={product.inStock ? 'default' : 'destructive'}>
+                              <Badge variant={product.inStock ? 'default' : 'destructive'} className="text-[10px]">
                                 {product.inStock ? 'In Stock' : 'Out of Stock'}
                               </Badge>
                             </td>
                             <td className="p-4">
-                              <Switch checked={product.arEnabled} />
+                              <Switch checked={product.arEnabled} className="scale-75 origin-left" />
                             </td>
                             <td className="p-4">
-                              <Button variant="ghost" size="icon">
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </td>
@@ -460,77 +453,54 @@ export default function AdminDashboard() {
             <div className="space-y-6">
               <div>
                 <h1 className="text-2xl font-bold">AR Analytics</h1>
-                <p className="text-muted-foreground">Track augmented reality engagement and conversions</p>
+                <p className="text-muted-foreground">Track augmented reality engagement</p>
               </div>
 
-              {/* AR Stats */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center">
-                        <Sparkles className="h-6 w-6 text-accent" />
-                      </div>
-                      <div>
-                        <p className="text-2xl font-bold">8,742</p>
-                        <p className="text-sm text-muted-foreground">Total AR Sessions</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
-                        <TrendingUp className="h-6 w-6 text-green-600" />
-                      </div>
-                      <div>
-                        <p className="text-2xl font-bold">6.4%</p>
-                        <p className="text-sm text-muted-foreground">AR Conversion Rate</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
-                        <Eye className="h-6 w-6 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="text-2xl font-bold">3:24</p>
-                        <p className="text-sm text-muted-foreground">Avg. Session Duration</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {[
+                    { label: 'Total AR Sessions', val: '8,742', icon: Sparkles, color: 'bg-accent/10 text-accent' },
+                    { label: 'AR Conversion Rate', val: '6.4%', icon: TrendingUp, color: 'bg-green-100 text-green-600' },
+                    { label: 'Avg. Duration', val: '3:24', icon: Eye, color: 'bg-blue-100 text-blue-600' }
+                ].map((item, idx) => (
+                    <Card key={idx} className="shadow-sm">
+                      <CardContent className="p-6">
+                        <div className="flex items-center gap-4">
+                          <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center shrink-0", item.color)}>
+                            <item.icon className="h-6 w-6" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-2xl font-bold truncate">{item.val}</p>
+                            <p className="text-sm text-muted-foreground truncate">{item.label}</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                ))}
               </div>
 
-              {/* AR Product Performance */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>AR Product Performance</CardTitle>
-                  <CardDescription>Products with highest AR engagement</CardDescription>
+              <Card className="shadow-sm">
+                <CardHeader className="p-4 sm:p-6 border-b border-border">
+                  <CardTitle className="text-lg">Product Performance</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-0">
                   <div className="overflow-x-auto">
-                    <table className="w-full">
+                    <table className="w-full min-w-[600px]">
                       <thead>
-                        <tr className="text-left border-b border-border">
-                          <th className="pb-3 font-medium text-muted-foreground">Product</th>
-                          <th className="pb-3 font-medium text-muted-foreground">AR Sessions</th>
-                          <th className="pb-3 font-medium text-muted-foreground">Conversions</th>
-                          <th className="pb-3 font-medium text-muted-foreground">Conversion Rate</th>
+                        <tr className="text-left bg-muted/30">
+                          <th className="p-4 text-xs font-semibold text-muted-foreground uppercase">Product</th>
+                          <th className="p-4 text-xs font-semibold text-muted-foreground uppercase text-center">AR Sessions</th>
+                          <th className="p-4 text-xs font-semibold text-muted-foreground uppercase text-center">Conversions</th>
+                          <th className="p-4 text-xs font-semibold text-muted-foreground uppercase text-right">Rate</th>
                         </tr>
                       </thead>
-                      <tbody>
+                      <tbody className="divide-y divide-border">
                         {arAnalytics.map(item => (
-                          <tr key={item.product} className="border-b border-border last:border-0">
-                            <td className="py-4 font-medium">{item.product}</td>
-                            <td className="py-4">{item.sessions.toLocaleString()}</td>
-                            <td className="py-4">{item.conversions}</td>
-                            <td className="py-4">
-                              <Badge variant="secondary">{item.rate}</Badge>
+                          <tr key={item.product} className="hover:bg-muted/20 transition-colors">
+                            <td className="p-4 text-sm font-medium">{item.product}</td>
+                            <td className="p-4 text-sm text-center font-mono">{item.sessions.toLocaleString()}</td>
+                            <td className="p-4 text-sm text-center font-mono">{item.conversions}</td>
+                            <td className="p-4 text-right">
+                              <Badge variant="secondary" className="font-mono">{item.rate}</Badge>
                             </td>
                           </tr>
                         ))}
@@ -545,53 +515,39 @@ export default function AdminDashboard() {
           {activeTab === 'chatbot' && (
             <div className="space-y-6">
               <div>
-                <h1 className="text-2xl font-bold">Chatbot Analytics</h1>
-                <p className="text-muted-foreground">Monitor AI assistant performance</p>
+                <h1 className="text-2xl font-bold">Chatbot</h1>
+                <p className="text-muted-foreground">Monitor assistant performance</p>
               </div>
 
-              {/* Chatbot Stats */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card>
-                  <CardContent className="p-6 text-center">
-                    <p className="text-3xl font-bold">{chatbotMetrics.totalConversations.toLocaleString()}</p>
-                    <p className="text-sm text-muted-foreground">Total Conversations</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-6 text-center">
-                    <p className="text-3xl font-bold">{chatbotMetrics.avgResponseTime}</p>
-                    <p className="text-sm text-muted-foreground">Avg Response Time</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-6 text-center">
-                    <p className="text-3xl font-bold">{chatbotMetrics.resolutionRate}</p>
-                    <p className="text-sm text-muted-foreground">Resolution Rate</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-6 text-center">
-                    <p className="text-3xl font-bold">4.8</p>
-                    <p className="text-sm text-muted-foreground">User Satisfaction</p>
-                  </CardContent>
-                </Card>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                    { l: 'Conversations', v: chatbotMetrics.totalConversations.toLocaleString() },
+                    { l: 'Avg Speed', v: chatbotMetrics.avgResponseTime },
+                    { l: 'Resolution', v: chatbotMetrics.resolutionRate },
+                    { l: 'Satisfaction', v: '4.8/5' }
+                ].map((m, i) => (
+                    <Card key={i} className="shadow-sm">
+                        <CardContent className="p-4 sm:p-6 text-center">
+                            <p className="text-xl sm:text-2xl font-bold">{m.v}</p>
+                            <p className="text-[10px] sm:text-xs text-muted-foreground uppercase mt-1">{m.l}</p>
+                        </CardContent>
+                    </Card>
+                ))}
               </div>
 
-              {/* Top Queries */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Top User Queries</CardTitle>
-                  <CardDescription>Most common questions asked to the chatbot</CardDescription>
+              <Card className="shadow-sm">
+                <CardHeader className="p-4 sm:p-6 border-b border-border">
+                  <CardTitle className="text-lg">Common Questions</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
+                <CardContent className="p-4 sm:p-6">
+                  <div className="grid gap-3">
                     {chatbotMetrics.topQueries.map((query, i) => (
-                      <div key={query} className="flex items-center gap-4">
-                        <span className="text-muted-foreground font-medium w-6">{i + 1}</span>
-                        <div className="flex-1 bg-secondary rounded-lg p-3">
-                          <p className="font-medium">{query}</p>
-                        </div>
-                        <Badge variant="secondary">{Math.floor(200 + Math.random() * 300)}</Badge>
+                      <div key={query} className="flex items-center gap-3 sm:gap-4 p-3 bg-muted/40 rounded-xl hover:bg-muted/70 transition-colors">
+                        <span className="text-xs font-bold text-muted-foreground/40 w-5">{i + 1}</span>
+                        <p className="flex-1 text-sm font-medium truncate">{query}</p>
+                        <Badge variant="outline" className="bg-background font-mono text-[10px]">
+                            {Math.floor(200 + Math.random() * 300)} hits
+                        </Badge>
                       </div>
                     ))}
                   </div>
@@ -600,13 +556,16 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {/* Other tabs show placeholder */}
+          {/* Fallback for other tabs */}
           {!['overview', 'products', 'analytics', 'chatbot'].includes(activeTab) && (
-            <div className="flex items-center justify-center h-96">
-              <div className="text-center">
-                <h2 className="text-xl font-semibold mb-2 capitalize">{activeTab}</h2>
-                <p className="text-muted-foreground">This section is under development</p>
-              </div>
+            <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-6">
+                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                    <Settings className="h-8 w-8 text-muted-foreground animate-spin-slow" />
+                </div>
+                <h2 className="text-xl font-bold capitalize">{activeTab}</h2>
+                <p className="text-muted-foreground max-w-xs mx-auto mt-2 text-sm">
+                    We are currently building this section. Check back soon for new updates!
+                </p>
             </div>
           )}
         </main>
