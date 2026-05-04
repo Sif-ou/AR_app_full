@@ -6,7 +6,7 @@ import { Footer } from '@/components/footer'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Package, Truck, MapPin, CheckCircle2, Search } from 'lucide-react'
+import { Package, Truck, MapPin, CheckCircle2, Search, Link } from 'lucide-react'
 
 const mockOrder = {//Order مزيف
   id: 'ORD-2024-001',
@@ -187,7 +187,14 @@ export default function TrackOrderPage() {
             <p className="text-muted-foreground mb-4">
               Need help with your order?
             </p>
-            <Button variant="outline">Contact Support</Button>
+            
+            <Button variant="outline">
+              <Link href="/contact">
+      Contact Support
+    </Link>
+              
+              </Button>
+            
           </div>
         </div>
       </main>

@@ -2,26 +2,25 @@
 import { Heart } from 'lucide-react'
 import { useWishlist } from '@/lib/wishlist-context'
 import Link from 'next/link'
-import { useState, useEffect } from 'react' // Added useEffect
-import { Menu, Search, ShoppingBag, User, X, ChevronDown, Moon, Sun } from 'lucide-react' // Added Moon/Sun icons
+import { useState, useEffect } from 'react'
+import { Menu, Search, ShoppingBag, User, X, ChevronDown, Moon, Sun } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { useCart } from '@/lib/cart-context'
 import { categories } from '@/lib/data'
 import { cn } from '@/lib/utils'
-import { useTheme } from 'next-themes' // Added useTheme
+import { useTheme } from 'next-themes'
 
 export function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const { totalItems, setIsOpen } = useCart()
   const { totalWishlistItems } = useWishlist()
-  // Theme logic
+  
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
-  // Prevent hydration mismatch (ensures icons only show after client-side load)
   useEffect(() => {
     setMounted(true)
   }, [])
@@ -36,102 +35,106 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-border">
       <div className="container mx-auto px-4">
-        
-
-        {/* Main header */}
-        <div className="flex items-center justify-between h-16 md:h-20">
-          {/* Mobile menu */}
-<Sheet>
-  <SheetTrigger asChild className="md:hidden">
-    <Button variant="ghost" size="icon" className="relative hover:bg-accent/10 transition-colors">
-      <Menu className="h-6 w-6" />
-      <span className="sr-only">Open menu</span>
-    </Button>
-  </SheetTrigger>
-  
-  <SheetContent 
-    side="left" 
-    className="w-[85%] max-w-[320px] p-0 flex flex-col bg-background/95 backdrop-blur-xl border-r border-border/50"
-  >
-    {/* 1. Sidebar Top Header */}
-    <div className="flex items-center justify-between p-6 pb-4 border-b border-border/40">
-      <Link href="/" className="flex items-center space-x-2">
-        <span className="font-serif text-2xl font-bold tracking-tight text-foreground">
-          AR<span className="text-accent italic">Smart</span>
-        </span>
-      </Link>
-    </div>
-
-    {/* 2. Navigation Area */}
-    <div className="flex-1 overflow-y-auto py-4">
-      <div className="px-4 mb-4">
-        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/70 mb-4 px-2">
-          Collections
-        </p>
-        <nav className="space-y-1">
-          <Link 
-            href="/products" 
-            className="group flex items-center justify-between px-3 py-3 rounded-xl transition-all duration-200 hover:bg-accent/10"
-          >
-            <span className="text-base font-medium">All Products</span>
-            <ChevronDown className="h-4 w-4 -rotate-90 opacity-40 group-hover:opacity-100 transition-opacity" />
-          </Link>
+        <div className="flex items-center justify-between h-16 md:h-20 gap-4">
           
-          {categories.map((category) => (
-            <Link 
-              key={category.id}
-              href={`/products?category=${category.id}`}
-              className="group flex items-center justify-between px-3 py-3 rounded-xl transition-all duration-200 hover:bg-accent/10"
+          <Sheet>
+            <SheetTrigger asChild className="md:hidden">
+              <Button variant="ghost" size="icon" className="relative hover:bg-accent/10 transition-colors">
+                <Menu className="h-6 w-6" />
+                <span className="sr-only">Open menu</span>
+              </Button>
+            </SheetTrigger>
+            
+            <SheetContent 
+              side="left" 
+              className="w-[85%] max-w-[320px] p-0 flex flex-col bg-background/95 backdrop-blur-xl border-r border-border/50"
             >
-              <div className="flex items-center gap-3">
-                {/* Small thumbnail placeholder for premium feel */}
-                <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center overflow-hidden">
-                   <img src={category.image} alt="" className="w-full h-full object-cover opacity-80" />
-                </div>
-                <span className="text-base font-medium">{category.name}</span>
+              {/* 1. Sidebar Top Header - Clean Brand Only */}
+              <div className="flex items-center p-6 pb-4 border-b border-border/40">
+                <Link href="/" className="flex items-center space-x-2">
+                  <span className="font-serif text-2xl font-bold tracking-tight text-foreground">
+                    AR<span className="text-accent italic">Smart</span>
+                  </span>
+                </Link>
               </div>
-              <ChevronDown className="h-4 w-4 -rotate-90 opacity-40 group-hover:opacity-100 transition-opacity" />
-            </Link>
-          ))}
-        </nav>
-      </div>
 
-      <div className="px-6 py-2">
-        <hr className="border-border/50" />
-      </div>
+              {/* 2. Scrollable Navigation Area */}
+              <div className="flex-1 overflow-y-auto py-4">
+                <div className="px-4 mb-4">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/70 mb-4 px-2">
+                    Collections
+                  </p>
+                  <nav className="space-y-1">
+                    <Link 
+                      href="/products" 
+                      className="group flex items-center justify-between px-3 py-3 rounded-xl transition-all duration-200 hover:bg-accent/10"
+                    >
+                      <span className="text-base font-medium">All Products</span>
+                      <ChevronDown className="h-4 w-4 -rotate-90 opacity-40 group-hover:opacity-100 transition-opacity" />
+                    </Link>
+                    
+                    {categories.map((category) => (
+                      <Link 
+                        key={category.id}
+                        href={`/products?category=${category.id}`}
+                        className="group flex items-center justify-between px-3 py-3 rounded-xl transition-all duration-200 hover:bg-accent/10"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center overflow-hidden shadow-sm">
+                             <img src={category.image} alt="" className="w-full h-full object-cover opacity-90" />
+                          </div>
+                          <span className="text-base font-medium">{category.name}</span>
+                        </div>
+                        <ChevronDown className="h-4 w-4 -rotate-90 opacity-40 group-hover:opacity-100 transition-opacity" />
+                      </Link>
+                    ))}
+                  </nav>
+                </div>
+              </div>
 
-      {/* 3. Featured Feature (AR) */}
-      <div className="px-4 mt-4">
-        <Link 
-          href="/ar-experience" 
-          className="relative overflow-hidden group flex items-center justify-between p-4 rounded-2xl bg-accent text-accent-foreground shadow-lg shadow-accent/20 transition-all active:scale-[0.98]"
-        >
-          <div className="relative z-10">
-            <p className="text-[10px] font-bold uppercase tracking-widest opacity-80 mb-1">New Tech</p>
-            <span className="text-lg font-bold">AR Experience</span>
-          </div>
-          {/* Subtle decorative circle for "glass" look */}
-          <div className="absolute -right-2 -top-2 w-16 h-16 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-all" />
-          <Search className="h-6 w-6 opacity-50" />
-        </Link>
-      </div>
-    </div>
+              {/* 3. Bottom Footer Section - NEW IMPROVED TOGGLE LOCATION */}
+              <div className="p-4 bg-muted/20 border-t border-border/40 space-y-3">
+                
+                {/* Theme Toggle Button - Integrated Look */}
+                <Button
+                  variant="outline"
+                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                  className="w-full h-12 justify-between px-4 rounded-2xl bg-background border border-border/50 shadow-sm transition-all active:scale-[0.98]"
+                >
+                  <div className="flex items-center gap-3">
+                    {mounted && (theme === 'dark' ? (
+                      <Sun className="h-5 w-5 text-yellow-500" />
+                    ) : (
+                      <Moon className="h-5 w-5 text-foreground" />
+                    ))}
+                    <span className="text-sm font-medium">
+                      {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+                    </span>
+                  </div>
+                  <div className={cn(
+                    "w-8 h-4 rounded-full relative transition-colors duration-300",
+                    theme === 'dark' ? "bg-accent" : "bg-muted"
+                  )}>
+                    <div className={cn(
+                      "absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all duration-300",
+                      theme === 'dark' ? "left-4.5" : "left-0.5"
+                    )} />
+                  </div>
+                </Button>
 
-    {/* 4. Bottom Footer Section */}
-    <div className="p-6 mt-auto bg-muted/20 border-t border-border/40">
-      <div className="grid grid-cols-2 gap-4">
-        <Link href="/account" className="flex flex-col items-center justify-center p-3 rounded-xl bg-background border border-border/50 hover:border-accent/50 transition-colors">
-          <User className="h-5 w-5 mb-1" />
-          <span className="text-xs font-medium">Account</span>
-        </Link>
-        <Link href="/wishlist" className="flex flex-col items-center justify-center p-3 rounded-xl bg-background border border-border/50 hover:border-accent/50 transition-colors">
-          <Heart className="h-5 w-5 mb-1" />
-          <span className="text-xs font-medium">Saved</span>
-        </Link>
-      </div>
-    </div>
-  </SheetContent>
-</Sheet>
+                <div className="grid grid-cols-2 gap-3">
+                  <Link href="/account" className="flex flex-col items-center justify-center p-4 rounded-2xl bg-background border border-border/50 shadow-sm hover:border-accent/50 transition-all active:scale-[0.98]">
+                    <User className="h-5 w-5 mb-1 text-foreground" />
+                    <span className="text-xs font-bold text-foreground">Account</span>
+                  </Link>
+                  <Link href="/wishlist" className="flex flex-col items-center justify-center p-4 rounded-2xl bg-background border border-border/50 shadow-sm hover:border-accent/50 transition-all active:scale-[0.98]">
+                    <Heart className="h-5 w-5 mb-1 text-foreground" />
+                    <span className="text-xs font-bold text-foreground">Saved</span>
+                  </Link>
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
 
           {/* Logo */}
           <Link href="/" className="flex items-center">
@@ -140,7 +143,6 @@ export function Header() {
             </span>
           </Link>
 
-          {/* Desktop Navigation */}
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
             <div className="relative group">
@@ -180,60 +182,47 @@ export function Header() {
             <Link href="/about" className="text-sm font-medium hover:text-accent transition-colors">
               About
             </Link>
-             
-              <form onSubmit={handleSearch} className="relative ml-4">
-    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-    
-    <Input
-      type="text"
-      placeholder="Search..."
-      value={searchQuery}
-      onChange={(e) => setSearchQuery(e.target.value)}
-      className="pl-9 w-[180px] focus:w-[220px] transition-all duration-200 "
-    />
-  </form>
+              
+            <form onSubmit={handleSearch} className="relative ml-4">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 w-[180px] focus:w-[220px] transition-all duration-200 "
+              />
+            </form>
           </nav>
 
-          {/* Actions */}
+          {/* Desktop Actions */}
           <div className="flex items-center gap-1 md:gap-2">
-            {/* Dark Mode Toggle Button */}
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              title="Toggle theme"
+              className="hidden md:inline-flex"
             >
-              {mounted && (theme === 'dark' ? (
-                <Sun className="h-5 w-5 text-yellow-500" />
-              ) : (
-                <Moon className="h-5 w-5" />
-              ))}
-              <span className="sr-only">Toggle theme</span>
+              {mounted && (theme === 'dark' ? <Sun className="h-5 w-5 text-yellow-500" /> : <Moon className="h-5 w-5" />)}
             </Button>
 
-            {/* Account */}
-            <Link href="/account">
+            <Link href="/account" className="hidden md:inline-block">
               <Button variant="ghost" size="icon">
                 <User className="h-5 w-5" />
-                <span className="sr-only">Account</span>
               </Button>
             </Link>
 
-{/* NEW: Wishlist Button */}
-  <Link href="/wishlist">
-    <Button variant="ghost" size="icon" className="relative">
-      <Heart className="h-5 w-5" />
-      {totalWishlistItems > 0 && (
-        <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-accent text-accent-foreground text-xs flex items-center justify-center">
-          {totalWishlistItems}
-        </span>
-      )}
-      <span className="sr-only">Wishlist</span>
-    </Button>
-  </Link>
+            <Link href="/wishlist" className="hidden md:inline-block">
+              <Button variant="ghost" size="icon" className="relative">
+                <Heart className="h-5 w-5" />
+                {totalWishlistItems > 0 && (
+                  <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-accent text-accent-foreground text-xs flex items-center justify-center">
+                    {totalWishlistItems}
+                  </span>
+                )}
+              </Button>
+            </Link>
 
-
-            {/* Cart */}
             <Button 
               variant="ghost" 
               size="icon" 
@@ -246,10 +235,7 @@ export function Header() {
                   {totalItems}
                 </span>
               )}
-              <span className="sr-only">Cart</span>
             </Button>
-
-            
           </div>
         </div>
       </div>

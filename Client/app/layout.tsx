@@ -44,7 +44,9 @@ export default function RootLayout({
     <CartProvider>
       <WishlistProvider>
 
-        {children}
+        <main className="min-h-screen w-full overflow-x-hidden px-4 sm:px-6 lg:px-8">
+    {children}
+  </main>
         <Toaster />
 
       </WishlistProvider>
