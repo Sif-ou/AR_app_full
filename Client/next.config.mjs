@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export', // هذا السطر هو الأهم للموبايل
+  /*output: 'export', // هذا السطر هو الأهم للموبايل*/
   images: { unoptimized: true },
   trailingSlash: true, // أضف هذا السطر لتحسين المسارات في الموبايل
   typescript: {
