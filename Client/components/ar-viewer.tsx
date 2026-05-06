@@ -41,6 +41,15 @@ export default function ARViewer({ product, onClose }: ARViewerProps) {
             {isMobile ? "View 3D Model or Start AR" : "3D Interactive Preview"}
           </p>
         </div>
+
+         {/* CENTER */}
+  <div className="absolute left-1/2 -translate-x-1/2 text-center">
+    {!isMobile && (
+      <p className="text-xs text-gray-400 font-semibold">
+        AR is only available on mobile
+      </p>
+    )}
+  </div>
         
         <button onClick={onClose} className="p-3 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
