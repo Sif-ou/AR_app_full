@@ -17,8 +17,8 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-
-const access_bot = 'https://ar-app-back-end.onrender.com/api/chat'
+// FIXED: Base URL without the trailing /api/chat to prevent duplication
+const BASE_URL = 'https://ar-app-back-end.onrender.com'
 
 interface Message {
   id: string
@@ -37,7 +37,7 @@ const initialMessages: Message[] = [
   }
 ]
 
-export function ChatbotWidget() {
+export default function ChatbotWidget() {
   const [isOpen, setIsOpen] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
   const [messages, setMessages] = useState<Message[]>(initialMessages)
@@ -73,10 +73,9 @@ export function ChatbotWidget() {
     setIsTyping(true)
 
     try {
-      // 2. Build URL with the 'prompt' parameter
-      // This matches your @RequestParam("prompt") in Spring Boot
+      // 2. Build URL correctly using URLSearchParams
       const params = new URLSearchParams({ prompt: messageText })
-      const requestUrl = `${access_bot}/api/chat?${params.toString()}`
+      const requestUrl = `${BASE_URL}/api/chat?${params.toString()}`
 
       // 3. Execute the Fetch
       const response = await fetch(requestUrl, {
@@ -88,7 +87,7 @@ export function ChatbotWidget() {
         throw new Error(`Server Error: ${response.status}`)
       }
 
-      // 4. Get the result from AI_ModelService
+      // 4. Get the text result from the Spring Boot backend
       const botReply = await response.text()
 
       const assistantMessage: Message = {
@@ -117,14 +116,6 @@ export function ChatbotWidget() {
       e.preventDefault()
       handleSend()
     }
-  }
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0
-    }).format(price)
   }
 
   return (
