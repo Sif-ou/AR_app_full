@@ -10,14 +10,13 @@ import {
   X, 
   Send, 
   Sparkles, 
-  Maximize2,
-  Minimize2,
-  Bot,
+  Maximize2, 
+  Minimize2, 
+  Bot, 
   User 
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-// FIXED: Base URL without the trailing /api/chat to prevent duplication
 const BASE_URL = 'https://ar-app-back-end.onrender.com'
 
 interface Message {
@@ -37,6 +36,7 @@ const initialMessages: Message[] = [
   }
 ]
 
+// Note: Exported as a named function to match your Page imports
 export function ChatbotWidget() {
   const [isOpen, setIsOpen] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
@@ -62,7 +62,6 @@ export function ChatbotWidget() {
     const messageText = text || inputValue.trim()
     if (!messageText) return
 
-    // 1. Add User Message to UI
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
@@ -73,21 +72,20 @@ export function ChatbotWidget() {
     setIsTyping(true)
 
     try {
-      // 2. Build URL correctly using URLSearchParams
-      const params = new URLSearchParams({ prompt: messageText })
-      const requestUrl = `${BASE_URL}/api/chat?${params.toString()}`
-
-      // 3. Execute the Fetch
-      const response = await fetch(requestUrl, {
-        method: 'GET',
-        headers: { 'Accept': 'application/json' }
+      // CHANGED: Switched from GET to POST for better reliability in production
+      const response = await fetch(`${BASE_URL}/api/chat`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json' 
+        },
+        body: JSON.stringify({ prompt: messageText })
       })
 
       if (!response.ok) {
         throw new Error(`Server Error: ${response.status}`)
       }
 
-      // 4. Get the text result from the Spring Boot backend
       const botReply = await response.text()
 
       const assistantMessage: Message = {
