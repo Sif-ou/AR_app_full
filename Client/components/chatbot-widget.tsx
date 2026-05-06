@@ -58,30 +58,58 @@ export function ChatbotWidget() {
     }
   }, [isOpen])
 
-const handleSend = async (text?: string) => {
-  const messageText = text || inputValue.trim();
-  if (!messageText) return;
+  const handleSend = async (text?: string) => {
+    const messageText = text || inputValue.trim()
+    if (!messageText) return
 
-  // ... (UI update logic)
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: messageText
+    }
+    setMessages(prev => [...prev, userMessage])
+    setInputValue('')
+    setIsTyping(true)
 
-  try {
-    const response = await fetch(`${BASE_URL}/api/chat`, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json', // Critical for the backend to see the data
-        'Accept': 'application/json' 
-      },
-      body: JSON.stringify({ prompt: messageText }) // Ensure the key is "prompt"
-    });
+    try {
+      // CHANGED: Switched from GET to POST for better reliability in production
+      const response = await fetch(`${BASE_URL}/api/chat`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json' 
+        },
+        body: JSON.stringify({ prompt: messageText })
+      })
 
-    if (!response.ok) throw new Error(`Server Error: ${response.status}`);
-    
-    const botReply = await response.text();
-    // ... (UI state update)
-  } catch (error) {
-    console.error("Connection Error:", error);
+      if (!response.ok) {
+        throw new Error(`Server Error: ${response.status}`)
+      }
+
+      const botReply = await response.text()
+
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: botReply,
+        products: [],
+        quickReplies: [] 
+      }
+
+      setMessages(prev => [...prev, assistantMessage])
+    } catch (error) {
+      console.error("Connection Error:", error)
+      setMessages(prev => [...prev, {
+        id: 'error',
+        role: 'assistant',
+        content: "I'm having trouble reaching the server. If this is the first message, Render might be waking up (please wait 30s)."
+      }])
+    } finally {
+      setIsTyping(false)
+    }
   }
-};
+
+
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
