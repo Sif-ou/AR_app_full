@@ -37,7 +37,7 @@ const initialMessages: Message[] = [
   }
 ]
 
-export default function ChatbotWidget() {
+export function ChatbotWidget() {
   const [isOpen, setIsOpen] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
   const [messages, setMessages] = useState<Message[]>(initialMessages)
