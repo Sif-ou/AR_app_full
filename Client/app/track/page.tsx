@@ -1,12 +1,12 @@
 'use client'
-
+import Link from 'next/link'
 import { useState } from 'react'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Package, Truck, MapPin, CheckCircle2, Search, Link } from 'lucide-react'
+import { Package, Truck, MapPin, CheckCircle2, Search } from 'lucide-react'
 
 const mockOrder = {//Order مزيف
   id: 'ORD-2024-001',
@@ -187,14 +187,11 @@ export default function TrackOrderPage() {
             <p className="text-muted-foreground mb-4">
               Need help with your order?
             </p>
-            
-            <Button variant="outline">
-              <Link href="/contact">
+            <Button variant="outline" asChild>
+    <Link href="/contact">
       Contact Support
     </Link>
-              
-              </Button>
-            
+  </Button>
           </div>
         </div>
       </main>
