@@ -136,7 +136,7 @@ export default function AboutPage() {
                 Meet the people behind ARFURN
               </h2>
             </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-4xl mx-auto">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-4xl mx-auto">
               {team.map((member) => (
                 <div key={member.name} className="text-center">
                   <div className="aspect-square rounded-full overflow-hidden mb-4 w-32 h-32 mx-auto">
