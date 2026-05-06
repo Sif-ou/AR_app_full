@@ -8,7 +8,7 @@ const testimonials = [
   {
     id: 1,
     content: "The AR feature completely changed how I shop for furniture. I was hesitant about buying a large sectional online, but seeing it in my actual living room gave me the confidence to make the purchase. It fits perfectly!",
-    author: "charlomonti",
+    author: "sara",
     role: "Interior Designer",
     image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&q=80",
     rating: 5
@@ -17,7 +17,7 @@ const testimonials = [
     id: 2,
     content: "Absolutely incredible technology. I spent hours trying different furniture pieces in my bedroom using AR. The visualization is so realistic that what I ordered looked exactly as expected when it arrived.",
     author: "hamida capitain",
-    role: "Home Owner",
+    role: "Ali",
     image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&q=80",
     rating: 5
   },
@@ -32,7 +32,7 @@ const testimonials = [
   {
     id: 4,
     content: "We furnished our entire new apartment using AR Smart Retail. The ability to try furniture before buying eliminated all the stress. Plus, the quality of everything we ordered exceeded expectations.",
-    author: "bassit & seif",
+    author: "aymen",
     role: "New Homeowners",
     image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&q=80",
     rating: 5

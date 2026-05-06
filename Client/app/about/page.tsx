@@ -30,10 +30,9 @@ const values = [
 ]
 
 const team = [
-  { name: 'Sarah ', role: 'CEO & Co-Founder', image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&q=80' },
-  { name: 'Ahmed', role: 'Head of Design', image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80' },
-  { name: 'Djamila', role: 'CTO', image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&q=80' },
-  { name: 'Youcef', role: 'Head of Operations', image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80' }
+  { name: 'Aymen ', image: 'https://wallpapers.com/images/hd/anonymous-profile-silhouette-b714qekh29tu1anb.jpg' },
+  { name: 'Ali', image: 'https://wallpapers.com/images/hd/anonymous-profile-silhouette-b714qekh29tu1anb.jpg' },
+  { name: 'Seif', image: 'https://wallpapers.com/images/hd/anonymous-profile-silhouette-b714qekh29tu1anb.jpg' },
 ]
 
 export default function AboutPage() {
@@ -148,7 +147,7 @@ export default function AboutPage() {
                     />
                   </div>
                   <h3 className="font-semibold">{member.name}</h3>
-                  <p className="text-sm text-muted-foreground">{member.role}</p>
+                  
                 </div>
               ))}
             </div>

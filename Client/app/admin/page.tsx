@@ -390,10 +390,12 @@ export default function AdminDashboard() {
                   <h1 className="text-2xl font-bold">Products</h1>
                   <p className="text-muted-foreground">{products.length} products in catalog</p>
                 </div>
-                <Button className="w-full sm:w-auto">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Product
-                </Button>
+                <Link href="/products">
+  <Button className="w-full sm:w-auto">
+    <Plus className="h-4 w-4 mr-2" />
+    Add Product
+  </Button>
+</Link>
               </div>
 
               <Card className="shadow-sm overflow-hidden">
