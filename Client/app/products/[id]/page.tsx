@@ -1,4 +1,6 @@
+
 'use client'
+
 export const dynamic = 'force-dynamic'; // أو استخدم التصدير التالي
 export const dynamicParams = true;
 import { useWishlist } from '@/lib/wishlist-context' 
