@@ -9,7 +9,7 @@ import java.util.Optional;
 @Repository
 public interface VariantsRepository extends JpaRepository<Variants, Long> {
     
-    List<Variants> findByProductId(Product product);
+    List<Variants> findByProduct(Product product);
     
 
     Optional<Variants> findBySku(String sku);

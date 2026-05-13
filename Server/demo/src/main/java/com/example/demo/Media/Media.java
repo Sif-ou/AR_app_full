@@ -21,7 +21,7 @@ public class Media {
 
 
     @ManyToOne 
-    @JoinColumn(name = "variant", referencedColumnName = "id" )
+    @JoinColumn(name = "variant_id", referencedColumnName = "id" )
     private Variants variant ;
 
     @Column(nullable = false)
@@ -29,9 +29,9 @@ public class Media {
 
     private String model_3d ;
 
-    public Media(Long id, Variants variant_id, String static_image, String model_3d) {
+    public Media(Long id, Variants variant, String static_image, String model_3d) {
         this.id = id;
-        this.variant = variant_id;
+        this.variant = variant;
         this.static_image = static_image;
         this.model_3d = model_3d;
     }
