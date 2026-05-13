@@ -11,7 +11,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
-//
 @Entity
 @Table(name = "medias")
 public class Media {
@@ -22,8 +21,8 @@ public class Media {
 
 
     @ManyToOne 
-    @JoinColumn(name = "variant_id", referencedColumnName = "id" )
-    private Variants variant_id ;
+    @JoinColumn(name = "variant", referencedColumnName = "id" )
+    private Variants variant ;
 
     @Column(nullable = false)
     private String static_image ;
@@ -32,7 +31,7 @@ public class Media {
 
     public Media(Long id, Variants variant_id, String static_image, String model_3d) {
         this.id = id;
-        this.variant_id = variant_id;
+        this.variant = variant_id;
         this.static_image = static_image;
         this.model_3d = model_3d;
     }
@@ -65,11 +64,11 @@ public class Media {
     }
 
     public Variants getVariant_id() {
-        return variant_id;
+        return variant;
     }
 
-    public void setVariant_id(Variants variant_id) {
-        this.variant_id = variant_id;
+    public void setVariant_id(Variants variant) {
+        this.variant = variant;
     }
 
 }

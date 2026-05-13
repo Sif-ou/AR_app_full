@@ -11,5 +11,5 @@ import java.util.List;
 public interface MediaRepository extends JpaRepository<Media, Long> {
     
 
-    List<Media> findByVariant_id(Variants variant_id) ;
+    List<Media> findByVariant(Variants variants) ;
 }
