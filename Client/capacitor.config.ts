@@ -1,10 +1,12 @@
-import { CapacitorConfig } from '@capacitor/cli';
+import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.example.app',
-  appName: 'Atelier AR',
-  webDir: 'out', // تأكد أنها out وليس public
-  
+  appId: 'com.arsmartretail.app',   
+  appName: 'AR Smart Retail',
+  webDir: 'out', 
+  server: {
+    androidScheme: 'https'
+  }
 };
 
 export default config;

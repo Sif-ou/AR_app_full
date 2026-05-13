@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">AR Smart Retail</string>
+    <string name="title_activity_main">AR Smart Retail</string>
+    <string name="package_name">com.arsmartretail.app</string>
+    <string name="custom_url_scheme">com.arsmartretail.app</string>
+</resources>
