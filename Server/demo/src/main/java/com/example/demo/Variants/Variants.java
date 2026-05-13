@@ -41,6 +41,9 @@ public class Variants {
     @Column(nullable = false)
     private int quantity ;
 
+    @Column(nullable = true)
+    private String description ;
+
 
     public Variants(Long id, Product product, Color color_id, String name, String sku , int percentage , int quantity) {
         this.id = id;

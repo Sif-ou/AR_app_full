@@ -1,6 +1,12 @@
 package com.example.demo.User;
+import java.util.Collection;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
 import com.example.demo.Role.Role;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -8,10 +14,17 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
+
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 
 @Entity
 @Table(name = "users") 
-public class User {
+public class User implements UserDetails {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,16 +34,18 @@ public class User {
 @JoinColumn(name = "role_id", referencedColumnName = "id")
     private Role role_id ;
 
+    @Column(nullable = false , unique = true )
     private String username;
+
+     @Column(nullable = false)
     private String password;
-    private String email;
+
+    private String email;    
+    
     private int phone_num;
+
     private String address;
     private boolean active;
-
-
-
-public User() {}
 
 
     public User(boolean active, String address, String email, Long id, String password, int phone_num, Role role_id, String username) {
@@ -56,8 +71,8 @@ public User() {}
         return this.role_id ;
     }
 
-    public void setRole_id(Role role) {
-    this.role_id = role;
+    public void setRole_id(Role role_id) {
+    this.role_id = role_id;
     }
     
     public String getUsername() {
@@ -106,6 +121,36 @@ public User() {}
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getAuthorities'");
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'isAccountNonExpired'");
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'isAccountNonLocked'");
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'isCredentialsNonExpired'");
+    }
+
+    @Override
+    public boolean isEnabled() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'isEnabled'");
     }
 
     
