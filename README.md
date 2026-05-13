@@ -4,7 +4,7 @@ Client folder:
 
    . Holds the front-end.
 
-   . Contents: (I’m still learning the ropes with React! :) )
+   . Contents
 
 Server folder:
 
