@@ -38,7 +38,7 @@ public class User implements UserDetails {
     @JoinColumn(name = "role_id", referencedColumnName = "id")
     private Role role; 
 
-    @Column(nullable = false, unique = true)
+    @Column( nullable = false, unique = true )
     private String username;
 
     @Column(nullable = false)
@@ -46,7 +46,7 @@ public class User implements UserDetails {
 
     private String email;
     
-    @Column(nullable = false)    
+    @Column( nullable = false , unique = true  )    
     private int phoneNum;
 
     private String address;
@@ -79,12 +79,12 @@ public class User implements UserDetails {
 
     @Override
     public String getPassword() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return this.password ;
     }
 
-    @Override
-    public String getUsername() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
+@Override
+public String getUsername() {
+    return this.username; 
+}
 
 }
