@@ -82,7 +82,8 @@ export default function ARViewer({ product, onClose }: ARViewerProps) {
             shadow-softness="1"
             environment-image="neutral"
             exposure="1"
-           
+            alt={`A 3D model of ${product.name}`}
+            style={{ width: '100%', height: '100%' }}
           >
             {/* This button only shows on Mobile when the 3D view is ready */}
             <button 
