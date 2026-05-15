@@ -1,7 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
+
+import { useRouter } from 'next/navigation' 
+
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -35,6 +39,7 @@ import {
   LogOut
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import router from 'next/router'
 
 
 const stats = [
@@ -91,8 +96,38 @@ const chatbotMetrics = {
 }
 
 export default function AdminDashboard() {
+  const [isAuthorized, setIsAuthorized] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [activeTab, setActiveTab] = useState('overview')
+
+
+  useEffect(() => {
+    // 1. Retrieve the user's token or profile. 
+    // Adjust this depending on how you store your Spring Boot JWT or user data.
+    const token = localStorage.getItem('token')
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+
+    // 2. Verify the Role-Based Access
+    if (!token || user.role !== 'ADMIN') {
+      // Redirect to the login page or a "Not Authorized" page
+      router.replace('/login') 
+    } else {
+      // User is verified as ADMIN, allow rendering
+      setIsAuthorized(true)
+    }
+  }, [router])
+
+  // 3. Show a loading state while verifying to prevent a flash of the dashboard
+  if (!isAuthorized) {
+    return (
+      <div className="min-h-screen bg-secondary flex flex-col items-center justify-center space-y-4">
+        <div className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-muted-foreground font-medium">Verifying admin credentials...</p>
+      </div>
+    )
+  }
+
+
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {
