@@ -16,8 +16,8 @@ const testimonials = [
   {
     id: 2,
     content: "Absolutely incredible technology. I spent hours trying different furniture pieces in my bedroom using AR. The visualization is so realistic that what I ordered looked exactly as expected when it arrived.",
-    author: "hamida capitain",
-    role: "Ali",
+    author: "mohamed",
+    role: "Doctor",
     image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&q=80",
     rating: 5
   },
@@ -33,7 +33,7 @@ const testimonials = [
     id: 4,
     content: "We furnished our entire new apartment using AR Smart Retail. The ability to try furniture before buying eliminated all the stress. Plus, the quality of everything we ordered exceeded expectations.",
     author: "aymen",
-    role: "New Homeowners",
+    role: "Chef",
     image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&q=80",
     rating: 5
   }
@@ -53,7 +53,7 @@ export function TestimonialsSection() {
   const current = testimonials[currentIndex]
 
   return (
-    <section className="py-20 bg-foreground text-background">
+    <section className="py-20 bg-foreground text-background"> 
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-12">
@@ -94,7 +94,7 @@ export function TestimonialsSection() {
               <div className="flex items-center justify-center gap-1 mt-4">
                 {Array.from({ length: current.rating }).map((_, i) => (
                   <span key={i} className="text-yellow-400 text-lg">★</span>
-                ))}
+                ))} 
               </div>
             </div>
           </div>
@@ -120,7 +120,7 @@ export function TestimonialsSection() {
                       ? 'w-8 bg-accent'
                       : 'bg-background/30 hover:bg-background/50'
                     }`}
-                />
+                /> //ida index == currentIndex, dot becomes wider and colored, otherwise it's a small gray dot that changes on hover
               ))}
             </div>
 

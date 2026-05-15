@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { categories } from '@/lib/data'
 import { ArrowRight } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils' //DMJ CSS CLASSES
 
 export function CategoriesSection() {
   return (
@@ -21,7 +21,7 @@ export function CategoriesSection() {
           </div>
           <Link 
             href="/products" 
-            className="text-sm font-semibold flex items-center gap-2 group hover:text-accent transition-colors shrink-0"
+            className="text-sm font-semibold flex items-center gap-2 group hover:text-accent transition-colors shrink-0" //group dir hover
           >
             View All Collections
             <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
@@ -38,7 +38,7 @@ export function CategoriesSection() {
                 "group relative overflow-hidden rounded-2xl shadow-sm transition-all duration-500 hover:shadow-xl",
                 // Mobile: All items take 1 row
                 // Desktop: Index 0 takes 2 cols and 2 rows
-                index === 0 ? "sm:col-span-2 sm:row-span-2" : "col-span-1"
+                index === 0 ? "sm:col-span-2 sm:row-span-2" : "col-span-1" // ida knt lwla dirha kbira ida lala normal
               )}
             >
               {/* Image Layer */}
@@ -46,7 +46,7 @@ export function CategoriesSection() {
                 <img 
                   src={category.image}
                   alt={category.name}
-                  className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                  className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110" //tzoomi ki dir hover
                 />
                 {/* Responsive Gradient - Darker on mobile for text readability */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent md:from-black/60 md:via-transparent" />
@@ -64,7 +64,7 @@ export function CategoriesSection() {
                   
                   {/* Hide long descriptions on small mobile, show on tablet+ */}
                   <p className={cn(
-                    "text-white/80 text-sm line-clamp-2 mb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden sm:block",
+                    "text-white/80 text-sm line-clamp-2 mb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden sm:block", 
                     index === 0 ? "md:max-w-md" : "max-w-xs"
                   )}>
                     {category.description}

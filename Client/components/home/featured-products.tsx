@@ -5,7 +5,7 @@ import { getFeaturedProducts } from '@/lib/data'
 import { ProductCard } from '@/components/product-card'
 import { Button } from '@/components/ui/button'
 import { ArrowRight, Sparkles } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils' 
 
 export function FeaturedProducts() {
   const products = getFeaturedProducts()
@@ -52,8 +52,8 @@ export function FeaturedProducts() {
             {products.map((product, index) => (
               <div 
                 key={product.id} 
-                className="min-w-[280px] sm:min-w-[320px] md:min-w-0 snap-center animate-in fade-in slide-in-from-bottom-4 duration-500"
-                style={{ animationDelay: `${index * 100}ms` }}
+                className="min-w-[280px] sm:min-w-[320px] md:min-w-0 snap-center animate-in fade-in slide-in-from-bottom-4 duration-500"  
+                style={{ animationDelay: `${index * 100}ms` }} //kol whda tji wra b3daha ykoon binthm delay
               >
                 <ProductCard product={product} />
               </div>
@@ -61,10 +61,10 @@ export function FeaturedProducts() {
           </div>
 
           {/* Subtle Mobile Scroll Indicator */}
-          <div className="flex md:hidden justify-center gap-1 mt-2">
+          <div className="flex md:hidden justify-center gap-1 mt-2"> 
             {products.slice(0, 4).map((_, i) => (
               <div key={i} className={cn("h-1 rounded-full bg-accent/20", i === 0 ? "w-4 bg-accent" : "w-1")} />
-            ))}
+            ))} // This creates a simple pagination dot indicator, with the first dot highlighted to indicate the current view.
           </div>
         </div>
 

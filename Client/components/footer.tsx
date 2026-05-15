@@ -57,7 +57,7 @@ export function Footer() {
         </div>
 
         {/* Bottom Section */}
-        <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-border/50 gap-6">
+        <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-border/50 gap-6"> 
           
           {/* Social Media - Responsive alignment */}
           <div className="flex items-center gap-3 order-2 md:order-1">

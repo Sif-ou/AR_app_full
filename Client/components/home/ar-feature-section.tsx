@@ -92,7 +92,7 @@ export function ARFeatureSection() {
               <div className="absolute top-8 left-8 right-8">
                 <div className="bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-lg max-w-[200px]">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />   
                     <span className="text-xs font-medium text-green-700">AR Active</span>
                   </div>
                   <p className="text-xs text-gray-600">Viewing: Nordica Sofa</p>

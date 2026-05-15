@@ -1,9 +1,8 @@
 'use client'
-import { Heart } from 'lucide-react'
 import { useWishlist } from '@/lib/wishlist-context'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import { Menu, Search, ShoppingBag, User, X, ChevronDown, Moon, Sun } from 'lucide-react'
+import { Menu, Search, ShoppingBag, User, X, ChevronDown, Moon, Sun, Heart } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
@@ -47,7 +46,7 @@ export function Header() {
             
             <SheetContent 
               side="left" 
-              className="w-[85%] max-w-[320px] p-0 flex flex-col bg-background/95 backdrop-blur-xl border-r border-border/50"
+              className="w-[85%] max-w-[320px] p-0 flex flex-col bg-background/95 backdrop-blur-xl border-r border-border/50" // Updated styles for a more modern look 
             >
               {/* 1. Sidebar Top Header - Clean Brand Only */}
               <div className="flex items-center p-6 pb-4 border-b border-border/40">
@@ -87,7 +86,7 @@ export function Header() {
                         </div>
                         <ChevronDown className="h-4 w-4 -rotate-90 opacity-40 group-hover:opacity-100 transition-opacity" />
                       </Link>
-                    ))}
+                    ))}// Added categories to mobile nav
                   </nav>
                 </div>
               </div>
@@ -114,11 +113,11 @@ export function Header() {
                   <div className={cn(
                     "w-8 h-4 rounded-full relative transition-colors duration-300",
                     theme === 'dark' ? "bg-accent" : "bg-muted"
-                  )}>
+                  )}> 
                     <div className={cn(
                       "absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all duration-300",
                       theme === 'dark' ? "left-4.5" : "left-0.5"
-                    )} />
+                    )} />   // Custom animated switch toggle
                   </div>
                 </Button>
 
@@ -168,7 +167,7 @@ export function Header() {
                       <h3 className="font-medium text-sm">{category.name}</h3>
                       <p className="text-xs text-muted-foreground">{category.productCount} products</p>
                     </Link>
-                  ))}
+                  ))} // Added category images and product counts to desktop dropdown
                 </div>
               </div>
             </div>
@@ -218,8 +217,8 @@ export function Header() {
                 {totalWishlistItems > 0 && (
                   <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-accent text-accent-foreground text-xs flex items-center justify-center">
                     {totalWishlistItems}
-                  </span>
-                )}
+                  </span> // tht nomro 3la wishlist
+                )}   
               </Button>
             </Link>
 
