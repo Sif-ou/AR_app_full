@@ -50,26 +50,26 @@ export function ChatbotWidget() {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
-  }, [messages, isTyping])
+  }, [messages, isTyping]) // ykhliha tscrolli ltaht kol ma yji message jdida aw ykoun isTyping true
 
   useEffect(() => {
     if (isOpen && inputRef.current) {
       inputRef.current.focus()
     }
-  }, [isOpen])
+  }, [isOpen]) // ykhliha tfocusi linput kol ma tft7 lchat
 
   const handleSend = async (text?: string) => {
-    const messageText = text || inputValue.trim()
-    if (!messageText) return
+    const messageText = text || inputValue.trim() 
+    if (!messageText) return 
 
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
       content: messageText
-    }
+    } 
     setMessages(prev => [...prev, userMessage])
     setInputValue('')
-    setIsTyping(true)
+    setIsTyping(true)    //يضيف رسالة العميل فوراً لشاشة العرض ويبدأ في عرض "Assistant is thinking..." أثناء انتظار الرد من الخادم
 
     try {
       // CHANGED: Switched from GET to POST for better reliability in production
@@ -94,11 +94,11 @@ export function ChatbotWidget() {
         content: botReply,
         products: [],
         quickReplies: [] 
-      }
+      } 
 
       setMessages(prev => [...prev, assistantMessage])
     } catch (error) {
-      console.error("Connection Error:", error)
+      console.error("Connection Error:", error) 
       setMessages(prev => [...prev, {
         id: 'error',
         role: 'assistant',
@@ -116,7 +116,7 @@ export function ChatbotWidget() {
       e.preventDefault()
       handleSend()
     }
-  }
+  } // Allows users to send messages by pressing Enter, while Shift+Enter creates a new line in the input field.
 
   return (
     <>
@@ -154,10 +154,10 @@ export function ChatbotWidget() {
 
           <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.map((m) => (
-              <div key={m.id} className={cn("flex gap-3", m.role === 'user' && "flex-row-reverse")}>
+              <div key={m.id} className={cn("flex gap-3", m.role === 'user' && "flex-row-reverse")}>  
                 <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0", m.role === 'assistant' ? "bg-accent/10" : "bg-muted")}>
                   {m.role === 'assistant' ? <Bot className="h-4 w-4 text-accent" /> : <User className="h-4 w-4 text-muted-foreground" />}
-                </div>
+                </div> 
                 <div className={cn("flex-1", m.role === 'user' && "text-right")}>
                   <div className={cn("rounded-xl px-4 py-2 inline-block max-w-[90%] text-sm shadow-sm", m.role === 'assistant' ? "bg-muted" : "bg-accent text-accent-foreground")}>
                     {m.content}
@@ -173,7 +173,7 @@ export function ChatbotWidget() {
                   )}
                 </div>
               </div>
-            ))}
+            ))} 
             {isTyping && <div className="text-xs text-muted-foreground animate-pulse px-12">Assistant is thinking...</div>}
           </div>
 

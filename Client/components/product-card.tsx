@@ -16,7 +16,7 @@ interface ProductCardProps {
   variant?: 'default' | 'compact'
 }
 
-export function ProductCard({ product, variant = 'default' }: ProductCardProps) {
+export function ProductCard({ product, variant = 'default' }: ProductCardProps) { 
   const [isHovered, setIsHovered] = useState(false)
   const [selectedColorIndex, setSelectedColorIndex] = useState(0)
 
@@ -34,7 +34,7 @@ export function ProductCard({ product, variant = 'default' }: ProductCardProps) 
   }
 
   const handleAddToCart = (e: React.MouseEvent) => {
-    e.preventDefault()
+    e.preventDefault() 
     e.stopPropagation()
 
     addItem(product, product.colors[selectedColorIndex].name)
@@ -100,7 +100,7 @@ export function ProductCard({ product, variant = 'default' }: ProductCardProps) 
           {/* Quick Action Overlay - Hidden on touch devices, shown on hover for desktop */}
           <div
             className={cn(
-              'absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/40 to-transparent transition-all duration-300 hidden lg:flex gap-2 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100',
+              'absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/40 to-transparent transition-all duration-300 hidden lg:flex gap-2 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100',  
             )}
           >
             <Button
@@ -118,9 +118,9 @@ export function ProductCard({ product, variant = 'default' }: ProductCardProps) 
               className="px-3 shadow-lg"
               onClick={handleFavorite}
             >
-              <Heart className={cn('h-4 w-4 transition-colors', liked && 'fill-accent text-accent')} />
+              <Heart className={cn('h-4 w-4 transition-colors', liked && 'fill-accent text-accent')}   /> 
             </Button>
-          </div>
+          </div> 
           
           {/* Mobile-only Quick Like Button */}
           <button 

@@ -86,7 +86,7 @@ export function Header() {
                         </div>
                         <ChevronDown className="h-4 w-4 -rotate-90 opacity-40 group-hover:opacity-100 transition-opacity" />
                       </Link>
-                    ))}// Added categories to mobile nav
+                    ))}
                   </nav>
                 </div>
               </div>
@@ -117,7 +117,7 @@ export function Header() {
                     <div className={cn(
                       "absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all duration-300",
                       theme === 'dark' ? "left-4.5" : "left-0.5"
-                    )} />   // Custom animated switch toggle
+                    )} />   
                   </div>
                 </Button>
 
@@ -167,7 +167,7 @@ export function Header() {
                       <h3 className="font-medium text-sm">{category.name}</h3>
                       <p className="text-xs text-muted-foreground">{category.productCount} products</p>
                     </Link>
-                  ))} // Added category images and product counts to desktop dropdown
+                  ))} 
                 </div>
               </div>
             </div>
