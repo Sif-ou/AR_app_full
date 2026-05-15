@@ -32,11 +32,11 @@ export default function ARViewer({ product, onClose }: ARViewerProps) {
   const modelSrc = product.arModel || "https://modelviewer.dev/shared-assets/models/Astronaut.glb";
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col bg-white">
+    <div className="fixed inset-0 z-[100] flex flex-col bg-white"> // Fullscreen overlay with white background
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b bg-white shadow-sm">
         <div className="text-left">
-          <h3 className="font-bold text-lg leading-none">{product.name}</h3>
+          <h3 className="font-bold text-black text-lg leading-none">{product.name}</h3>
           <p className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1 font-semibold">
             {isMobile ? "View 3D Model or Start AR" : "3D Interactive Preview"}
           </p>
