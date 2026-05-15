@@ -5,7 +5,7 @@ import React, { useEffect, useState } from 'react';
 interface ARViewerProps {
   product: any; 
   onClose: () => void;
-}
+} 
 
 export default function ARViewer({ product, onClose }: ARViewerProps) {
   const [isMobile, setIsMobile] = useState(false);
@@ -17,7 +17,7 @@ export default function ARViewer({ product, onClose }: ARViewerProps) {
       import('@google/model-viewer').then(() => {
         setLoaded(true); // Only show the viewer once the library is ready
       }).catch(console.error);
-    }
+    } 
     
     const checkMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     setIsMobile(checkMobile);
