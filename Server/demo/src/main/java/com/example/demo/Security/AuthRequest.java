@@ -3,27 +3,21 @@ package com.example.demo.Security;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+
+@Setter
+@Getter
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class AuthRequest {
 
-    private String email;
-    private String password ;
-    private int phone_num ;
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    
+    private String identifier; // This will hold either the Email or Phone Number
+    private String password;
 
 
 }

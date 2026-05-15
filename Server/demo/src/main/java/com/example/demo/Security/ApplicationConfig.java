@@ -30,14 +30,13 @@ public ApplicationConfig(UserRepository userRepository) {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 
-    @Bean
-    public AuthenticationProvider authenticationProvider(UserDetailsService myUserDetailsService, PasswordEncoder myPasswordEncoder) {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-
-        authProvider.setUserDetailsService(myUserDetailsService);
-        authProvider.setPasswordEncoder(myPasswordEncoder);
-        return authProvider;
-    }
+@Bean
+public AuthenticationProvider authenticationProvider() {
+    DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+    authProvider.setUserDetailsService(userDetailsService());
+    authProvider.setPasswordEncoder(passwordEncoder());
+    return authProvider;
+}
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {

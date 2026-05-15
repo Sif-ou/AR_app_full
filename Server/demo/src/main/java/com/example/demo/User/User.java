@@ -1,8 +1,10 @@
 package com.example.demo.User;
 import java.util.Collection;
+import java.util.List;
 
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails ;
 
 import com.example.demo.Role.Role;
 
@@ -16,12 +18,14 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
+
+@Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-
 @Entity
 @Table(name = "users") 
 public class User implements UserDetails {
@@ -30,128 +34,54 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-@ManyToOne 
-@JoinColumn(name = "role_id", referencedColumnName = "id")
-    private Role role_id ;
+    @ManyToOne 
+    @JoinColumn(name = "role_id", referencedColumnName = "id")
+    private Role role; 
 
-    @Column(nullable = false , unique = true )
+    @Column(nullable = false, unique = true)
     private String username;
 
-     @Column(nullable = false)
+    @Column(nullable = false)
     private String password;
 
     private String email;    
-    
-    private int phone_num;
-
+    private int phoneNum;
     private String address;
     private boolean active;
 
-
-    public User(boolean active, String address, String email, Long id, String password, int phone_num, Role role_id, String username) {
-        this.active = active;
-        this.address = address;
-        this.email = email;
-        this.id = id;
-        this.password = password;
-        this.phone_num = phone_num;
-        this.role_id = role_id;
-        this.username = username;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Role getRole_id() {
-        return this.role_id ;
-    }
-
-    public void setRole_id(Role role_id) {
-    this.role_id = role_id;
-    }
-    
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public int getPhone_num() {
-        return phone_num;
-    }
-
-    public void setPhone_num(int phone_num) {
-        this.phone_num = phone_num;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
-    public boolean isActive() {
-        return active;
-    }
-
-    public void setActive(boolean active) {
-        this.active = active;
-    }
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getAuthorities'");
+        return List.of(new SimpleGrantedAuthority(role.getRoleName())); 
     }
 
     @Override
     public boolean isAccountNonExpired() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'isAccountNonExpired'");
+        return true; 
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'isAccountNonLocked'");
+        return true;
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'isCredentialsNonExpired'");
+        return true;
     }
 
     @Override
     public boolean isEnabled() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'isEnabled'");
+        return this.active; // Use your active boolean here
     }
 
-    
+    @Override
+    public String getPassword() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public String getUsername() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
 }

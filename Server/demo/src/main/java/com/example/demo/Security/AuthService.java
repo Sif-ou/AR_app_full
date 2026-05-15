@@ -1,15 +1,13 @@
 package com.example.demo.Security;
 
-import com.example.demo.Security.AuthRequest;
-import com.example.demo.Security.AuthResponse;
-import com.example.demo.Security.RegisterRequest;
+import com.example.demo.Role.Role;
+import com.example.demo.Role.RoleRepository;
 
 import com.example.demo.User.User;
 import com.example.demo.User.UserRepository;
-import com.example.demo.Security.JwtService;
 
 
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,72 +20,55 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final RoleRepository roleRepository ;
 
-
-    public AuthService ( UserRepository userRepository ,  PasswordEncoder passwordEncoder , JwtService jwtService , AuthenticationManager authenticationManager ) 
-    {
-        this.userRepository = userRepository ;
-        this.passwordEncoder = passwordEncoder ;
-        this.jwtService = jwtService ;
-        this.authenticationManager = authenticationManager ;
-    }
+public AuthService (UserRepository userRepository, PasswordEncoder passwordEncoder, 
+                    JwtService jwtService, AuthenticationManager authenticationManager,
+                    RoleRepository roleRepository) 
+{
+    this.userRepository = userRepository;
+    this.passwordEncoder = passwordEncoder;
+    this.jwtService = jwtService;
+    this.authenticationManager = authenticationManager;
+    this.roleRepository = roleRepository; 
+}
 
 
 public AuthResponse register(RegisterRequest request) {
+    Role userRole = roleRepository.findByRoleName("CLIENT")
+        .orElseThrow(() -> new RuntimeException("Role not found"));
+
     var user = User.builder()
-            .username( request.getUsername())
+            .username(request.getUsername())
             .email(request.getEmail())
+            .phoneNum(request.getPhoneNum())
             .password(passwordEncoder.encode(request.getPassword()))
-            .role_id("CLIENT") 
+            .role(userRole) 
+            .active(true)
             .build();
 
     userRepository.save(user);
-
     var jwt = jwtService.generateToken(user);
-
-    return AuthResponse.builder()
-            .token(jwt)
-            .build();
+    return AuthResponse.builder().token(jwt).build();
 }
 
-    /*public AuthResponse register(RegisterRequest request) {
-        // Create new user with encoded password
-        var user = User.builder()
-                .username(request.getUsername())
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .role_id()("CLIENT")
-                .build();
 
-        // Save to database
-        userRepository.save(user);
+public AuthResponse authenticate(AuthRequest request) {
+        // Find user by Email or Phone
+        var user = userRepository.findByIdentifier(request.getIdentifier())
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Generate JWT for immediate login after registration
-        var jwt = jwtService.generateToken(user);
-
-        return AuthResponse.builder()
-                .token(jwt)
-                .build();
-    }*/
-
-    public AuthResponse authenticate(AuthRequest request) {
-        // Let Spring Security validate credentials
+        // Authenticate using the username associated with that account
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        request.getUsername(),
-                        request.getPassword() 
+                        user.getUsername(),
+                        request.getPassword()
                 )
         );
 
-        // If we get here, credentials are valid
-        var user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow();
-
-        // Generate and return JWT
         var jwt = jwtService.generateToken(user);
-
-        return AuthResponse.builder()
-                .token(jwt)
-                .build();
+        return AuthResponse.builder().token(jwt).build();
     }
+
+
 }

@@ -24,10 +24,12 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter ;
     private final UserDetailsService userDetailsService ;
+    private final AuthenticationProvider authenticationProvider;
 
-public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter, UserDetailsService userDetailsService) {
+public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter, UserDetailsService userDetailsService , AuthenticationProvider authenticationProvider ) {
     this.jwtAuthFilter = jwtAuthFilter;
     this.userDetailsService = userDetailsService;
+    this.authenticationProvider = authenticationProvider;
 }
 
     @Bean
@@ -51,7 +53,7 @@ public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter, UserDetailsService 
             )
 
             // Use our custom authentication provider
-            .authenticationProvider(authenticationProvider())
+            .authenticationProvider(authenticationProvider)
 
             // Add JWT filter before the standard authentication filter
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
@@ -59,21 +61,8 @@ public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter, UserDetailsService 
         return http.build();
     }
 
-    @Bean
-    public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService);
-        authProvider.setPasswordEncoder(passwordEncoder());
-        return authProvider;
-    }
 
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
+    /*public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
-    }
+    }*/
 }

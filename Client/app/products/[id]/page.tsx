@@ -1,5 +1,5 @@
 import { products } from '@/lib/data';
-import MyOriginalPage from './ProductPageClient'; // We will rename your current file to this
+import MyOriginalPage from './ProductPageClient'; 
 
 export async function generateStaticParams() {
   return products.map((p) => ({ id: p.id }));
