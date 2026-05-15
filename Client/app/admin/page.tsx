@@ -101,23 +101,18 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview')
 
 
-  useEffect(() => {
-    // 1. Retrieve the user's token or profile. 
-    // Adjust this depending on how you store your Spring Boot JWT or user data.
+useEffect(() => {
     const token = localStorage.getItem('token')
     const user = JSON.parse(localStorage.getItem('user') || '{}')
 
-    // 2. Verify the Role-Based Access
     if (!token || user.role !== 'ADMIN') {
-      // Redirect to the login page or a "Not Authorized" page
-      router.replace('/login') 
+      router.replace('/account') 
     } else {
-      // User is verified as ADMIN, allow rendering
       setIsAuthorized(true)
     }
   }, [router])
 
-  // 3. Show a loading state while verifying to prevent a flash of the dashboard
+ 
   if (!isAuthorized) {
     return (
       <div className="min-h-screen bg-secondary flex flex-col items-center justify-center space-y-4">
