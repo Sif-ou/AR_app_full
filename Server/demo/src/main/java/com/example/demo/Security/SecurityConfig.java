@@ -43,6 +43,8 @@ public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter, UserDetailsService 
                 // Public endpoints - no auth required
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/public/**").permitAll()
+                .requestMatchers("/api/chat/**").permitAll()
+
                 // Everything else requires authentication
                 .anyRequest().authenticated()
             )
