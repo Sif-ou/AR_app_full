@@ -44,8 +44,11 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String password;
 
-    private String email;    
+    private String email;
+    
+    @Column(nullable = false)    
     private int phoneNum;
+
     private String address;
     private boolean active;
 

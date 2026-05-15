@@ -69,10 +69,9 @@ export function ChatbotWidget() {
     } 
     setMessages(prev => [...prev, userMessage])
     setInputValue('')
-    setIsTyping(true)    //يضيف رسالة العميل فوراً لشاشة العرض ويبدأ في عرض "Assistant is thinking..." أثناء انتظار الرد من الخادم
+    setIsTyping(true)  
 
     try {
-      // CHANGED: Switched from GET to POST for better reliability in production
       const response = await fetch(`${BASE_URL}/api/chat`, {
         method: 'POST',
         headers: { 
