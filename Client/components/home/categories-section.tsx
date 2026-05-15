@@ -10,7 +10,7 @@ export function CategoriesSection() {
     <section className="py-12 md:py-24 bg-secondary/30">
       <div className="container mx-auto px-4 sm:px-6">
         {/* Header - Improved for mobile spacing */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10 md:mb-16">// 3MODDI on mobile, align bottom on desktop
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10 md:mb-16">
           <div className="max-w-xl">
             <h2 className="font-serif text-3xl md:text-5xl font-bold mb-4 tracking-tight">
               Shop by Category

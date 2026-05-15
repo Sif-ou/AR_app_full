@@ -217,8 +217,8 @@ export function Header() {
                 {totalWishlistItems > 0 && (
                   <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-accent text-accent-foreground text-xs flex items-center justify-center">
                     {totalWishlistItems}
-                  </span>
-                )} // tht nomro 3la wishlist
+                  </span> // tht nomro 3la wishlist
+                )}   
               </Button>
             </Link>
 
