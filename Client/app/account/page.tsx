@@ -69,22 +69,99 @@ export default function AccountPage() {
                     </TabsTrigger>
                   </TabsList>
 
-                  <TabsContent value="login">
-                    <form onSubmit={(e) => { e.preventDefault(); setIsLoggedIn(true); }} className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input id="email" type="email" placeholder="Enter your email" required />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="password">Password</Label>
-                        <Input id="password" type="password" placeholder="Enter your password" required />
-                      </div>
-                      <Button type="submit" className="w-full">Sign In</Button>
-                      <p className="text-center text-sm text-muted-foreground">
-                        <a href="#" className="text-accent hover:underline">Forgot your password?</a>
-                      </p>
-                    </form>
-                  </TabsContent>
+<TabsContent value="login">
+  <form 
+    onSubmit={async (e) => { 
+      e.preventDefault(); 
+      
+      // 1. Grab whatever they typed (could be an email or a phone number)
+      const userInput = e.target.identifier.value;
+      const passwordInput = e.target.password.value;
+
+      setLoading(true);
+      setStatusMessage('');
+
+      try {
+        const response = await fetch('https://ar-app-back-end.onrender.com/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({ 
+            identifier: userInput , 
+            password: passwordInput 
+          })
+        });
+
+        if (response.ok) {
+          const data = await response.json(); 
+
+          // 2. Save the session token and role profile
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('userRole', data.role);
+
+          setStatusMessage('Welcome back! Logging you in... 🎉');
+          setIsLoggedIn(true);
+
+          // 3. Kick them over to their specific dashboard workspace
+          setTimeout(() => {
+            if (data.role === 'ADMIN') {
+              window.location.href = '/admin/dashboard';
+            } else {
+              window.location.href = '/home';
+            }
+          }, 1000);
+
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          setStatusMessage(errorData.message || 'Invalid credentials. Please try again.');
+        }
+      } catch (error) {
+        setStatusMessage('Network error. Could not reach backend authentication server.');
+      } finally {
+        setLoading(false);
+      }
+    }} 
+    className="space-y-4"
+  >
+    <div className="space-y-2">
+      <Label htmlFor="identifier">Email or Phone Number</Label>
+      <Input 
+        id="identifier" 
+        name="identifier" 
+        type="text"       
+        placeholder="username@email.com or 0555123456" 
+        required 
+      />
+    </div>
+    
+    <div className="space-y-2">
+      <Label htmlFor="password">Password</Label>
+      <Input 
+        id="password" 
+        name="password" 
+        type="password" 
+        placeholder="Enter your password" 
+        required 
+      />
+    </div>
+
+    <Button type="submit" className="w-full" disabled={loading}>
+      {loading ? 'Authenticating...' : 'Sign In'}
+    </Button>
+
+    {statusMessage && (
+      <p className={`text-sm font-medium mt-2 text-center ${statusMessage.includes('🎉') ? 'text-green-600' : 'text-red-500'}`}>
+        {statusMessage}
+      </p>
+    )}
+
+    <p className="text-center text-sm text-muted-foreground">
+      <a href="#" className="text-accent hover:underline">Forgot your password?</a>
+    </p>
+  </form>
+</TabsContent>
 
                   {/* --- Updated Registration Content Tab --- */}
                   <TabsContent value="register">
