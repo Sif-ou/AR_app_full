@@ -110,7 +110,7 @@ export default function AccountPage() {
                             body: JSON.stringify({ 
                               username: username,
                               email: email,
-                              phoneNumber: phoneNumber,
+                              phoneNum: phoneNumber,
                               password: password 
                             })
                           });

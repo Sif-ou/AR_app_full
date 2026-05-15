@@ -36,7 +36,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-// Mock data for dashboard
+
 const stats = [
   { 
     title: 'Total Revenue', 
