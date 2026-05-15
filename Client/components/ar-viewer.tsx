@@ -32,7 +32,7 @@ export default function ARViewer({ product, onClose }: ARViewerProps) {
   const modelSrc = product.arModel || "https://modelviewer.dev/shared-assets/models/Astronaut.glb";
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col bg-white"> // Fullscreen overlay with white background
+    <div className="fixed inset-0 z-[100] flex flex-col bg-white"> 
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b bg-white shadow-sm">
         <div className="text-left">
@@ -55,9 +55,9 @@ export default function ARViewer({ product, onClose }: ARViewerProps) {
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
+          </svg> 
         </button>
-      </div>
+      </div> 
 
       {/* Main 3D Stage */}
       <div className="flex-1 relative bg-[#f8f8f8]">
@@ -82,9 +82,7 @@ export default function ARViewer({ product, onClose }: ARViewerProps) {
             shadow-softness="1"
             environment-image="neutral"
             exposure="1"
-            poster={product.images ? product.images[0] : ""}
-            alt={`A 3D model of ${product.name}`}
-            style={{ width: '100%', height: '100%' }}
+           
           >
             {/* This button only shows on Mobile when the 3D view is ready */}
             <button 
