@@ -14,6 +14,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 
@@ -35,11 +37,16 @@ public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter, UserDetailsService 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+
+            .cors(cors -> cors.configure(http))
             // Disable CSRF - not needed for stateless JWT auth
             .csrf(csrf -> csrf.disable())
 
             // Configure authorization rules
             .authorizeHttpRequests(auth -> auth
+
+                .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+
                 // Public endpoints - no auth required
                 .requestMatchers("/api/auth/register").permitAll()
                 .requestMatchers("/api/auth/login").permitAll()
@@ -64,6 +71,20 @@ public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter, UserDetailsService 
         return http.build();
     }
 
+
+
+@Bean
+public WebMvcConfigurer corsConfigurer() {
+    return new WebMvcConfigurer() {
+        @Override
+        public void addCorsMappings(CorsRegistry registry) {
+            registry.addMapping("/**")
+                    .allowedOrigins("*") 
+                    .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                    .allowedHeaders("*");
+        }
+    };
+}
 
     /*public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
