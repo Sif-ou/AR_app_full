@@ -12,8 +12,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByUsername(String username);
 
 
-    @Query("SELECT u FROM User u WHERE u.email = :id OR CAST(u.phoneNum AS string) = :id")
-    Optional<User> findByIdentifier(@Param("id") String identifier);
+    Optional<User> findByEmail(String email);
+
+
+    Optional<User> findByPhoneNum(int phoneNum);
+
+/*
+@Query("SELECT u FROM User u WHERE u.email = :id OR CONCAT(u.phoneNum, '') = :id")
+Optional<User> findByIdentifier(@Param("id") String identifier);*/
 
 
 }

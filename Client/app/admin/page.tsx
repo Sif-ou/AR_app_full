@@ -1,7 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
+
+import { useRouter } from 'next/navigation' 
+
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -35,8 +39,9 @@ import {
   LogOut
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import router from 'next/router'
 
-// Mock data for dashboard
+
 const stats = [
   { 
     title: 'Total Revenue', 
@@ -91,8 +96,33 @@ const chatbotMetrics = {
 }
 
 export default function AdminDashboard() {
+  const [isAuthorized, setIsAuthorized] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [activeTab, setActiveTab] = useState('overview')
+
+
+useEffect(() => {
+    const token = localStorage.getItem('token')
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+
+    if (!token || user.role !== 'ADMIN') {
+      router.replace('/account') 
+    } else {
+      setIsAuthorized(true)
+    }
+  }, [router])
+
+ 
+  if (!isAuthorized) {
+    return (
+      <div className="min-h-screen bg-secondary flex flex-col items-center justify-center space-y-4">
+        <div className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-muted-foreground font-medium">Verifying admin credentials...</p>
+      </div>
+    )
+  }
+
+
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {

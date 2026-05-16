@@ -54,6 +54,42 @@ public AuthResponse register(RegisterRequest request) {
 
 
 public AuthResponse authenticate(AuthRequest request) {
+    String identifier = request.getIdentifier();
+    
+    // 1. Find user by Email or Phone using type-safe parsing in Java
+    User user = userRepository.findByEmail(identifier)
+            .orElseGet(() -> {
+                // If not found by email, check if the identifier string is entirely numbers
+                if (identifier != null && identifier.matches("\\d+")) {
+                    try {
+                        int phone = Integer.parseInt(identifier);
+                        return userRepository.findByPhoneNum(phone).orElse(null);
+                    } catch (NumberFormatException e) {
+                        return null; // Fallback protection if number is too massive for an int
+                    }
+                }
+                return null;
+            });
+
+    // 2. If neither search finds a record, throw the explicit exception
+    if (user == null) {
+        throw new RuntimeException("User not found");
+    }
+
+    // 3. Authenticate using the username associated with that account
+    authenticationManager.authenticate(
+            new UsernamePasswordAuthenticationToken(
+                    user.getUsername(),
+                    request.getPassword()
+            )
+    );
+
+    // 4. Everything matches! Generate and return your JWT token payload
+    var jwt = jwtService.generateToken(user);
+    return AuthResponse.builder().token(jwt).build();
+}
+
+/*public AuthResponse authenticate(AuthRequest request) {
         // Find user by Email or Phone
         var user = userRepository.findByIdentifier(request.getIdentifier())
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -69,6 +105,6 @@ public AuthResponse authenticate(AuthRequest request) {
         var jwt = jwtService.generateToken(user);
         return AuthResponse.builder().token(jwt).build();
     }
-
+*/
 
 }
