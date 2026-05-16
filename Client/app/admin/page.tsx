@@ -106,7 +106,7 @@ export default function AdminDashboard() {
     const userRole = localStorage.getItem('userRole')
 
     if (!token || userRole !== 'ADMIN') {
-      router.replace('/account') 
+      router.replace('/admin') 
     } else {
       // Sync names dynamically if they exist in localStorage session tracking
       const savedName = localStorage.getItem('username')
@@ -147,7 +147,7 @@ export default function AdminDashboard() {
 
   const handleLogout = () => {
     localStorage.clear()
-    router.push('/account')
+    router.push('')
   }
 
   return (
