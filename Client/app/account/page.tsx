@@ -118,7 +118,7 @@ useEffect(() => {
           setIsLoggedIn(true);
 
           setIsLoggedIn(true)
-    router.push('/')
+    router.push('/home')
           // 3. Kick them over to their specific dashboard workspace
           setTimeout(() => {
             if (data.role === 'ADMIN') {
@@ -183,8 +183,7 @@ useEffect(() => {
                     <form 
                       onSubmit={async (e) => { 
                         e.preventDefault(); 
-                        setIsLoggedIn(true)
-    router.push('/account')
+    
                         if (password !== confirmPassword) {
                           setStatusMessage("Passwords do not match!");
                           return;
@@ -211,6 +210,8 @@ useEffect(() => {
                           if (response.ok) {
                             setStatusMessage('Successfully registered! 🎉');
                             setUsername(''); setEmail(''); setPhoneNumber(''); setPassword(''); setConfirmPassword('');
+                                                setIsLoggedIn(true)
+    router.push('/account')
                           } else {
                             const errorData = await response.json().catch(() => ({}));
                             setStatusMessage(errorData.message || `Registration failed: ${response.status}`);
@@ -368,7 +369,7 @@ useEffect(() => {
     localStorage.removeItem('token')
     localStorage.removeItem('userRole')
     setIsLoggedIn(false)
-    router.push('/')
+    router.push('/home')
   }}
 >
   Sign Out
