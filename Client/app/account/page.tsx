@@ -27,6 +27,7 @@ export default function AccountPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [statusMessage, setStatusMessage] = useState('')
+  const [isCheckingRole, setIsCheckingRole] = useState(true)
 
   // State to hold active logged-in user profile details dynamically
   const [loggedInUser, setLoggedInUser] = useState({
@@ -43,6 +44,8 @@ export default function AccountPage() {
     wishlist: ['nordica-sofa', 'aurora-armchair']
   })
 
+
+
   // Helper function to navigate based on role cleanly
   const handleRoleRedirect = (role: string) => {
     if (role === 'ADMIN') {
@@ -53,6 +56,7 @@ export default function AccountPage() {
   }
 
   useEffect(() => {
+
     const token = localStorage.getItem('token')
     const savedName = localStorage.getItem('username')
     const savedEmail = localStorage.getItem('userEmail')
@@ -62,6 +66,7 @@ export default function AccountPage() {
       if (savedRole === 'ADMIN') {
         
         router.push('/admin')
+        return;
       }
 
     if (token) {
@@ -72,6 +77,8 @@ export default function AccountPage() {
       })
       
     }
+
+    setIsCheckingRole(false) 
   }, [])
 
   const handleRemoveWishlist = (itemToRemove: string) => {
@@ -116,6 +123,10 @@ export default function AccountPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (isCheckingRole) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>
   }
 
   if (!isLoggedIn) {
@@ -169,6 +180,12 @@ export default function AccountPage() {
                             localStorage.setItem('userRole', data.role);
                             localStorage.setItem('username', data.username); 
                             localStorage.setItem('userEmail', data.email);
+
+// 1. Check for admin instantly and return early to stop execution context
+if (data.role === 'ADMIN') {
+  router.push('/admin');
+  return; 
+}
 
                             setLoggedInUser({
                               name: data.username,
