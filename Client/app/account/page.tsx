@@ -107,26 +107,22 @@ useEffect(() => {
           })
         });
 
-        if (response.ok) {
-          const data = await response.json(); 
+      if (response.ok) {
+  const data = await response.json();
 
-          // 2. Save the session token and role profile
-          localStorage.setItem('token', data.token);
-          localStorage.setItem('userRole', data.role);
+  localStorage.setItem('token', data.token);
+  localStorage.setItem('userRole', data.role);
 
-          setStatusMessage('Welcome back! Logging you in... 🎉');
-          setIsLoggedIn(true);
+  setStatusMessage('Welcome back! Logging you in... 🎉');
+  setIsLoggedIn(true);
 
-          setIsLoggedIn(true)
-    router.push('/')
-          // 3. Kick them over to their specific dashboard workspace
-          setTimeout(() => {
-            if (data.role === 'ADMIN') {
-              window.location.href = '/admin/dashboard';
-            } else {
-              window.location.href = '/';
-            }
-          }, 1000);
+  setTimeout(() => {
+    if (data.role === 'ADMIN') {
+      router.push('/admin/dashboard');
+    } else {
+      router.push('/');
+    }
+  }, 1000);
 
         } else {
           const errorData = await response.json().catch(() => ({}));
