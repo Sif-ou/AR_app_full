@@ -27,6 +27,7 @@ export default function AccountPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [statusMessage, setStatusMessage] = useState('')
+  const [isCheckingRole, setIsCheckingRole] = useState(true)
 
   // Logged-in user profile details
   const [loggedInUser, setLoggedInUser] = useState({
@@ -43,11 +44,34 @@ export default function AccountPage() {
     wishlist: ['nordica-sofa', 'aurora-armchair']
   })
 
+<<<<<<< HEAD
   // Sync auth state and values from localStorage safely on mount
+=======
+
+
+  // Helper function to navigate based on role cleanly
+  const handleRoleRedirect = (role: string) => {
+    if (role === 'ADMIN') {
+      router.push('/admin')
+    } else {
+      router.push('/')
+    }
+  }
+
+>>>>>>> c7d72480a0cbab393d644ed357349f6763c3b764
   useEffect(() => {
+
     const token = localStorage.getItem('token')
     const savedName = localStorage.getItem('username')
     const savedEmail = localStorage.getItem('userEmail')
+    const savedRole = localStorage.getItem('userRole')
+
+
+      if (savedRole === 'ADMIN') {
+        
+        router.push('/admin')
+        return;
+      }
 
     if (token) {
       setIsLoggedIn(true)
@@ -55,7 +79,10 @@ export default function AccountPage() {
         name: savedName || 'User Account',
         email: savedEmail || ''
       })
+      
     }
+
+    setIsCheckingRole(false) 
   }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -191,6 +218,7 @@ export default function AccountPage() {
     }
   }
 
+<<<<<<< HEAD
   const handleSignOut = () => {
     localStorage.removeItem('token')
     localStorage.removeItem('userRole')
@@ -208,6 +236,12 @@ export default function AccountPage() {
     { id: 'settings', label: 'Account Settings', icon: Settings, desc: 'Security & options' },
   ]
 
+=======
+  if (isCheckingRole) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>
+  }
+
+>>>>>>> c7d72480a0cbab393d644ed357349f6763c3b764
   if (!isLoggedIn) {
     return (
       <>
@@ -233,7 +267,66 @@ export default function AccountPage() {
                   </TabsList>
 
                   <TabsContent value="login">
+<<<<<<< HEAD
                     <form onSubmit={handleLogin} className="space-y-4">
+=======
+                    <form 
+                      onSubmit={async (e) => { 
+                        e.preventDefault(); 
+                        setLoading(true);
+                        setStatusMessage('');
+
+                        try {
+                          const response = await fetch('https://ar-app-back-end.onrender.com/api/auth/login', {
+                            method: 'POST',
+                            headers: {
+                              'Content-Type': 'application/json',
+                              'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({ 
+                              identifier: loginIdentifier, 
+                              password: loginPassword 
+                            })
+                          });
+
+                          if (response.ok) {
+                            const data = await response.json(); 
+
+                            localStorage.setItem('token', data.token);
+                            localStorage.setItem('userRole', data.role);
+                            localStorage.setItem('username', data.username); 
+                            localStorage.setItem('userEmail', data.email);
+
+// 1. Check for admin instantly and return early to stop execution context
+if (data.role === 'ADMIN') {
+  router.push('/admin');
+  return; 
+}
+
+                            setLoggedInUser({
+                              name: data.username,
+                              email: data.email
+                            });
+
+                            setStatusMessage('Welcome back! Logging you in... 🎉');
+                            setIsLoggedIn(true);
+
+
+                            handleRoleRedirect(data.role);
+                            
+                          } else {
+                            const errorData = await response.json().catch(() => ({}));
+                            setStatusMessage(errorData.message || 'Invalid credentials. Please try again.');
+                          }
+                        } catch (error) {
+                          setStatusMessage('Network error. Could not reach backend authentication server.');
+                        } finally {
+                          setLoading(false);
+                        }
+                      }} 
+                      className="space-y-4"
+                    >
+>>>>>>> c7d72480a0cbab393d644ed357349f6763c3b764
                       <div className="space-y-2">
                         <Label htmlFor="identifier">Email or Phone Number</Label>
                         <Input
@@ -293,10 +386,17 @@ export default function AccountPage() {
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="reg-email">Email</Label>
+<<<<<<< HEAD
                         <Input
                           id="reg-email"
                           type="email"
                           placeholder="Enter your email"
+=======
+                        <Input 
+                          id="reg-email" 
+                          type="text" 
+                          placeholder="Enter your email" 
+>>>>>>> c7d72480a0cbab393d644ed357349f6763c3b764
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           required
@@ -376,6 +476,9 @@ export default function AccountPage() {
       </>
     )
   }
+
+
+
 
   return (
     <>
@@ -572,4 +675,5 @@ export default function AccountPage() {
       <Footer />
     </>
   )
+  
 }
