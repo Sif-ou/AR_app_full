@@ -1,541 +1,372 @@
-'use client'
+'use client';
 
-import { useEffect, useState } from 'react'
-import { Header } from '@/components/header'
-import { Footer } from '@/components/footer'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { User, Package, Heart, Settings, LogIn, UserPlus } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function AccountPage() {
-  const router = useRouter()
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [activeTab, setActiveTab] = useState('login')
-  const [activeSection, setActiveSection] = useState('profile') 
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
+  
+  // Auth state flags
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loggedInUser, setLoggedInUser] = useState<{ name: string; email: string } | null>(null);
+  
+  // Login Form States
+  const [loginIdentifier, setLoginIdentifier] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  
+  // Registration Form States
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  
+  // UI Notification Messaging
+  const [statusMessage, setStatusMessage] = useState('');
+  const [isError, setIsError] = useState(false);
 
-  // Registration & Auth Form States
-  const [username, setUsername] = useState('')
-  const [email, setEmail] = useState('')
-  const [phoneNumber, setPhoneNumber] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [statusMessage, setStatusMessage] = useState('')
-
-  // State to hold active logged-in user profile details dynamically
-  const [loggedInUser, setLoggedInUser] = useState({
-    name: '',
-    email: ''
-  })
-
-  // Fixed static data placeholder for features like orders/wishlist
-  const [userState, setUserState] = useState({
-    orders: [
-      { id: 'ORD-001', date: '2024-01-15', status: 'Delivered', total: 1299 },
-      { id: 'ORD-002', date: '2024-02-20', status: 'In Transit', total: 649 }
-    ],
-    wishlist: ['nordica-sofa', 'aurora-armchair']
-  })
-
-  // Load session profile metrics when the component hooks mount using our new GET endpoint
+  // Check profile validation status on mount
   useEffect(() => {
     const fetchUserProfile = async () => {
-      const token = localStorage.getItem('token')
-      if (!token) return
+      const savedToken = localStorage.getItem('token');
+      if (!savedToken) return;
 
       try {
         const response = await fetch('https://ar-app-back-end.onrender.com/api/users/me', {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
+            'Authorization': `Bearer ${savedToken}`,
+            'Accept': 'application/json'
           }
-        })
+        });
 
         if (response.ok) {
-          const data = await response.json()
-          setIsLoggedIn(true)
+          const data = await response.json();
+          setIsLoggedIn(true);
           setLoggedInUser({
-            name: data.username || 'User Account',
-            email: data.email || ''
-          })
+            name: data.username,
+            email: data.email
+          });
           
-          localStorage.setItem('username', data.username || '')
-          localStorage.setItem('userEmail', data.email || '')
+          // Secondary fallback security catch: redirect to dashboard if profile token indicates admin
+          const savedRole = localStorage.getItem('userRole') || data.role;
+          if (savedRole === 'ADMIN') {
+            router.push('/admin/dashboard');
+          }
         } else {
-          localStorage.removeItem('token')
-          localStorage.removeItem('userRole')
-          localStorage.removeItem('username')
-          localStorage.removeItem('userEmail')
-          setIsLoggedIn(false)
+          // If token expired or bad payload returned, flush storage
+          localStorage.clear();
         }
-      } catch (error) {
-        console.error('Failed fetching dynamic user credentials layout profile:', error)
-        // Fallback gracefully to backup storage metrics if network drops
-        const savedName = localStorage.getItem('username')
-        const savedEmail = localStorage.getItem('userEmail')
-        setIsLoggedIn(true)
-        setLoggedInUser({
-          name: savedName || 'User Account',
-          email: savedEmail || ''
-        })
+      } catch (err) {
+        console.error('Failed to authenticate stored session token:', err);
       }
+    };
+
+    fetchUserProfile();
+  }, [router]);
+
+  // Handle Login Authentication
+  const handleLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatusMessage('');
+    setIsError(false);
+
+    if (!loginIdentifier || !loginPassword) {
+      setIsError(true);
+      setStatusMessage('Please fill in all login fields.');
+      return;
     }
 
-    fetchUserProfile()
-  }, [])
+    try {
+      const response = await fetch('https://ar-app-back-end.onrender.com/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          identifier: loginIdentifier,
+          password: loginPassword
+        })
+      });
 
-  const handleRemoveWishlist = (itemToRemove: string) => {
-    setUserState((prev) => ({
-      ...prev,
-      wishlist: prev.wishlist.filter((item) => item !== itemToRemove)
-    }))
-  }
+      const data = await response.json();
 
-  const handleResetPassword = () => {
-    alert(`A password reset link has been sent to ${loggedInUser.email || 'your email'}`)
-  }
+      if (response.ok) {
+        // Save session storage blocks safely to local storage
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('userRole', data.role); 
+        localStorage.setItem('username', data.username);
+        localStorage.setItem('userEmail', data.email);
 
-  if (!isLoggedIn) {
+        setStatusMessage('Welcome back! Logging you in... 🎉');
+
+        // THE ADMIN REDIRECT TRIGGER:
+        if (data.role === 'ADMIN') {
+          router.push('/admin/dashboard');
+        } else {
+          setLoggedInUser({
+            name: data.username,
+            email: data.email
+          });
+          setIsLoggedIn(true);
+          // Clear input components
+          setLoginIdentifier('');
+          setLoginPassword('');
+        }
+      } else {
+        setIsError(true);
+        setStatusMessage(data.message || 'Authentication failed. Please verify credentials.');
+      }
+    } catch (err) {
+      setIsError(true);
+      setStatusMessage('Could not connect to the authentication server. Try again later.');
+    }
+  };
+
+  // Handle New Client Registrations
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatusMessage('');
+    setIsError(false);
+
+    if (!username || !email || !phoneNumber || !password || !confirmPassword) {
+      setIsError(true);
+      setStatusMessage('All registration fields are required.');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setIsError(true);
+      setStatusMessage('Passwords do not match.');
+      return;
+    }
+
+    try {
+      const response = await fetch('https://ar-app-back-end.onrender.com/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          username: username,
+          email: email,
+          phoneNum: phoneNumber,
+          password: password
+        })
+      });
+
+      if (response.ok) {
+        setStatusMessage('Account created successfully! Please sign in with your credentials.');
+        // Clean up input fields and flip back to login tab view
+        setUsername('');
+        setEmail('');
+        setPhoneNumber('');
+        setPassword('');
+        setConfirmPassword('');
+        setActiveTab('login');
+      } else {
+        const errData = await response.json();
+        setIsError(true);
+        setStatusMessage(errData.message || 'Registration failed. Username or email might be taken.');
+      }
+    } catch (err) {
+      setIsError(true);
+      setStatusMessage('Server communication failure during registration setup.');
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.clear();
+    setIsLoggedIn(false);
+    setLoggedInUser(null);
+    setStatusMessage('Logged out safely.');
+    setIsError(false);
+    router.refresh();
+  };
+
+  // Render Client Profile Interface if Authenticated
+  if (isLoggedIn && loggedInUser) {
     return (
-      <>
-        <Header />
-        <main className="min-h-screen py-12">
-          <div className="container mx-auto px-4 max-w-md">
-            <Card>
-              <CardHeader className="text-center">
-                <CardTitle className="font-serif text-2xl">Welcome to ARFURN</CardTitle>
-                <CardDescription>Sign in to your account or create a new one</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Tabs value={activeTab} onValueChange={setActiveTab}>
-                  <TabsList className="grid w-full grid-cols-2 mb-6">
-                    <TabsTrigger value="login" className="flex items-center gap-2">
-                      <LogIn className="h-4 w-4" />
-                      Sign In
-                    </TabsTrigger>
-                    <TabsTrigger value="register" className="flex items-center gap-2">
-                      <UserPlus className="h-4 w-4" />
-                      Register
-                    </TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="login">
-                    <form 
-                      onSubmit={async (e) => { 
-                        e.preventDefault(); 
-                        const target = e.currentTarget;
-                        const userInput = target.identifier.value;
-                        const passwordInput = target.password.value;
-
-                        setLoading(true);
-                        setStatusMessage('');
-
-                        try {
-                          const response = await fetch('https://ar-app-back-end.onrender.com/api/auth/login', {
-                            method: 'POST',
-                            headers: {
-                              'Content-Type': 'application/json',
-                              'Accept': 'application/json'
-                            },
-                            body: JSON.stringify({ 
-                              identifier: userInput, 
-                              password: passwordInput 
-                            })
-                          });
-
-                          if (response.ok) {
-                            const data = await response.json(); 
-
-                            // Save token, role, and dynamic profile metrics returned from API response
-                            localStorage.setItem('token', data.token);
-                            localStorage.setItem('userRole', data.role);
-                            localStorage.setItem('username', data.username); 
-                            localStorage.setItem('userEmail', data.email);
-
-                            // Sync localized React application state context
-                            setLoggedInUser({
-                              name: data.username,
-                              email: data.email
-                            });
-
-                            setStatusMessage('Welcome back! Logging you in... 🎉');
-
-                            // Routing branch logic based on security structural configuration role mappings
-                            if (data.role === 'ADMIN') {
-                              router.push('/admin/dashboard');
-                            } else {
-                              setIsLoggedIn(true);
-                            }
-
-                          } else {
-                            const errorData = await response.json().catch(() => ({}));
-                            setStatusMessage(errorData.message || 'Invalid credentials. Please try again.');
-                          }
-                        } catch (error) {
-                          setStatusMessage('Network error. Could not reach backend authentication server.');
-                        } finally {
-                          setLoading(false);
-                        }
-                      }} 
-                      className="space-y-4"
-                    >
-                      <div className="space-y-2">
-                        <Label htmlFor="identifier">Email or Phone Number</Label>
-                        <Input 
-                          id="identifier" 
-                          name="identifier" 
-                          type="text"       
-                          placeholder="username@email.com or 0555123456" 
-                          required 
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="password">Password</Label>
-                        <Input 
-                          id="password" 
-                          name="password" 
-                          type="password" 
-                          placeholder="Enter your password" 
-                          required 
-                        />
-                      </div>
-
-                      <Button type="submit" className="w-full" disabled={loading}>
-                        {loading ? 'Authenticating...' : 'Sign In'}
-                      </Button>
-
-                      {statusMessage && (
-                        <p className={`text-sm font-medium mt-2 text-center ${statusMessage.includes('🎉') ? 'text-green-600' : 'text-red-500'}`}>
-                          {statusMessage}
-                        </p>
-                      )}
-
-                      <p className="text-center text-sm text-muted-foreground">
-                        <a href="#" className="text-accent hover:underline">Forgot your password?</a>
-                      </p>
-                    </form>
-                  </TabsContent>
-
-                  <TabsContent value="register">
-                    <form 
-                      onSubmit={async (e) => { 
-                        e.preventDefault(); 
-      
-                        if (password !== confirmPassword) {
-                          setStatusMessage("Passwords do not match!");
-                          return;
-                        }
-                        
-                        setLoading(true);
-                        setStatusMessage('');
-
-                        try {
-                          const response = await fetch('https://ar-app-back-end.onrender.com/api/auth/register', {
-                            method: 'POST',
-                            headers: {
-                              'Content-Type': 'application/json',
-                              'Accept': 'application/json'
-                            },
-                            body: JSON.stringify({ 
-                              username: username,
-                              email: email,
-                              phoneNum: phoneNumber,
-                              password: password 
-                            })
-                          });
-
-                          if (response.ok) {
-                            setStatusMessage('Successfully registered! Please log in. 🎉');
-                            setUsername(''); setEmail(''); setPhoneNumber(''); setPassword(''); setConfirmPassword('');
-                            setActiveTab('login');
-                          } else {
-                            const errorData = await response.json().catch(() => ({}));
-                            setStatusMessage(errorData.message || `Registration failed: ${response.status}`);
-                          }
-                        } catch (error) {
-                          setStatusMessage('Network error. Could not reach backend.');
-                        } finally {
-                          setLoading(false);
-                        }
-                      }} 
-                      className="space-y-4"
-                    >
-                      <div className="space-y-2">
-                        <Label htmlFor="name">Full Name</Label>
-                        <Input 
-                          id="name" 
-                          type="text" 
-                          placeholder="Enter your name" 
-                          value={username}
-                          onChange={(e) => setUsername(e.target.value)}
-                          required 
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="reg-email">Email</Label>
-                        <Input 
-                          id="reg-email" 
-                          type="email" 
-                          placeholder="Enter your email" 
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          required 
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="reg-phone">Phone Number</Label>
-                        <Input 
-                          id="reg-phone" 
-                          type="tel" 
-                          placeholder="0555123456" 
-                          value={phoneNumber}
-                          maxLength={10}
-                          onChange={(e) => {
-                            const onlyDigits = e.target.value.replace(/\D/g, '');
-                            setPhoneNumber(onlyDigits);
-                          }}
-                          required 
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="reg-password">Password</Label>
-                        <Input 
-                          id="reg-password" 
-                          type="password" 
-                          placeholder="Create a password" 
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          required 
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="confirm-password">Confirm Password</Label>
-                        <Input 
-                          id="confirm-password" 
-                          type="password" 
-                          placeholder="Confirm your password" 
-                          value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
-                          required 
-                        />
-                      </div>
-                      <Button type="submit" className="w-full" disabled={loading}>
-                        {loading ? 'Creating Account...' : 'Create Account'}
-                      </Button>
-
-                      {statusMessage && (
-                        <p className={`text-sm font-medium mt-2 text-center ${statusMessage.includes('🎉') ? 'text-green-600' : 'text-red-500'}`}>
-                          {statusMessage}
-                        </p>
-                      )}
-                    </form>
-                  </TabsContent>
-                </Tabs>
-
-                <div className="mt-6 pt-6 border-t">
-                  <p className="text-center text-sm text-muted-foreground mb-4">Or continue with</p>
-                  <div className="flex gap-3">
-                    <Button variant="outline" className="flex-1" asChild>
-                      <a href="https://www.google.com" target="_blank" rel="noopener noreferrer">
-                        <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24">
-                          <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                          <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                          <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                          <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                        </svg>
-                        Google
-                      </a>
-                    </Button>
-                    <Button variant="outline" className="flex-1" asChild>
-                      <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer">
-                        <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                        </svg>
-                        Facebook
-                      </a>
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-xl shadow-lg text-center">
+          <div className="w-20 h-20 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto text-3xl font-bold uppercase">
+            {loggedInUser.name.charAt(0)}
           </div>
-        </main>
-        <Footer />
-      </>
-    )
+          <h2 className="text-3xl font-extrabold text-gray-900">Your AR Furn Profile</h2>
+          <div className="text-left bg-gray-50 p-4 rounded-lg space-y-2 border border-gray-100">
+            <p className="text-sm text-gray-500">Username: <span className="font-semibold text-gray-900 block text-base">{loggedInUser.name}</span></p>
+            <p className="text-sm text-gray-500">Email Address: <span className="font-semibold text-gray-900 block text-base">{loggedInUser.email}</span></p>
+          </div>
+          {statusMessage && (
+            <p className={`text-sm font-medium ${isError ? 'text-red-600' : 'text-green-600'}`}>
+              {statusMessage}
+            </p>
+          )}
+          <button
+            onClick={handleLogout}
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-colors"
+          >
+            Sign Out Securely
+          </button>
+        </div>
+      </div>
+    );
   }
 
+  // Render Authentication Portal (Login / Registration Layout)
   return (
-    <>
-      <Header />
-      <main className="min-h-screen py-12">
-        <div className="container mx-auto px-4">
-          <h1 className="font-serif text-3xl font-bold mb-8">My Account</h1>
-          <div className="grid lg:grid-cols-4 gap-8">
-            <div className="lg:col-span-1">
-              <Card>
-                <CardContent className="p-4">
-                  <nav className="space-y-1">
-                    {[
-                      { id: 'profile', label: 'Profile', icon: User },
-                      { id: 'orders', label: 'Orders', icon: Package },
-                      { id: 'wishlist', label: 'Wishlist', icon: Heart },
-                      { id: 'settings', label: 'Settings', icon: Settings },
-                    ].map((item) => (
-                      <button
-                        key={item.id}
-                        onClick={() => setActiveSection(item.id)}
-                        className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
-                          activeSection === item.id 
-                            ? 'bg-accent/10 text-accent font-medium' 
-                            : 'hover:bg-muted text-muted-foreground'
-                        }`}
-                      >
-                        <item.icon className="h-5 w-5" />
-                        {item.label}
-                      </button>
-                    ))}
-                  </nav>
-                </CardContent>
-              </Card>
-              <Button
-                variant="outline"
-                className="w-full mt-4"
-                onClick={() => {
-                  localStorage.removeItem('token')
-                  localStorage.removeItem('userRole')
-                  localStorage.removeItem('username')
-                  localStorage.removeItem('userEmail')
-                  setIsLoggedIn(false)
-                  router.push('/account')
-                }}
-              >
-                Sign Out
-              </Button>
-            </div>
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          {activeTab === 'login' ? 'Sign in to your account' : 'Create your account'}
+        </h2>
+      </div>
 
-            <div className="lg:col-span-3 space-y-6">
-              {activeSection === 'profile' && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Profile Information</CardTitle>
-                    <CardDescription>Manage your account details</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>Full Name</Label>
-                        <Input 
-                          value={loggedInUser.name} 
-                          onChange={(e) => setLoggedInUser({ ...loggedInUser, name: e.target.value })}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Email</Label>
-                        <Input 
-                          value={loggedInUser.email} 
-                          onChange={(e) => setLoggedInUser({ ...loggedInUser, email: e.target.value })}
-                        />
-                      </div>
-                    </div>
-                    <Button onClick={() => alert('Profile saved successfully!')}>Save Changes</Button>
-                  </CardContent>
-                </Card>
-              )}
-
-              {activeSection === 'orders' && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Recent Orders</CardTitle>
-                    <CardDescription>Track your order history</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {userState.orders.map(order => (
-                        <div key={order.id} className="flex items-center justify-between p-4 rounded-lg border">
-                          <div>
-                            <p className="font-medium">{order.id}</p>
-                            <p className="text-sm text-muted-foreground">{order.date}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-medium">${order.total}</p>
-                            <span className={`text-sm px-2 py-1 rounded-full ${
-                              order.status === 'Delivered' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
-                            }`}>
-                              {order.status}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {activeSection === 'wishlist' && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>My Wishlist</CardTitle>
-                    <CardDescription>Products you've saved for later</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {userState.wishlist.length > 0 ? (
-                        userState.wishlist.map((item, index) => (
-                          <div key={index} className="flex items-center justify-between p-4 rounded-lg border">
-                            <p className="font-medium capitalize">{item.replace('-', ' ')}</p>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="text-destructive hover:bg-destructive/10"
-                              onClick={() => handleRemoveWishlist(item)}
-                            >
-                              Remove
-                            </Button>
-                          </div>
-                        ))
-                      ) : (
-                        <p className="text-center text-muted-foreground py-8">Your wishlist is empty.</p>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {activeSection === 'settings' && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Account Settings</CardTitle>
-                    <CardDescription>Manage security and preferences</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="p-4 border rounded-lg bg-muted/50">
-                        <h3 className="font-medium mb-1">Security</h3>
-                        <p className="text-sm text-muted-foreground mb-4">Update your password to keep your account secure.</p>
-                        <Button variant="outline" onClick={handleResetPassword}>Reset Password</Button>
-                      </div>
-                      <div className="p-4 border rounded-lg bg-destructive/5">
-                        <h3 className="font-medium text-destructive mb-1">Danger Zone</h3>
-                        <p className="text-sm text-muted-foreground mb-4">Permanently delete your account and all data.</p>
-                        <Button variant="destructive">Delete Account</Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-gray-100">
+          
+          {/* Tab Navigation Controls */}
+          <div className="flex border-b border-gray-200 mb-6">
+            <button
+              className={`flex-1 pb-4 text-sm font-medium text-center border-b-2 transition-colors ${
+                activeTab === 'login' ? 'border-amber-500 text-amber-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+              onClick={() => { setActiveTab('login'); setStatusMessage(''); }}
+            >
+              Sign In
+            </button>
+            <button
+              className={`flex-1 pb-4 text-sm font-medium text-center border-b-2 transition-colors ${
+                activeTab === 'register' ? 'border-amber-500 text-amber-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+              onClick={() => { setActiveTab('register'); setStatusMessage(''); }}
+            >
+              Register
+            </button>
           </div>
+
+          {/* System Warning/Success Toast Messaging */}
+          {statusMessage && (
+            <div className={`p-3 rounded-md mb-4 text-sm font-medium ${isError ? 'bg-red-50 text-red-700 border border-red-100' : 'bg-green-50 text-green-700 border border-green-100'}`}>
+              {statusMessage}
+            </div>
+          )}
+
+          {/* Render Login Panel Component Layout */}
+          {activeTab === 'login' ? (
+            <form className="space-y-6" onSubmit={handleLoginSubmit}>
+              <div>
+                <label htmlFor="loginIdentifier" className="block text-sm font-medium text-gray-700">Email or Phone Number</label>
+                <input
+                  id="loginIdentifier"
+                  type="text"
+                  required
+                  value={loginIdentifier}
+                  onChange={(e) => setLoginIdentifier(e.target.value)}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-amber-500 focus:border-amber-500 sm:text-sm text-black"
+                  placeholder="name@example.com or 055..."
+                />
+              </div>
+
+              <div>
+                <label htmlFor="loginPassword" className="block text-sm font-medium text-gray-700">Password</label>
+                <input
+                  id="loginPassword"
+                  type="password"
+                  required
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-amber-500 focus:border-amber-500 sm:text-sm text-black"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-colors"
+              >
+                Sign In
+              </button>
+            </form>
+          ) : (
+            /* Render Client Registration Layout Form */
+            <form className="space-y-4" onSubmit={handleRegisterSubmit}>
+              <div>
+                <label htmlFor="username" className="block text-sm font-medium text-gray-700">Username</label>
+                <input
+                  id="username"
+                  type="text"
+                  required
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-amber-500 focus:border-amber-500 sm:text-sm text-black"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email Address</label>
+                <input
+                  id="email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-amber-500 focus:border-amber-500 sm:text-sm text-black"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Phone Number</label>
+                <input
+                  id="phone"
+                  type="text"
+                  required
+                  value={phoneNumber}
+                  onChange={(e) => {
+                    const cleanValue = e.target.value.replace(/\D/g, ''); // Custom regex number filter
+                    setPhoneNumber(cleanValue);
+                  }}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-amber-500 focus:border-amber-500 sm:text-sm text-black"
+                  placeholder="Digits only (e.g. 0551234567)"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="pass" className="block text-sm font-medium text-gray-700">Password</label>
+                <input
+                  id="pass"
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-amber-500 focus:border-amber-500 sm:text-sm text-black"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="confirmPass" className="block text-sm font-medium text-gray-700">Confirm Password</label>
+                <input
+                  id="confirmPass"
+                  type="password"
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-amber-500 focus:border-amber-500 sm:text-sm text-black"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-colors"
+              >
+                Register Account
+              </button>
+            </form>
+          )}
         </div>
-      </main>
-      <Footer />
-    </>
-  )
+      </div>
+    </div>
+  );
 }
