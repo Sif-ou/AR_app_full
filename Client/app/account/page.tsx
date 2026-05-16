@@ -52,7 +52,6 @@ export default function AccountPage() {
     }
   }
 
-  // Load session profile metrics when the component hooks mount
   useEffect(() => {
     const token = localStorage.getItem('token')
     const savedName = localStorage.getItem('username')
@@ -66,9 +65,8 @@ export default function AccountPage() {
         email: savedEmail || ''
       })
       
-      // If they land on this page but are already logged in, redirect them immediately
-      if (savedRole) {
-        handleRoleRedirect(savedRole)
+      if (savedRole === 'ADMIN') {
+        router.push('/admin')
       }
     }
   }, [])
