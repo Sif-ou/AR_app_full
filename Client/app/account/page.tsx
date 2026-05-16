@@ -18,6 +18,8 @@ export default function AccountPage() {
   const [activeSection, setActiveSection] = useState('profile') 
 
   // Registration & Auth Form States
+  const [loginIdentifier, setLoginIdentifier] = useState('')
+  const [loginPassword, setLoginPassword] = useState('')
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [phoneNumber, setPhoneNumber] = useState('')
@@ -67,6 +69,39 @@ export default function AccountPage() {
     alert(`A password reset link has been sent to ${loggedInUser.email || 'your email'}`)
   }
 
+  const handleSaveChanges = async () => {
+    setLoading(true)
+    setStatusMessage('')
+    const token = localStorage.getItem('token')
+
+    try {
+      const response = await fetch('https://ar-app-back-end.onrender.com/api/user/update', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          username: loggedInUser.name,
+          email: loggedInUser.email
+        })
+      })
+
+      if (response.ok) {
+        localStorage.setItem('username', loggedInUser.name)
+        localStorage.setItem('userEmail', loggedInUser.email)
+        alert('Profile saved successfully!')
+      } else {
+        const errorData = await response.json().catch(() => ({}))
+        alert(errorData.message || 'Failed to update profile settings.')
+      }
+    } catch (error) {
+      alert('Network error. Could not sync profile changes to server.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   if (!isLoggedIn) {
     return (
       <>
@@ -95,10 +130,6 @@ export default function AccountPage() {
                     <form 
                       onSubmit={async (e) => { 
                         e.preventDefault(); 
-                        const target = e.currentTarget;
-                        const userInput = target.identifier.value;
-                        const passwordInput = target.password.value;
-
                         setLoading(true);
                         setStatusMessage('');
 
@@ -110,36 +141,26 @@ export default function AccountPage() {
                               'Accept': 'application/json'
                             },
                             body: JSON.stringify({ 
-                              identifier: userInput, 
-                              password: passwordInput 
+                              identifier: loginIdentifier, 
+                              password: loginPassword 
                             })
                           });
 
                           if (response.ok) {
                             const data = await response.json(); 
 
-                            // Save token, role, and dynamic profile metrics returned from API response
-localStorage.setItem('token', data.token);
-      localStorage.setItem('userRole', data.role);
-      localStorage.setItem('username', data.username); 
-      localStorage.setItem('userEmail', data.email);
+                            localStorage.setItem('token', data.token);
+                            localStorage.setItem('userRole', data.role);
+                            localStorage.setItem('username', data.username); 
+                            localStorage.setItem('userEmail', data.email);
 
-                            // Sync localized React application state context
-setLoggedInUser({
-        name: data.username,
-        email: data.email
-      });
+                            setLoggedInUser({
+                              name: data.username,
+                              email: data.email
+                            });
 
                             setStatusMessage('Welcome back! Logging you in... 🎉');
                             setIsLoggedIn(true);
-
-                            // Secure cleanly grouped workspace navigation handling
-                            /*if (data.role === 'ADMIN') {
-                              router.push('/admin/dashboard');
-                            } else {
-                              router.push('/');
-                            }*/
-
                           } else {
                             const errorData = await response.json().catch(() => ({}));
                             setStatusMessage(errorData.message || 'Invalid credentials. Please try again.');
@@ -159,6 +180,8 @@ setLoggedInUser({
                           name="identifier" 
                           type="text"       
                           placeholder="username@email.com or 0555123456" 
+                          value={loginIdentifier}
+                          onChange={(e) => setLoginIdentifier(e.target.value)}
                           required 
                         />
                       </div>
@@ -170,6 +193,8 @@ setLoggedInUser({
                           name="password" 
                           type="password" 
                           placeholder="Enter your password" 
+                          value={loginPassword}
+                          onChange={(e) => setLoginPassword(e.target.value)}
                           required 
                         />
                       </div>
@@ -399,7 +424,6 @@ setLoggedInUser({
                     <div className="grid md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>Full Name</Label>
-                        {/* Bound directly to dynamic state variables fetched on login */}
                         <Input 
                           value={loggedInUser.name} 
                           onChange={(e) => setLoggedInUser({ ...loggedInUser, name: e.target.value })}
@@ -407,14 +431,15 @@ setLoggedInUser({
                       </div>
                       <div className="space-y-2">
                         <Label>Email</Label>
-                        {/* Bound directly to dynamic state variables fetched on login */}
                         <Input 
                           value={loggedInUser.email} 
                           onChange={(e) => setLoggedInUser({ ...loggedInUser, email: e.target.value })}
                         />
                       </div>
                     </div>
-                    <Button onClick={() => alert('Profile saved successfully!')}>Save Changes</Button>
+                    <Button onClick={handleSaveChanges} disabled={loading}>
+                      {loading ? 'Saving Changes...' : 'Save Changes'}
+                    </Button>
                   </CardContent>
                 </Card>
               )}
