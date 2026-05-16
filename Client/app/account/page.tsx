@@ -121,7 +121,7 @@ export default function AccountPage() {
                             // Save token, role, and dynamic profile metrics returned from API response
 localStorage.setItem('token', data.token);
       localStorage.setItem('userRole', data.role);
-      localStorage.setItem('username', data.username); // Holds actual clean name
+      localStorage.setItem('username', data.username); 
       localStorage.setItem('userEmail', data.email);
 
                             // Sync localized React application state context

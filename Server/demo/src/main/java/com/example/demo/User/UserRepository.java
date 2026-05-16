@@ -23,3 +23,10 @@ Optional<User> findByIdentifier(@Param("id") String identifier);*/
 
 
 }
+
+/*
+
+    public UserController(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+*/
