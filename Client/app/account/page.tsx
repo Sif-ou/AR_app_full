@@ -9,15 +9,21 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { User, Package, Heart, Settings, LogIn, UserPlus } from 'lucide-react'
-import { useRouter } from 'next/dist/client/components/navigation'
 
 export default function AccountPage() {
-  const router = useRouter()
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [activeTab, setActiveTab] = useState('login')
   const [activeSection, setActiveSection] = useState('profile') 
 
-  // This is the source of truth for your data in this file
+  // --- Registration & Auth State Variables Added Here ---
+  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
+  const [phoneNumber, setPhoneNumber] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [statusMessage, setStatusMessage] = useState('')
+
   const [userState, setUserState] = useState({
     name: 'fahd',
     email: 'fahd@Gmail.com',
@@ -28,7 +34,6 @@ export default function AccountPage() {
     wishlist: ['nordica-sofa', 'aurora-armchair']
   })
 
-  // This function now correctly updates the local state above
   const handleRemoveWishlist = (itemToRemove: string) => {
     setUserState((prev) => ({
       ...prev,
@@ -64,56 +69,212 @@ export default function AccountPage() {
                     </TabsTrigger>
                   </TabsList>
 
-                  <TabsContent value="login">
-                    <form
-  onSubmit={(e) => {
-    e.preventDefault()
-    setIsLoggedIn(true)
-    router.push('/')
-  }}
-  className="space-y-4"
->
-                      <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input id="email" type="email" placeholder="Enter your email" required />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="password">Password</Label>
-                        <Input id="password" type="password" placeholder="Enter your password" required />
-                      </div>
-                      <Button type="submit" className="w-full">Sign In</Button>
-                      <p className="text-center text-sm text-muted-foreground">
-                        <a href="#" className="text-accent hover:underline">Forgot your password?</a>
-                      </p>
-                    </form>
-                  </TabsContent>
+<TabsContent value="login">
+  <form 
+    onSubmit={async (e) => { 
+      e.preventDefault(); 
+      
+      // 1. Grab whatever they typed (could be an email or a phone number)
+      const userInput = e.target.identifier.value;
+      const passwordInput = e.target.password.value;
 
+      setLoading(true);
+      setStatusMessage('');
+
+      try {
+        const response = await fetch('https://ar-app-back-end.onrender.com/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({ 
+            identifier: userInput , 
+            password: passwordInput 
+          })
+        });
+
+        if (response.ok) {
+          const data = await response.json(); 
+
+          // 2. Save the session token and role profile
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('userRole', data.role);
+
+          setStatusMessage('Welcome back! Logging you in... 🎉');
+          setIsLoggedIn(true);
+
+          // 3. Kick them over to their specific dashboard workspace
+          setTimeout(() => {
+            if (data.role === 'ADMIN') {
+              window.location.href = '/admin/dashboard';
+            } else {
+              window.location.href = '/home';
+            }
+          }, 1000);
+
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          setStatusMessage(errorData.message || 'Invalid credentials. Please try again.');
+        }
+      } catch (error) {
+        setStatusMessage('Network error. Could not reach backend authentication server.');
+      } finally {
+        setLoading(false);
+      }
+    }} 
+    className="space-y-4"
+  >
+    <div className="space-y-2">
+      <Label htmlFor="identifier">Email or Phone Number</Label>
+      <Input 
+        id="identifier" 
+        name="identifier" 
+        type="text"       
+        placeholder="username@email.com or 0555123456" 
+        required 
+      />
+    </div>
+    
+    <div className="space-y-2">
+      <Label htmlFor="password">Password</Label>
+      <Input 
+        id="password" 
+        name="password" 
+        type="password" 
+        placeholder="Enter your password" 
+        required 
+      />
+    </div>
+
+    <Button type="submit" className="w-full" disabled={loading}>
+      {loading ? 'Authenticating...' : 'Sign In'}
+    </Button>
+
+    {statusMessage && (
+      <p className={`text-sm font-medium mt-2 text-center ${statusMessage.includes('🎉') ? 'text-green-600' : 'text-red-500'}`}>
+        {statusMessage}
+      </p>
+    )}
+
+    <p className="text-center text-sm text-muted-foreground">
+      <a href="#" className="text-accent hover:underline">Forgot your password?</a>
+    </p>
+  </form>
+</TabsContent>
+
+                  {/* --- Updated Registration Content Tab --- */}
                   <TabsContent value="register">
-                    <form
-  onSubmit={(e) => {
-    e.preventDefault()
-    setIsLoggedIn(true)
-    router.push('/account')
-  }}
-  className="space-y-4"
->
+                    <form 
+                      onSubmit={async (e) => { 
+                        e.preventDefault(); 
+                        
+                        if (password !== confirmPassword) {
+                          setStatusMessage("Passwords do not match!");
+                          return;
+                        }
+                        
+                        setLoading(true);
+                        setStatusMessage('');
+
+                        try {
+                          const response = await fetch('https://ar-app-back-end.onrender.com/api/auth/register', {
+                            method: 'POST',
+                            headers: {
+                              'Content-Type': 'application/json',
+                              'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({ 
+                              username: username,
+                              email: email,
+                              phoneNum: phoneNumber,
+                              password: password 
+                            })
+                          });
+
+                          if (response.ok) {
+                            setStatusMessage('Successfully registered! 🎉');
+                            setUsername(''); setEmail(''); setPhoneNumber(''); setPassword(''); setConfirmPassword('');
+                          } else {
+                            const errorData = await response.json().catch(() => ({}));
+                            setStatusMessage(errorData.message || `Registration failed: ${response.status}`);
+                          }
+                        } catch (error) {
+                          setStatusMessage('Network error. Could not reach backend.');
+                        } finally {
+                          setLoading(false);
+                        }
+                      }} 
+                      className="space-y-4"
+                    >
                       <div className="space-y-2">
                         <Label htmlFor="name">Full Name</Label>
-                        <Input id="name" type="text" placeholder="Enter your name" required />
+                        <Input 
+                          id="name" 
+                          type="text" 
+                          placeholder="Enter your name" 
+                          value={username}
+                          onChange={(e) => setUsername(e.target.value)}
+                          required 
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="reg-email">Email</Label>
-                        <Input id="reg-email" type="email" placeholder="Enter your email" required />
+                        <Input 
+                          id="reg-email" 
+                          type="email" 
+                          placeholder="Enter your email" 
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          required 
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="reg-phone">Phone Number</Label>
+                        <Input 
+                          id="reg-phone" 
+                          type="tel" 
+                          placeholder="0555123456" 
+                          value={phoneNumber}
+                          maxLength={10}
+                          onChange={(e) => {
+                            const onlyDigits = e.target.value.replace(/\D/g, '');
+                            setPhoneNumber(onlyDigits);
+                          }}
+                          required 
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="reg-password">Password</Label>
-                        <Input id="reg-password" type="password" placeholder="Create a password" required />
+                        <Input 
+                          id="reg-password" 
+                          type="password" 
+                          placeholder="Create a password" 
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          required 
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="confirm-password">Confirm Password</Label>
-                        <Input id="confirm-password" type="password" placeholder="Confirm your password" required />
+                        <Input 
+                          id="confirm-password" 
+                          type="password" 
+                          placeholder="Confirm your password" 
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          required 
+                        />
                       </div>
-                      <Button type="submit" className="w-full">Create Account</Button>
+                      <Button type="submit" className="w-full" disabled={loading}>
+                        {loading ? 'Creating Account...' : 'Create Account'}
+                      </Button>
+
+                      {statusMessage && (
+                        <p className={`text-sm font-medium mt-2 text-center ${statusMessage.includes('🎉') ? 'text-green-600' : 'text-red-500'}`}>
+                          {statusMessage}
+                        </p>
+                      )}
                     </form>
                   </TabsContent>
                 </Tabs>
