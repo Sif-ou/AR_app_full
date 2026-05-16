@@ -30,9 +30,9 @@ const values = [
 ]
 
 const team = [
-  { name: 'Aymen ', image: 'https://wallpapers.com/images/hd/anonymous-profile-silhouette-b714qekh29tu1anb.jpg' },
-  { name: 'Ali', image: 'https://wallpapers.com/images/hd/anonymous-profile-silhouette-b714qekh29tu1anb.jpg' },
-  { name: 'Seif', image: 'https://wallpapers.com/images/hd/anonymous-profile-silhouette-b714qekh29tu1anb.jpg' },
+  { name: 'Seif ', image: 'https://wallpapers.com/images/hd/anonymous-profile-silhouette-b714qekh29tu1anb.jpg' },
+  { name: 'Aymen',  image: 'https://wallpapers.com/images/hd/anonymous-profile-silhouette-b714qekh29tu1anb.jpg' },
+  { name: 'Ali',  image: 'https://wallpapers.com/images/hd/anonymous-profile-silhouette-b714qekh29tu1anb.jpg' }
 ]
 
 export default function AboutPage() {
