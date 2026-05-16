@@ -119,26 +119,26 @@ export default function AccountPage() {
                             const data = await response.json(); 
 
                             // Save token, role, and dynamic profile metrics returned from API response
-                            localStorage.setItem('token', data.token);
-                            localStorage.setItem('userRole', data.role);
-                            localStorage.setItem('username', data.username || data.name || userInput);
-                            localStorage.setItem('userEmail', data.email || (userInput.includes('@') ? userInput : ''));
+localStorage.setItem('token', data.token);
+      localStorage.setItem('userRole', data.role);
+      localStorage.setItem('username', data.username); // Holds actual clean name
+      localStorage.setItem('userEmail', data.email);
 
                             // Sync localized React application state context
-                            setLoggedInUser({
-                              name: data.username || data.name || userInput,
-                              email: data.email || (userInput.includes('@') ? userInput : '')
-                            });
+setLoggedInUser({
+        name: data.username,
+        email: data.email
+      });
 
                             setStatusMessage('Welcome back! Logging you in... 🎉');
                             setIsLoggedIn(true);
 
                             // Secure cleanly grouped workspace navigation handling
-                            if (data.role === 'ADMIN') {
+                            /*if (data.role === 'ADMIN') {
                               router.push('/admin/dashboard');
                             } else {
                               router.push('/');
-                            }
+                            }*/
 
                           } else {
                             const errorData = await response.json().catch(() => ({}));
