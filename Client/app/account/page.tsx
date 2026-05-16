@@ -9,12 +9,10 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { User, Package, Heart, Settings, LogIn, UserPlus } from 'lucide-react'
-import { useRouter, useSearchParams } from 'next/navigation' // Added useSearchParams
+import { useRouter } from 'next/navigation'
 
 export default function AccountPage() {
   const router = useRouter()
-  const searchParams = useSearchParams() // Initialize to read query params
-  
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [activeTab, setActiveTab] = useState('login')
   const [activeSection, setActiveSection] = useState('profile') 
@@ -45,14 +43,12 @@ export default function AccountPage() {
     wishlist: ['nordica-sofa', 'aurora-armchair']
   })
 
-  // Helper function to handle role-based navigation and prior redirection
+  // Helper function to navigate based on role cleanly
   const handleRoleRedirect = (role: string) => {
     if (role === 'ADMIN') {
-      router.push('/admin') // Always clean redirect admins to /admin
+      router.push('/admin')
     } else {
-      // Look for ?redirectTo=/some-path in the URL fallback to home page '/'
-      const destination = searchParams.get('redirectTo') || '/'
-      router.push(destination)
+      router.push('/')
     }
   }
 
@@ -70,7 +66,7 @@ export default function AccountPage() {
         email: savedEmail || ''
       })
       
-      // Optional: if a logged-in user lands here directly, route them outward immediately
+      // If they land on this page but are already logged in, redirect them immediately
       if (savedRole) {
         handleRoleRedirect(savedRole)
       }
@@ -181,7 +177,7 @@ export default function AccountPage() {
                             setStatusMessage('Welcome back! Logging you in... 🎉');
                             setIsLoggedIn(true);
 
-                            // Role routing evaluation
+                            // Trigger clean redirect by checking data.role payload directly
                             handleRoleRedirect(data.role);
                           } else {
                             const errorData = await response.json().catch(() => ({}));
@@ -269,9 +265,6 @@ export default function AccountPage() {
                             setStatusMessage('Successfully registered! Please log in. 🎉');
                             setUsername(''); setEmail(''); setPhoneNumber(''); setPassword(''); setConfirmPassword('');
                             setActiveTab('login');
-                            
-                            // Note: If your registration payload automatically logs users in and sends 
-                            // back token details, you would update localStorage and invoke handleRoleRedirect(data.role) here.
                           } else {
                             const errorData = await response.json().catch(() => ({}));
                             setStatusMessage(errorData.message || `Registration failed: ${response.status}`);
