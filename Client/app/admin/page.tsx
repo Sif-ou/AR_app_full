@@ -93,7 +93,7 @@ const chatbotMetrics = {
 
 export default function AdminDashboard() {
   const router = useRouter()
-  const [isAuthorized, setIsAuthorized] = useState(false)
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [activeTab, setActiveTab] = useState('overview')
   
@@ -118,7 +118,17 @@ export default function AdminDashboard() {
     }
   }, [router])
 
-  if (!isAuthorized) {
+
+  // Redirect unauthorized users back to the previous page
+useEffect(() => {
+  // If authorization check is complete and user is explicitly false (not authorized)
+  if (isAuthorized === false) {
+    router.back();
+  }
+}, [isAuthorized, router]);
+
+
+  if ( !isAuthorized ) {
     return (
       <div className="min-h-screen bg-secondary flex flex-col items-center justify-center space-y-4">
         <div className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
