@@ -45,6 +45,7 @@ public class UserController {
         AuthResponse profileData = AuthResponse.builder()
                 .username(user.getUsername())
                 .email(user.getEmail())
+                .role(user.getRole().getRoleName())
                 .build();
 
         return ResponseEntity.ok(profileData);

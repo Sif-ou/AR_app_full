@@ -84,7 +84,12 @@ public AuthResponse authenticate(AuthRequest request) {
 
     // 4. Everything matches! Generate and return your JWT token payload
     var jwt = jwtService.generateToken(user);
-    return AuthResponse.builder().token(jwt).build();
+    return AuthResponse.builder()
+                       .token(jwt)
+                       .role(user.getRole().getRoleName()) 
+                       .username(user.getUsername())       
+                       .email(user.getEmail())
+                       .build();
 }
 
 /*public AuthResponse authenticate(AuthRequest request) {

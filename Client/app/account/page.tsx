@@ -41,19 +41,53 @@ export default function AccountPage() {
     wishlist: ['nordica-sofa', 'aurora-armchair']
   })
 
-  // Load session profile metrics when the component hooks mount
+  // Load session profile metrics when the component hooks mount using our new GET endpoint
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    const savedName = localStorage.getItem('username')
-    const savedEmail = localStorage.getItem('userEmail')
+    const fetchUserProfile = async () => {
+      const token = localStorage.getItem('token')
+      if (!token) return
 
-    if (token) {
-      setIsLoggedIn(true)
-      setLoggedInUser({
-        name: savedName || 'User Account',
-        email: savedEmail || ''
-      })
+      try {
+        const response = await fetch('https://ar-app-back-end.onrender.com/api/users/me', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          setIsLoggedIn(true)
+          setLoggedInUser({
+            name: data.username || 'User Account',
+            email: data.email || ''
+          })
+          
+          localStorage.setItem('username', data.username || '')
+          localStorage.setItem('userEmail', data.email || '')
+        } else {
+          localStorage.removeItem('token')
+          localStorage.removeItem('userRole')
+          localStorage.removeItem('username')
+          localStorage.removeItem('userEmail')
+          setIsLoggedIn(false)
+        }
+      } catch (error) {
+        console.error('Failed fetching dynamic user credentials layout profile:', error)
+        // Fallback gracefully to backup storage metrics if network drops
+        const savedName = localStorage.getItem('username')
+        const savedEmail = localStorage.getItem('userEmail')
+        setIsLoggedIn(true)
+        setLoggedInUser({
+          name: savedName || 'User Account',
+          email: savedEmail || ''
+        })
+      }
     }
+
+    fetchUserProfile()
   }, [])
 
   const handleRemoveWishlist = (itemToRemove: string) => {
@@ -119,26 +153,25 @@ export default function AccountPage() {
                             const data = await response.json(); 
 
                             // Save token, role, and dynamic profile metrics returned from API response
-localStorage.setItem('token', data.token);
-      localStorage.setItem('userRole', data.role);
-      localStorage.setItem('username', data.username); 
-      localStorage.setItem('userEmail', data.email);
+                            localStorage.setItem('token', data.token);
+                            localStorage.setItem('userRole', data.role);
+                            localStorage.setItem('username', data.username); 
+                            localStorage.setItem('userEmail', data.email);
 
                             // Sync localized React application state context
-setLoggedInUser({
-        name: data.username,
-        email: data.email
-      });
+                            setLoggedInUser({
+                              name: data.username,
+                              email: data.email
+                            });
 
                             setStatusMessage('Welcome back! Logging you in... 🎉');
-                            setIsLoggedIn(true);
 
-                            // Secure cleanly grouped workspace navigation handling
-                            /*if (data.role === 'ADMIN') {
+                            // Routing branch logic based on security structural configuration role mappings
+                            if (data.role === 'ADMIN') {
                               router.push('/admin/dashboard');
                             } else {
-                              router.push('/');
-                            }*/
+                              setIsLoggedIn(true);
+                            }
 
                           } else {
                             const errorData = await response.json().catch(() => ({}));
@@ -399,7 +432,6 @@ setLoggedInUser({
                     <div className="grid md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>Full Name</Label>
-                        {/* Bound directly to dynamic state variables fetched on login */}
                         <Input 
                           value={loggedInUser.name} 
                           onChange={(e) => setLoggedInUser({ ...loggedInUser, name: e.target.value })}
@@ -407,7 +439,6 @@ setLoggedInUser({
                       </div>
                       <div className="space-y-2">
                         <Label>Email</Label>
-                        {/* Bound directly to dynamic state variables fetched on login */}
                         <Input 
                           value={loggedInUser.email} 
                           onChange={(e) => setLoggedInUser({ ...loggedInUser, email: e.target.value })}
