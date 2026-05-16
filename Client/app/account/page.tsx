@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { Button } from '@/components/ui/button'
@@ -14,6 +14,14 @@ import { useRouter } from 'next/navigation'
 export default function AccountPage() {
   const router = useRouter()
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+
+useEffect(() => {
+  const token = localStorage.getItem('token')
+
+  if (token) {
+    setIsLoggedIn(true)
+  }
+}, [])
   const [activeTab, setActiveTab] = useState('login')
   const [activeSection, setActiveSection] = useState('profile') 
 
@@ -76,8 +84,7 @@ export default function AccountPage() {
     onSubmit={async (e) => { 
       e.preventDefault(); 
       
-    setIsLoggedIn(true)
-    router.push('/')
+    
   
   
       // 1. Grab whatever they typed (could be an email or a phone number)
@@ -110,6 +117,8 @@ export default function AccountPage() {
           setStatusMessage('Welcome back! Logging you in... 🎉');
           setIsLoggedIn(true);
 
+          setIsLoggedIn(true)
+    router.push('/')
           // 3. Kick them over to their specific dashboard workspace
           setTimeout(() => {
             if (data.role === 'ADMIN') {
@@ -352,9 +361,18 @@ export default function AccountPage() {
                   </nav>
                 </CardContent>
               </Card>
-              <Button variant="outline" className="w-full mt-4" onClick={() => setIsLoggedIn(false)}>
-                Sign Out
-              </Button>
+              <Button
+  variant="outline"
+  className="w-full mt-4"
+  onClick={() => {
+    localStorage.removeItem('token')
+    localStorage.removeItem('userRole')
+    setIsLoggedIn(false)
+    router.push('/')
+  }}
+>
+  Sign Out
+</Button>
             </div>
 
             <div className="lg:col-span-3 space-y-6">
