@@ -118,13 +118,13 @@ useEffect(() => {
           setIsLoggedIn(true);
 
           setIsLoggedIn(true)
-    router.push('/home')
+    router.push('/')
           // 3. Kick them over to their specific dashboard workspace
           setTimeout(() => {
             if (data.role === 'ADMIN') {
               window.location.href = '/admin/dashboard';
             } else {
-              window.location.href = '/home';
+              window.location.href = '/';
             }
           }, 1000);
 
@@ -369,7 +369,7 @@ useEffect(() => {
     localStorage.removeItem('token')
     localStorage.removeItem('userRole')
     setIsLoggedIn(false)
-    router.push('/home')
+    router.push('/account')
   }}
 >
   Sign Out
