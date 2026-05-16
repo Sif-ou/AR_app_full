@@ -58,6 +58,12 @@ export default function AccountPage() {
     const savedEmail = localStorage.getItem('userEmail')
     const savedRole = localStorage.getItem('userRole')
 
+
+      if (savedRole === 'ADMIN') {
+        
+        router.push('/admin')
+      }
+
     if (token) {
       setIsLoggedIn(true)
       setLoggedInUser({
@@ -65,9 +71,6 @@ export default function AccountPage() {
         email: savedEmail || ''
       })
       
-      if (savedRole === 'ADMIN') {
-        router.push('/admin')
-      }
     }
   }, [])
 
@@ -175,8 +178,9 @@ export default function AccountPage() {
                             setStatusMessage('Welcome back! Logging you in... 🎉');
                             setIsLoggedIn(true);
 
-                            // Trigger clean redirect by checking data.role payload directly
+
                             handleRoleRedirect(data.role);
+                            
                           } else {
                             const errorData = await response.json().catch(() => ({}));
                             setStatusMessage(errorData.message || 'Invalid credentials. Please try again.');
@@ -380,6 +384,9 @@ export default function AccountPage() {
     )
   }
 
+
+
+
   return (
     <>
       <Header />
@@ -548,4 +555,5 @@ export default function AccountPage() {
       <Footer />
     </>
   )
+  
 }
