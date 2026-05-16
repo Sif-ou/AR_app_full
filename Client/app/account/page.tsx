@@ -44,14 +44,13 @@ export default function AccountPage() {
   })
 
   // Helper function to navigate based on role cleanly
-  /*const handleRoleRedirect = (role: string) => {
+  const handleRoleRedirect = (role: string) => {
     if (role === 'ADMIN') {
       router.push('/admin')
     } else {
       router.push('/')
     }
-   // localStorage.clear();
-  }*/
+  }
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -68,7 +67,6 @@ export default function AccountPage() {
       
       if (savedRole === 'ADMIN') {
         router.push('/admin')
-        localStorage.clear();
       }
     }
   }, [])
@@ -178,7 +176,7 @@ export default function AccountPage() {
                             setIsLoggedIn(true);
 
                             // Trigger clean redirect by checking data.role payload directly
-                            //handleRoleRedirect(data.role);
+                            handleRoleRedirect(data.role);
                           } else {
                             const errorData = await response.json().catch(() => ({}));
                             setStatusMessage(errorData.message || 'Invalid credentials. Please try again.');
