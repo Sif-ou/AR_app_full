@@ -63,11 +63,11 @@ public class Media {
         this.model_3d = model_3d;
     }
 
-    public Variants getVariant_id() {
+    public Variants getVariant() {
         return variant;
     }
 
-    public void setVariant_id(Variants variant) {
+    public void setVariant(Variants variant) {
         this.variant = variant;
     }
 

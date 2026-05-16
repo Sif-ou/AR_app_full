@@ -29,7 +29,7 @@ export default function ARViewer({ product, onClose }: ARViewerProps) {
   }, []);
 
   // Use the model provided by the database, or a stable fallback for testing
-  const modelSrc = product.arModel || "https://modelviewer.dev/shared-assets/models/Astronaut.glb";
+  const modelSrc = product.arModel || "https://github.com/Sif-ou/AR_app_full/raw/refs/heads/main/3d%20models/3d_model_furni-v1.glb";
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col bg-white"> 
