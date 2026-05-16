@@ -66,7 +66,9 @@ export default function AccountPage() {
       })
       
       if (savedRole === 'ADMIN') {
+        localStorage.clear();
         router.push('/admin')
+
       }
     }
   }, [])
