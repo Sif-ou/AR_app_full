@@ -76,13 +76,11 @@ public AuthResponse authenticate(AuthRequest request) {
         throw new RuntimeException("User not found");
     }
 
-    // 3. Authenticate using the username associated with that account
-    authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(
-                    user.getUsername(),
-                    request.getPassword()
-            )
-    );
+
+// 2. CRITICAL FIX: Match the raw password against the encrypted database password
+    if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+        throw new RuntimeException("Invalid credentials");
+    }
 
     // 4. Everything matches! Generate and return your JWT token payload
     var jwt = jwtService.generateToken(user);

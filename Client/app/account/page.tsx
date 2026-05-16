@@ -14,18 +14,10 @@ import { useRouter } from 'next/navigation'
 export default function AccountPage() {
   const router = useRouter()
   const [isLoggedIn, setIsLoggedIn] = useState(false)
-
-useEffect(() => {
-  const token = localStorage.getItem('token')
-
-  if (token) {
-    setIsLoggedIn(true)
-  }
-}, [])
   const [activeTab, setActiveTab] = useState('login')
   const [activeSection, setActiveSection] = useState('profile') 
 
-  // --- Registration & Auth State Variables Added Here ---
+  // Registration & Auth Form States
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [phoneNumber, setPhoneNumber] = useState('')
@@ -34,15 +26,35 @@ useEffect(() => {
   const [loading, setLoading] = useState(false)
   const [statusMessage, setStatusMessage] = useState('')
 
+  // State to hold active logged-in user profile details dynamically
+  const [loggedInUser, setLoggedInUser] = useState({
+    name: '',
+    email: ''
+  })
+
+  // Fixed static data placeholder for features like orders/wishlist
   const [userState, setUserState] = useState({
-    name: 'fahd',
-    email: 'fahd@Gmail.com',
     orders: [
       { id: 'ORD-001', date: '2024-01-15', status: 'Delivered', total: 1299 },
       { id: 'ORD-002', date: '2024-02-20', status: 'In Transit', total: 649 }
     ],
     wishlist: ['nordica-sofa', 'aurora-armchair']
   })
+
+  // Load session profile metrics when the component hooks mount
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+    const savedName = localStorage.getItem('username')
+    const savedEmail = localStorage.getItem('userEmail')
+
+    if (token) {
+      setIsLoggedIn(true)
+      setLoggedInUser({
+        name: savedName || 'User Account',
+        email: savedEmail || ''
+      })
+    }
+  }, [])
 
   const handleRemoveWishlist = (itemToRemove: string) => {
     setUserState((prev) => ({
@@ -52,7 +64,7 @@ useEffect(() => {
   }
 
   const handleResetPassword = () => {
-    alert(`A password reset link has been sent to ${userState.email}`)
+    alert(`A password reset link has been sent to ${loggedInUser.email || 'your email'}`)
   }
 
   if (!isLoggedIn) {
@@ -79,111 +91,110 @@ useEffect(() => {
                     </TabsTrigger>
                   </TabsList>
 
-<TabsContent value="login">
-  <form 
-    onSubmit={async (e) => { 
-      e.preventDefault(); 
-      
-    
-  
-  
-      // 1. Grab whatever they typed (could be an email or a phone number)
-      const userInput = e.target.identifier.value;
-      const passwordInput = e.target.password.value;
+                  <TabsContent value="login">
+                    <form 
+                      onSubmit={async (e) => { 
+                        e.preventDefault(); 
+                        const target = e.currentTarget;
+                        const userInput = target.identifier.value;
+                        const passwordInput = target.password.value;
 
-      setLoading(true);
-      setStatusMessage('');
+                        setLoading(true);
+                        setStatusMessage('');
 
-      try {
-        const response = await fetch('https://ar-app-back-end.onrender.com/api/auth/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify({ 
-            identifier: userInput , 
-            password: passwordInput 
-          })
-        });
+                        try {
+                          const response = await fetch('https://ar-app-back-end.onrender.com/api/auth/login', {
+                            method: 'POST',
+                            headers: {
+                              'Content-Type': 'application/json',
+                              'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({ 
+                              identifier: userInput, 
+                              password: passwordInput 
+                            })
+                          });
 
-        if (response.ok) {
-          const data = await response.json(); 
+                          if (response.ok) {
+                            const data = await response.json(); 
 
-          // 2. Save the session token and role profile
-          localStorage.setItem('token', data.token);
-          localStorage.setItem('userRole', data.role);
+                            // Save token, role, and dynamic profile metrics returned from API response
+                            localStorage.setItem('token', data.token);
+                            localStorage.setItem('userRole', data.role);
+                            localStorage.setItem('username', data.username || data.name || userInput);
+                            localStorage.setItem('userEmail', data.email || (userInput.includes('@') ? userInput : ''));
 
-          setStatusMessage('Welcome back! Logging you in... 🎉');
-          setIsLoggedIn(true);
+                            // Sync localized React application state context
+                            setLoggedInUser({
+                              name: data.username || data.name || userInput,
+                              email: data.email || (userInput.includes('@') ? userInput : '')
+                            });
 
-          setIsLoggedIn(true)
-    router.push('/')
-          // 3. Kick them over to their specific dashboard workspace
-          setTimeout(() => {
-            if (data.role === 'ADMIN') {
-              window.location.href = '/admin/dashboard';
-            } else {
-              window.location.href = '/';
-            }
-          }, 1000);
+                            setStatusMessage('Welcome back! Logging you in... 🎉');
+                            setIsLoggedIn(true);
 
-        } else {
-          const errorData = await response.json().catch(() => ({}));
-          setStatusMessage(errorData.message || 'Invalid credentials. Please try again.');
-        }
-      } catch (error) {
-        setStatusMessage('Network error. Could not reach backend authentication server.');
-      } finally {
-        setLoading(false);
-      }
-    }} 
-    className="space-y-4"
-  >
-    <div className="space-y-2">
-      <Label htmlFor="identifier">Email or Phone Number</Label>
-      <Input 
-        id="identifier" 
-        name="identifier" 
-        type="text"       
-        placeholder="username@email.com or 0555123456" 
-        required 
-      />
-    </div>
-    
-    <div className="space-y-2">
-      <Label htmlFor="password">Password</Label>
-      <Input 
-        id="password" 
-        name="password" 
-        type="password" 
-        placeholder="Enter your password" 
-        required 
-      />
-    </div>
+                            // Secure cleanly grouped workspace navigation handling
+                            if (data.role === 'ADMIN') {
+                              router.push('/admin/dashboard');
+                            } else {
+                              router.push('/');
+                            }
 
-    <Button type="submit" className="w-full" disabled={loading}>
-      {loading ? 'Authenticating...' : 'Sign In'}
-    </Button>
+                          } else {
+                            const errorData = await response.json().catch(() => ({}));
+                            setStatusMessage(errorData.message || 'Invalid credentials. Please try again.');
+                          }
+                        } catch (error) {
+                          setStatusMessage('Network error. Could not reach backend authentication server.');
+                        } finally {
+                          setLoading(false);
+                        }
+                      }} 
+                      className="space-y-4"
+                    >
+                      <div className="space-y-2">
+                        <Label htmlFor="identifier">Email or Phone Number</Label>
+                        <Input 
+                          id="identifier" 
+                          name="identifier" 
+                          type="text"       
+                          placeholder="username@email.com or 0555123456" 
+                          required 
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="password">Password</Label>
+                        <Input 
+                          id="password" 
+                          name="password" 
+                          type="password" 
+                          placeholder="Enter your password" 
+                          required 
+                        />
+                      </div>
 
-    {statusMessage && (
-      <p className={`text-sm font-medium mt-2 text-center ${statusMessage.includes('🎉') ? 'text-green-600' : 'text-red-500'}`}>
-        {statusMessage}
-      </p>
-    )}
+                      <Button type="submit" className="w-full" disabled={loading}>
+                        {loading ? 'Authenticating...' : 'Sign In'}
+                      </Button>
 
-    <p className="text-center text-sm text-muted-foreground">
-      <a href="#" className="text-accent hover:underline">Forgot your password?</a>
-    </p>
-  </form>
-</TabsContent>
+                      {statusMessage && (
+                        <p className={`text-sm font-medium mt-2 text-center ${statusMessage.includes('🎉') ? 'text-green-600' : 'text-red-500'}`}>
+                          {statusMessage}
+                        </p>
+                      )}
 
-                  {/* --- Updated Registration Content Tab --- */}
+                      <p className="text-center text-sm text-muted-foreground">
+                        <a href="#" className="text-accent hover:underline">Forgot your password?</a>
+                      </p>
+                    </form>
+                  </TabsContent>
+
                   <TabsContent value="register">
                     <form 
                       onSubmit={async (e) => { 
                         e.preventDefault(); 
-    
+      
                         if (password !== confirmPassword) {
                           setStatusMessage("Passwords do not match!");
                           return;
@@ -208,10 +219,9 @@ useEffect(() => {
                           });
 
                           if (response.ok) {
-                            setStatusMessage('Successfully registered! 🎉');
+                            setStatusMessage('Successfully registered! Please log in. 🎉');
                             setUsername(''); setEmail(''); setPhoneNumber(''); setPassword(''); setConfirmPassword('');
-                                                setIsLoggedIn(true)
-    router.push('/account')
+                            setActiveTab('login');
                           } else {
                             const errorData = await response.json().catch(() => ({}));
                             setStatusMessage(errorData.message || `Registration failed: ${response.status}`);
@@ -363,17 +373,19 @@ useEffect(() => {
                 </CardContent>
               </Card>
               <Button
-  variant="outline"
-  className="w-full mt-4"
-  onClick={() => {
-    localStorage.removeItem('token')
-    localStorage.removeItem('userRole')
-    setIsLoggedIn(false)
-    router.push('/account')
-  }}
->
-  Sign Out
-</Button>
+                variant="outline"
+                className="w-full mt-4"
+                onClick={() => {
+                  localStorage.removeItem('token')
+                  localStorage.removeItem('userRole')
+                  localStorage.removeItem('username')
+                  localStorage.removeItem('userEmail')
+                  setIsLoggedIn(false)
+                  router.push('/account')
+                }}
+              >
+                Sign Out
+              </Button>
             </div>
 
             <div className="lg:col-span-3 space-y-6">
@@ -387,11 +399,19 @@ useEffect(() => {
                     <div className="grid md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>Full Name</Label>
-                        <Input defaultValue={userState.name} />
+                        {/* Bound directly to dynamic state variables fetched on login */}
+                        <Input 
+                          value={loggedInUser.name} 
+                          onChange={(e) => setLoggedInUser({ ...loggedInUser, name: e.target.value })}
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label>Email</Label>
-                        <Input defaultValue={userState.email} />
+                        {/* Bound directly to dynamic state variables fetched on login */}
+                        <Input 
+                          value={loggedInUser.email} 
+                          onChange={(e) => setLoggedInUser({ ...loggedInUser, email: e.target.value })}
+                        />
                       </div>
                     </div>
                     <Button onClick={() => alert('Profile saved successfully!')}>Save Changes</Button>
