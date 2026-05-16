@@ -9,10 +9,12 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { User, Package, Heart, Settings, LogIn, UserPlus } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation' // Added useSearchParams
 
 export default function AccountPage() {
   const router = useRouter()
+  const searchParams = useSearchParams() // Initialize to read query params
+  
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [activeTab, setActiveTab] = useState('login')
   const [activeSection, setActiveSection] = useState('profile') 
@@ -43,11 +45,23 @@ export default function AccountPage() {
     wishlist: ['nordica-sofa', 'aurora-armchair']
   })
 
+  // Helper function to handle role-based navigation and prior redirection
+  const handleRoleRedirect = (role: string) => {
+    if (role === 'ADMIN') {
+      router.push('/admin') // Always clean redirect admins to /admin
+    } else {
+      // Look for ?redirectTo=/some-path in the URL fallback to home page '/'
+      const destination = searchParams.get('redirectTo') || '/'
+      router.push(destination)
+    }
+  }
+
   // Load session profile metrics when the component hooks mount
   useEffect(() => {
     const token = localStorage.getItem('token')
     const savedName = localStorage.getItem('username')
     const savedEmail = localStorage.getItem('userEmail')
+    const savedRole = localStorage.getItem('userRole')
 
     if (token) {
       setIsLoggedIn(true)
@@ -55,6 +69,11 @@ export default function AccountPage() {
         name: savedName || 'User Account',
         email: savedEmail || ''
       })
+      
+      // Optional: if a logged-in user lands here directly, route them outward immediately
+      if (savedRole) {
+        handleRoleRedirect(savedRole)
+      }
     }
   }, [])
 
@@ -161,6 +180,9 @@ export default function AccountPage() {
 
                             setStatusMessage('Welcome back! Logging you in... 🎉');
                             setIsLoggedIn(true);
+
+                            // Role routing evaluation
+                            handleRoleRedirect(data.role);
                           } else {
                             const errorData = await response.json().catch(() => ({}));
                             setStatusMessage(errorData.message || 'Invalid credentials. Please try again.');
@@ -247,6 +269,9 @@ export default function AccountPage() {
                             setStatusMessage('Successfully registered! Please log in. 🎉');
                             setUsername(''); setEmail(''); setPhoneNumber(''); setPassword(''); setConfirmPassword('');
                             setActiveTab('login');
+                            
+                            // Note: If your registration payload automatically logs users in and sends 
+                            // back token details, you would update localStorage and invoke handleRoleRedirect(data.role) here.
                           } else {
                             const errorData = await response.json().catch(() => ({}));
                             setStatusMessage(errorData.message || `Registration failed: ${response.status}`);
@@ -274,7 +299,7 @@ export default function AccountPage() {
                         <Label htmlFor="reg-email">Email</Label>
                         <Input 
                           id="reg-email" 
-                          type="email" 
+                          type="text" 
                           placeholder="Enter your email" 
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
