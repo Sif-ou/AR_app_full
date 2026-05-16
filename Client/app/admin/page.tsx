@@ -1,13 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation' 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { products } from '@/lib/data'
+
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -28,6 +30,7 @@ import {
   Trash2
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import router from 'next/router'
 
 // Mock data for dashboard
 const stats = [
@@ -77,6 +80,30 @@ const INITIAL_ACCOUNTS = [
   { id: 'USR-005', name: 'Kamel Tounsi', email: 'kamel.t@arsmart.com', role: 'Marketing Manager', status: 'Active', joined: 'May 02, 2026' },
 ]
 
+
+useEffect(() => {
+    const token = localStorage.getItem('token')
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+
+    if (!token || user.role !== 'ADMIN') {
+      router.replace('/account') 
+    } else {
+      setIsAuthorized(true)
+    }
+  }, [router])
+
+ 
+  if (!isAuthorized) {
+    return (
+      <div className="min-h-screen bg-secondary flex flex-col items-center justify-center space-y-4">
+        <div className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-muted-foreground font-medium">Verifying admin credentials...</p>
+      </div>
+    )
+  }
+
+
+
 export default function AdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [activeTab, setActiveTab] = useState('overview')
@@ -116,14 +143,12 @@ export default function AdminDashboard() {
     }))
   }
 
-  // Handle Account Deletion
   const deleteAccount = (id: string) => {
     if (confirm('Are you sure you want to completely revoke access and delete this entity?')) {
       setAccounts(prev => prev.filter(acc => acc.id !== id))
     }
   }
 
-  // Handle Account Provisioning Form Submission
   const handleProvisionAccount = (e: React.FormEvent) => {
     e.preventDefault()
     if (!newName || !newEmail) return
