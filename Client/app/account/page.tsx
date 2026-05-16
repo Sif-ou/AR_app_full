@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { User, Package, Heart, Settings, LogIn, UserPlus } from 'lucide-react'
+import { User, Package, Heart, Settings, LogIn, UserPlus, Eye, EyeOff } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 export default function AccountPage() {
@@ -29,6 +29,11 @@ export default function AccountPage() {
   const [statusMessage, setStatusMessage] = useState('')
   const [isCheckingRole, setIsCheckingRole] = useState(true)
 
+  // Password Visibility States
+  const [showLoginPassword, setShowLoginPassword] = useState(false)
+  const [showRegPassword, setShowRegPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+
   // State to hold active logged-in user profile details dynamically
   const [loggedInUser, setLoggedInUser] = useState({
     name: '',
@@ -44,8 +49,6 @@ export default function AccountPage() {
     wishlist: ['nordica-sofa', 'aurora-armchair']
   })
 
-
-
   // Helper function to navigate based on role cleanly
   const handleRoleRedirect = (role: string) => {
     if (role === 'ADMIN') {
@@ -56,18 +59,15 @@ export default function AccountPage() {
   }
 
   useEffect(() => {
-
     const token = localStorage.getItem('token')
     const savedName = localStorage.getItem('username')
     const savedEmail = localStorage.getItem('userEmail')
     const savedRole = localStorage.getItem('userRole')
 
-
-      if (savedRole === 'ADMIN') {
-        
-        router.push('/admin')
-        return;
-      }
+    if (savedRole === 'ADMIN') {
+      router.push('/admin')
+      return;
+    }
 
     if (token) {
       setIsLoggedIn(true)
@@ -75,7 +75,6 @@ export default function AccountPage() {
         name: savedName || 'User Account',
         email: savedEmail || ''
       })
-      
     }
 
     setIsCheckingRole(false) 
@@ -145,7 +144,7 @@ export default function AccountPage() {
                   <TabsList className="grid w-full grid-cols-2 mb-6">
                     <TabsTrigger value="login" className="flex items-center gap-2">
                       <LogIn className="h-4 w-4" />
-                      Sign In
+                      Sign It
                     </TabsTrigger>
                     <TabsTrigger value="register" className="flex items-center gap-2">
                       <UserPlus className="h-4 w-4" />
@@ -181,11 +180,11 @@ export default function AccountPage() {
                             localStorage.setItem('username', data.username); 
                             localStorage.setItem('userEmail', data.email);
 
-// 1. Check for admin instantly and return early to stop execution context
-if (data.role === 'ADMIN') {
-  router.push('/admin');
-  return; 
-}
+                            // 1. Check for admin instantly and return early to stop execution context
+                            if (data.role === 'ADMIN') {
+                              router.push('/admin');
+                              return; 
+                            }
 
                             setLoggedInUser({
                               name: data.username,
@@ -194,7 +193,6 @@ if (data.role === 'ADMIN') {
 
                             setStatusMessage('Welcome back! Logging you in... 🎉');
                             setIsLoggedIn(true);
-
 
                             handleRoleRedirect(data.role);
                             
@@ -225,15 +223,25 @@ if (data.role === 'ADMIN') {
                       
                       <div className="space-y-2">
                         <Label htmlFor="password">Password</Label>
-                        <Input 
-                          id="password" 
-                          name="password" 
-                          type="password" 
-                          placeholder="Enter your password" 
-                          value={loginPassword}
-                          onChange={(e) => setLoginPassword(e.target.value)}
-                          required 
-                        />
+                        <div className="relative">
+                          <Input 
+                            id="password" 
+                            name="password" 
+                            type={showLoginPassword ? "text" : "password"} 
+                            placeholder="Enter your password" 
+                            value={loginPassword}
+                            onChange={(e) => setLoginPassword(e.target.value)}
+                            required 
+                            className="pr-10"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowLoginPassword(!showLoginPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                          >
+                            {showLoginPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
                       </div>
 
                       <Button type="submit" className="w-full" disabled={loading}>
@@ -311,7 +319,7 @@ if (data.role === 'ADMIN') {
                         <Label htmlFor="reg-email">Email</Label>
                         <Input 
                           id="reg-email" 
-                          type="text" 
+                          type="email" 
                           placeholder="Enter your email" 
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
@@ -335,25 +343,45 @@ if (data.role === 'ADMIN') {
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="reg-password">Password</Label>
-                        <Input 
-                          id="reg-password" 
-                          type="password" 
-                          placeholder="Create a password" 
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          required 
-                        />
+                        <div className="relative">
+                          <Input 
+                            id="reg-password" 
+                            type={showRegPassword ? "text" : "password"} 
+                            placeholder="Create a password" 
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required 
+                            className="pr-10"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowRegPassword(!showRegPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                          >
+                            {showRegPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="confirm-password">Confirm Password</Label>
-                        <Input 
-                          id="confirm-password" 
-                          type="password" 
-                          placeholder="Confirm your password" 
-                          value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
-                          required 
-                        />
+                        <div className="relative">
+                          <Input 
+                            id="confirm-password" 
+                            type={showConfirmPassword ? "text" : "password"} 
+                            placeholder="Confirm your password" 
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            required 
+                            className="pr-10"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                          >
+                            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
                       </div>
                       <Button type="submit" className="w-full" disabled={loading}>
                         {loading ? 'Creating Account...' : 'Create Account'}
@@ -392,9 +420,6 @@ if (data.role === 'ADMIN') {
       </>
     )
   }
-
-
-
 
   return (
     <>
@@ -564,5 +589,4 @@ if (data.role === 'ADMIN') {
       <Footer />
     </>
   )
-  
 }
