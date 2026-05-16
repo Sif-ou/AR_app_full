@@ -272,7 +272,7 @@ useEffect(() => {
               <p className="text-xs text-slate-500 truncate">admin@gmail.com</p>
             </div>
             <Button variant="ghost" size="icon" className="text-slate-500 hover:text-rose-400 shrink-0 h-8 w-8" asChild>
-              <Link href="/account">
+              <Link href="/">
                 <LogOut className="h-4 w-4" />
               </Link>
             </Button>
