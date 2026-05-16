@@ -79,7 +79,7 @@ const INITIAL_ACCOUNTS = [
   { id: 'USR-004', name: 'Meriem Kaddour', email: 'm.kaddour@partner.com', role: 'User', status: 'Suspended', joined: 'Nov 22, 2025' },
   { id: 'USR-005', name: 'Kamel Tounsi', email: 'kamel.t@arsmart.com', role: 'Marketing Manager', status: 'Active', joined: 'May 02, 2026' },
 ]
-
+/*
 
 useEffect(() => {
     const token = localStorage.getItem('token')
@@ -101,7 +101,7 @@ useEffect(() => {
       </div>
     )
   }
-
+*/
 
 
 export default function AdminDashboard() {
