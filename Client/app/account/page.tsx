@@ -9,8 +9,10 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { User, Package, Heart, Settings, LogIn, UserPlus } from 'lucide-react'
+import { useRouter } from 'next/dist/client/components/navigation'
 
 export default function AccountPage() {
+  const router = useRouter()
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [activeTab, setActiveTab] = useState('login')
   const [activeSection, setActiveSection] = useState('profile') 
@@ -63,7 +65,14 @@ export default function AccountPage() {
                   </TabsList>
 
                   <TabsContent value="login">
-                    <form onSubmit={(e) => { e.preventDefault(); setIsLoggedIn(true); }} className="space-y-4">
+                    <form
+  onSubmit={(e) => {
+    e.preventDefault()
+    setIsLoggedIn(true)
+    router.push('/')
+  }}
+  className="space-y-4"
+>
                       <div className="space-y-2">
                         <Label htmlFor="email">Email</Label>
                         <Input id="email" type="email" placeholder="Enter your email" required />
@@ -80,7 +89,14 @@ export default function AccountPage() {
                   </TabsContent>
 
                   <TabsContent value="register">
-                    <form onSubmit={(e) => { e.preventDefault(); setIsLoggedIn(true); }} className="space-y-4">
+                    <form
+  onSubmit={(e) => {
+    e.preventDefault()
+    setIsLoggedIn(true)
+    router.push('/account')
+  }}
+  className="space-y-4"
+>
                       <div className="space-y-2">
                         <Label htmlFor="name">Full Name</Label>
                         <Input id="name" type="text" placeholder="Enter your name" required />
