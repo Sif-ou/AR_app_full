@@ -9,8 +9,10 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { User, Package, Heart, Settings, LogIn, UserPlus } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 export default function AccountPage() {
+  const router = useRouter()
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [activeTab, setActiveTab] = useState('login')
   const [activeSection, setActiveSection] = useState('profile') 
@@ -74,6 +76,10 @@ export default function AccountPage() {
     onSubmit={async (e) => { 
       e.preventDefault(); 
       
+    setIsLoggedIn(true)
+    router.push('/')
+  
+  
       // 1. Grab whatever they typed (could be an email or a phone number)
       const userInput = e.target.identifier.value;
       const passwordInput = e.target.password.value;
@@ -168,7 +174,8 @@ export default function AccountPage() {
                     <form 
                       onSubmit={async (e) => { 
                         e.preventDefault(); 
-                        
+                        setIsLoggedIn(true)
+    router.push('/account')
                         if (password !== confirmPassword) {
                           setStatusMessage("Passwords do not match!");
                           return;
