@@ -11,19 +11,16 @@ import java.util.Map;
 public class EmailVerificationService {
 
     private final RestClient restClient;
+    private final String brevoApiKey;
 
-    // This reads your existing PASSWORD_EMAIL_CODE variable from Render
-    @Value("${PASSWORD_EMAIL_CODE}")
-    private String brevoApiKey;
-
-    public EmailVerificationService(RestClient restClient) {
-        this.restClient = restClient;
+    public EmailVerificationService(@Value("${PASSWORD_EMAIL_CODE}") String brevoApiKey) {
+        this.restClient = RestClient.create();
+        this.brevoApiKey = brevoApiKey;
     }
 
     public void sendVerificationEmail(String recipientEmail, String verificationCode) {
         String url = "https://api.brevo.com/v3/smtp/email";
 
-        // Build the JSON payload required by Brevo's API
         Map<String, Object> requestBody = Map.of(
             "sender", Map.of("name", "Ecommerce Store", "email", "xdgenshin012@gmail.com"),
             "to", List.of(Map.of("email", recipientEmail)),
@@ -36,7 +33,7 @@ public class EmailVerificationService {
         try {
             restClient.post()
                     .uri(url)
-                    .header("api-key", brevoApiKey) // Send API key via header
+                    .header("api-key", brevoApiKey)
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(requestBody)
                     .retrieve()
