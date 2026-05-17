@@ -191,13 +191,41 @@ const handleVerifyCode = async () => {
     });
 
     if (response.ok) {
-      setStatusMessage('Account verified successfully! Redirecting... 🎉');
-      // Automatically switch to the login tab so they can sign in
-      setTimeout(() => {
-        setActiveTab('login');
-        setShowConfirmationMessage(false);
-        setVerificationCode('');
-      }, 2500);
+      const data = await response.json();
+
+      // Check if your backend sends the token upon verification success
+      if (data.token) {
+        // 1. Save credentials to session/local storage to log them in automatically
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('userRole', data.role || 'USER');
+        localStorage.setItem('username', data.username || username); 
+        localStorage.setItem('userEmail', data.email || targetEmail);
+
+        // 2. Hydrate client state so UI unlocks immediately
+        setLoggedInUser({
+          name: data.username || username,
+          email: data.email || targetEmail
+        });
+        setIsLoggedIn(true);
+
+        setStatusMessage('Account verified successfully! Logging you in... 🎉');
+
+        // 3. Clear temporary fields and redirect to home/dashboard
+        setTimeout(() => {
+          setShowConfirmationMessage(false);
+          setVerificationCode('');
+          handleRoleRedirect(data.role || 'USER');
+        }, 2000);
+
+      } else {
+        // Fallback fallback if your backend requires a manual sign-in step after verification
+        setStatusMessage('Account verified successfully! Please sign in below. 🎉');
+        setTimeout(() => {
+          setActiveTab('login');
+          setShowConfirmationMessage(false);
+          setVerificationCode('');
+        }, 2000);
+      }
     } else {
       const errorData = await response.json().catch(() => ({}));
       setStatusMessage(errorData.message || 'Invalid or expired verification code.');
