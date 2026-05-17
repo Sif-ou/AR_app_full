@@ -371,7 +371,7 @@ const handleVerifyCode = async (e: { preventDefault: () => void }) => {
                             setRegisteredEmail(email);
                             setStatusMessage('Successfully registered! Please log in. 🎉');
                             setUsername(''); setEmail(''); setPhoneNumber(''); setPassword(''); setConfirmPassword('');
-                            setActiveTab('login');
+                            setActiveTab('register');
                           } else {
                             const errorData = await response.json().catch(() => ({}));
                             setStatusMessage(errorData.message || `Registration failed: ${response.status}`);
