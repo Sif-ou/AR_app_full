@@ -14,7 +14,7 @@ public class MediaController {
         this.mediaService = mediaService;
     }
 
-    @PostMapping("add/media")
+    @PostMapping("/add/media")
     public ResponseEntity<?> addMedia(@RequestBody MediaCreateRequest request) {
         try {
             Media savedMedia = mediaService.saveMedia(request);

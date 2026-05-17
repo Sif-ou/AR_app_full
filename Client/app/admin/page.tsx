@@ -89,16 +89,35 @@ export default function AdminDashboard() {
       if (savedName) setAdminName(savedName)
       if (savedEmail) setAdminEmail(savedEmail)
       
-      setIsAuthorized(true)
+      // Introduces a 1.5s delay so the welcome screen finishes smoothly
+      const timer = setTimeout(() => {
+        setIsAuthorized(true)
+      }, 1500)
+
+      return () => clearTimeout(timer)
     }
   }, []) // Removed router from dependencies to run cleanly on mount
 
-  // 1. Loading State
+  // 1. Loading State (Now serving as your Welcome Screen)
   if (isAuthorized === null) {
     return (
-      <div className="min-h-screen bg-[#0F172A] flex flex-col items-center justify-center space-y-4">
-        <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-slate-400 font-medium">Verifying admin credentials...</p>
+      <div className="min-h-screen bg-[#0F172A] flex flex-col items-center justify-center space-y-3 font-sans antialiased">
+        {/* Friendly greeting icon */}
+        <div className="text-4xl animate-bounce mb-2">👋</div>
+        
+        {/* Welcome Text */}
+        <h1 className="text-2xl font-bold text-white tracking-wide animate-in fade-in duration-300">
+          Hello, Admin
+        </h1>
+        
+        <p className="text-slate-400 text-sm font-medium">
+          Preparing your dashboard...
+        </p>
+
+        {/* Smooth tracking bar */}
+        <div className="w-40 h-1 bg-slate-800 rounded-full overflow-hidden mt-4">
+          <div className="h-full bg-indigo-500 rounded-full animate-pulse w-full"></div>
+        </div>
       </div>
     )
   }
