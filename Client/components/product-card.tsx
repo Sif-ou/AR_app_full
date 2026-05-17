@@ -10,6 +10,7 @@ import { useCart } from '@/lib/cart-context'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { useWishlist } from '@/lib/wishlist-context'
+import { useRouter } from 'next/navigation'
 
 interface ProductCardProps {
   product: Product
@@ -19,7 +20,7 @@ interface ProductCardProps {
 export function ProductCard({ product, variant = 'default' }: ProductCardProps) { 
   const [isHovered, setIsHovered] = useState(false)
   const [selectedColorIndex, setSelectedColorIndex] = useState(0)
-
+const router = useRouter()
   const { addItem, setIsOpen } = useCart()
   const { toggleWishlist, isInWishlist } = useWishlist()
 
@@ -50,6 +51,15 @@ export function ProductCard({ product, variant = 'default' }: ProductCardProps) 
   const handleFavorite = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
+
+const token = localStorage.getItem('token')
+
+    if (!token) {
+      // 2. If not logged in, warn them and push them to login page
+      toast.error('Please log in to add items to your wishlist')
+      router.push('/account')
+      return // Stop execution here
+    }
 
     const wasLiked = liked
     toggleWishlist(product.id)
