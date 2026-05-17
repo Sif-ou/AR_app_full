@@ -17,7 +17,7 @@ export default function AccountPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [activeTab, setActiveTab] = useState('login')
   const [activeSection, setActiveSection] = useState('profile') 
-
+const [registeredEmail, setRegisteredEmail] = useState('');
   // Registration & Auth Form States
   const [loginIdentifier, setLoginIdentifier] = useState('')
   const [loginPassword, setLoginPassword] = useState('')
@@ -126,10 +126,12 @@ export default function AccountPage() {
   }
 
 
-  const handleResendCode = async () => {
-  // If the user hasn't filled out the email field yet, stop them
-  if (!email) {
-    setStatusMessage("Please enter an email address first.");
+ const handleResendCode = async () => {
+  // Use the saved registered email backup
+  const targetEmail = registeredEmail || email;
+
+  if (!targetEmail) {
+    setStatusMessage("No registration email found. Please try registering again.");
     return;
   }
 
@@ -137,14 +139,13 @@ export default function AccountPage() {
   setStatusMessage('');
 
   try {
-    // Calling your backend endpoint to trigger a new verification email
     const response = await fetch('https://ar-app-back-end.onrender.com/api/auth/resend-code', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
-      body: JSON.stringify({ email: email })
+      body: JSON.stringify({ email: targetEmail }) // Sends the exact registration email safely
     });
 
     if (response.ok) {
@@ -326,6 +327,7 @@ export default function AccountPage() {
 
                           if (response.ok) {
                             setShowConfirmationMessage(true);
+                            setRegisteredEmail(email);
                             setStatusMessage('Successfully registered! Please log in. 🎉');
                             setUsername(''); setEmail(''); setPhoneNumber(''); setPassword(''); setConfirmPassword('');
                             setActiveTab('login');

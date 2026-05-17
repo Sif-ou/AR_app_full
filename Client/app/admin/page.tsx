@@ -399,9 +399,6 @@ export default function AdminDashboard() {
     <span className="hidden sm:inline">View Live Store</span>
   </Button>
 </Link>
-              <Button variant="outline" size="icon" className="sm:hidden bg-slate-900 border-slate-800 text-slate-400">
-                <Eye className="h-4 w-4" />
-              </Button>
             </div>
           </div>
         </header>
