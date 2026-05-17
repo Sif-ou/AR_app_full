@@ -90,11 +90,6 @@ export default function PromoDashboard() {
               <option value="BOGO" className="bg-slate-800">BOGO</option>
             </select>
           </div>
-          
-          <button className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-lg shadow-indigo-600/10">
-            <Download className="w-4 h-4" />
-            Export Report
-          </button>
         </div>
       </header>
 

@@ -142,12 +142,6 @@ export default function DeliveryDashboard() {
             <Menu className="h-5 w-5 text-slate-900" />
           </Button>
           
-          <div className="flex items-center gap-4 ml-auto">
-            <div className="text-right">
-              <p className="text-[10px] sm:text-xs text-slate-500 font-medium">Today's Earnings</p>
-              <p className="font-bold text-slate-900 text-base sm:text-lg">$42.50</p>
-            </div>
-          </div>
         </header>
 
         <main className="p-4 sm:p-6 space-y-6">
