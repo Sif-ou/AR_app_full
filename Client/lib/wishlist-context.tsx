@@ -33,6 +33,13 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   }, [wishlist])
 
   const toggleWishlist = (productId: WishlistItemId) => {
+    const token = localStorage.getItem('token')
+
+  if (!token) {
+    // If not logged in, alert them and stop the function
+    alert('Please log in to add items to your wishlist!')
+    return
+  }
     setWishlist((prev) =>
       prev.includes(productId)
         ? prev.filter((id) => id !== productId)
