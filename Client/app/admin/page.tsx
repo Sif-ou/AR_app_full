@@ -76,6 +76,127 @@ export default function AdminDashboard() {
   const [adminName, setAdminName] = useState('Admin User')
   const [adminEmail, setAdminEmail] = useState('admin@Gmail.com')
 
+
+
+
+
+
+
+
+
+
+
+
+const [newPassword, setNewPassword] = useState('')
+const [newPhone, setNewPhone] = useState('')
+
+// 2. Update your submission function to talk to the Spring Boot endpoint:
+const handleProvisionAccount = async (e: React.FormEvent) => {
+  e.preventDefault()
+  
+  if (!newName || !newEmail || !newPassword || !newPhone) {
+    alert("Please populate all administrative mapping fields.");
+    return;
+  }
+
+  try {
+    const token = localStorage.getItem('token'); // Retrieve auth handle
+    
+    const response = await fetch('https://ar-app-back-end.onrender.com/api/admin/provision-account', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` // Pass JWT vector to backend security context
+      },
+      body: JSON.stringify({
+        username: newName,
+        email: newEmail,
+        password: newPassword,
+        phoneNumber: newPhone,
+        role: newRole
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      alert(data.message || "An error occurred during account routing provisioning.");
+      return;
+    }
+
+    // Success Hook: Update local UI table view state dynamically
+    const localizedMockAccount = {
+      id: `USR-${Math.floor(100 + Math.random() * 900)}`,
+      name: newName,
+      email: newEmail,
+      role: newRole,
+      status: 'Active',
+      joined: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
+    };
+
+    setAccounts(prev => [localizedMockAccount, ...prev]);
+    alert(data.message);
+    
+    // Clear standard form inputs
+    setNewName('');
+    setNewEmail('');
+    setNewPassword('');
+    setNewPhone('');
+    setNewRole('User');
+    setIsModalOpen(false);
+
+  } catch (error) {
+    console.error("Network communication failure:", error);
+    alert("Could not reach administrative server systems.");
+  }
+
+/*
+
+  const handleProvisionAccount = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newName || !newEmail) return
+
+    const newAccount = {
+      id: `USR-00${accounts.length + 1}`,
+      name: newName,
+      email: newEmail,
+      role: newRole,
+      status: 'Active',
+      joined: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
+    }
+
+    setAccounts(prev => [newAccount, ...prev])
+    setNewName('')
+    setNewEmail('')
+    setNewRole('User')
+    setIsModalOpen(false)
+  }
+
+ */
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   useEffect(() => {
     const token = localStorage.getItem('token')
     const userRole = localStorage.getItem('userRole')
@@ -173,25 +294,7 @@ export default function AdminDashboard() {
     }
   }
 
-  const handleProvisionAccount = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!newName || !newEmail) return
 
-    const newAccount = {
-      id: `USR-00${accounts.length + 1}`,
-      name: newName,
-      email: newEmail,
-      role: newRole,
-      status: 'Active',
-      joined: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
-    }
-
-    setAccounts(prev => [newAccount, ...prev])
-    setNewName('')
-    setNewEmail('')
-    setNewRole('User')
-    setIsModalOpen(false)
-  }
 
   const filteredAccounts = accounts.filter(acc => 
     acc.name.toLowerCase().includes(accountSearch.toLowerCase()) || 

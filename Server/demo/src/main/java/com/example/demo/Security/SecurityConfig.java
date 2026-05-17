@@ -57,6 +57,7 @@ public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter, UserDetailsService 
                 .requestMatchers("/api/add/products").permitAll()
                 .requestMatchers("/api/add/variants").permitAll()
                 .requestMatchers("/api/add/media").permitAll()
+                .requestMatchers("/api/admin/**").permitAll()
 
                 // Everything else requires authentication
                 .anyRequest().authenticated()

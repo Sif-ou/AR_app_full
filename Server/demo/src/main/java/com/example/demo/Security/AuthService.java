@@ -108,7 +108,6 @@ public AuthResponse register(RegisterRequest request) {
             throw new RuntimeException("User not found");
         }
 
-        // 6. CRITICAL CHECK: Block authentication if account is not active
         if (!user.isActive()) {
             throw new RuntimeException("Account is inactive. Please verify your email first.");
         }
