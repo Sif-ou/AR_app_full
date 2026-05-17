@@ -13,13 +13,13 @@ import { useRouter } from 'next/navigation'
 
 export default function AccountPage() {
   const [verificationCode, setVerificationCode] = useState('');
-const [isVerifying, setIsVerifying] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [showConfirmationMessage, setShowConfirmationMessage] = useState(false);
   const router = useRouter()
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [activeTab, setActiveTab] = useState('login')
   const [activeSection, setActiveSection] = useState('profile') 
-const [registeredEmail, setRegisteredEmail] = useState('');
+  const [registeredEmail, setRegisteredEmail] = useState('');
   // Registration & Auth Form States
   const [loginIdentifier, setLoginIdentifier] = useState('')
   const [loginPassword, setLoginPassword] = useState('')
@@ -56,6 +56,12 @@ const [registeredEmail, setRegisteredEmail] = useState('');
   const handleRoleRedirect = (role: string) => {
     if (role === 'ADMIN') {
       router.push('/admin')
+    } else if (role === 'STOCK') {
+      router.push('/stock')
+    } else if (role === 'DELIVERY') {
+      router.push('/delivery')
+    } else if (role === 'MARKETING MANAGER') {
+      router.push('/marketing')
     } else {
       router.push('/')
     }
@@ -67,8 +73,18 @@ const [registeredEmail, setRegisteredEmail] = useState('');
     const savedEmail = localStorage.getItem('userEmail')
     const savedRole = localStorage.getItem('userRole')
 
+    // Redirect straight away if a specialized workflow role is detected
     if (savedRole === 'ADMIN') {
       router.push('/admin')
+      return;
+    } else if (savedRole === 'STOCK') {
+      router.push('/stock')
+      return;
+    } else if (savedRole === 'DELIVERY') {
+      router.push('/delivery')
+      return;
+    } else if (savedRole === 'MARKETING MANAGER') {
+      router.push('/marketing')
       return;
     }
 
@@ -81,7 +97,7 @@ const [registeredEmail, setRegisteredEmail] = useState('');
     }
 
     setIsCheckingRole(false) 
-  }, [])
+  }, [router])
 
   const handleRemoveWishlist = (itemToRemove: string) => {
     setUserState((prev) => ({
@@ -128,79 +144,77 @@ const [registeredEmail, setRegisteredEmail] = useState('');
   }
 
 
- const handleResendCode = async () => {
-  // Use the saved registered email backup
-  const targetEmail = registeredEmail || email;
+  const handleResendCode = async () => {
+    const targetEmail = registeredEmail || email;
 
-  if (!targetEmail) {
-    setStatusMessage("No registration email found. Please try registering again.");
-    return;
-  }
-
-  setLoading(true);
-  setStatusMessage('');
-
-  try {
-    const response = await fetch('https://ar-app-back-end.onrender.com/api/auth/resend-code', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({ email: targetEmail }) // Sends the exact registration email safely
-    });
-
-    if (response.ok) {
-      setStatusMessage('A new verification code has been dispatched! 🎉');
-    } else {
-      const errorData = await response.json().catch(() => ({}));
-      setStatusMessage(errorData.message || 'Failed to send a new code.');
+    if (!targetEmail) {
+      setStatusMessage("No registration email found. Please try registering again.");
+      return;
     }
-  } catch (error) {
-    setStatusMessage('Network error. Unable to reach backend to resend code.');
-  } finally {
-    setLoading(false);
-  }
-};
 
-const handleVerifyCode = async (e: { preventDefault: () => void }) => {
-  e.preventDefault();
-  setIsVerifying(true);
-  setStatusMessage('');
+    setLoading(true);
+    setStatusMessage('');
 
-  const targetEmail = registeredEmail || email;
+    try {
+      const response = await fetch('https://ar-app-back-end.onrender.com/api/auth/resend-code', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ email: targetEmail })
+      });
 
-  try {
-    const response = await fetch('https://ar-app-back-end.onrender.com/api/auth/verify-code', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({ 
-        email: targetEmail, 
-        code: verificationCode 
-      })
-    });
-
-    if (response.ok) {
-      setStatusMessage('Account verified successfully! Redirecting... 🎉');
-      // Automatically switch to the login tab so they can sign in
-      setTimeout(() => {
-        setActiveTab('login');
-        setShowConfirmationMessage(false);
-        setVerificationCode('');
-      }, 2500);
-    } else {
-      const errorData = await response.json().catch(() => ({}));
-      setStatusMessage(errorData.message || 'Invalid or expired verification code.');
+      if (response.ok) {
+        setStatusMessage('A new verification code has been dispatched! 🎉');
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        setStatusMessage(errorData.message || 'Failed to send a new code.');
+      }
+    } catch (error) {
+      setStatusMessage('Network error. Unable to reach backend to resend code.');
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    setStatusMessage('Network error. Could not connect to the verification server.');
-  } finally {
-    setIsVerifying(false);
-  }
-};
+  };
+
+  const handleVerifyCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsVerifying(true);
+    setStatusMessage('');
+
+    const targetEmail = registeredEmail || email;
+
+    try {
+      const response = await fetch('https://ar-app-back-end.onrender.com/api/auth/verify-code', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ 
+          email: targetEmail, 
+          code: verificationCode 
+        })
+      });
+
+      if (response.ok) {
+        setStatusMessage('Account verified successfully! Redirecting... 🎉');
+        setTimeout(() => {
+          setActiveTab('login');
+          setShowConfirmationMessage(false);
+          setVerificationCode('');
+        }, 2500);
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        setStatusMessage(errorData.message || 'Invalid or expired verification code.');
+      }
+    } catch (error) {
+      setStatusMessage('Network error. Could not connect to the verification server.');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
 
   if (isCheckingRole) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>
@@ -222,7 +236,7 @@ const handleVerifyCode = async (e: { preventDefault: () => void }) => {
                   <TabsList className="grid w-full grid-cols-2 mb-6">
                     <TabsTrigger value="login" className="flex items-center gap-2">
                       <LogIn className="h-4 w-4" />
-                      Sign It
+                      Sign In
                     </TabsTrigger>
                     <TabsTrigger value="register" className="flex items-center gap-2">
                       <UserPlus className="h-4 w-4" />
@@ -258,9 +272,14 @@ const handleVerifyCode = async (e: { preventDefault: () => void }) => {
                             localStorage.setItem('username', data.username); 
                             localStorage.setItem('userEmail', data.email);
 
-                            // 1. Check for admin instantly and return early to stop execution context
-                            if (data.role === 'ADMIN') {
-                              router.push('/admin');
+                            // Intercept specialized roles to exit execution tree early
+                            if (
+                              data.role === 'ADMIN' || 
+                              data.role === 'STOCK' || 
+                              data.role === 'DELIVERY' || 
+                              data.role === 'MARKETING MANAGER'
+                            ) {
+                              handleRoleRedirect(data.role);
                               return; 
                             }
 
@@ -463,55 +482,52 @@ const handleVerifyCode = async (e: { preventDefault: () => void }) => {
                           </button>
                         </div>
                       </div>
-<Button type="submit" className="w-full" disabled={loading || showConfirmationMessage}>
-  {loading ? 'Creating Account...' : 'Create Account'}
-</Button>
+                      <Button type="submit" className="w-full" disabled={loading || showConfirmationMessage}>
+                        {loading ? 'Creating Account...' : 'Create Account'}
+                      </Button>
 
-{/* The dynamic confirmation panel */}
-{showConfirmationMessage && (
-  <div className="mt-4 p-4 border rounded-lg bg-muted/30 space-y-4 text-center animate-fade-in">
-    <p className="text-sm font-medium text-green-600">
-      Confirm: a verification code was sent to your real email.
-    </p>
-    
-    {/* Verification Code Input Field */}
-    <div className="space-y-2 text-left">
-      <Label htmlFor="verification-code" className="text-xs font-semibold">Enter Verification Code</Label>
-      <div className="flex gap-2">
-        <Input 
-          id="verification-code"
-          type="text"
-          maxLength={6} // Adjust if your OTP code layout length differs
-          placeholder="Enter code"
-          value={verificationCode}
-          onChange={(e) => setVerificationCode(e.target.value)}
-          className="text-center font-mono tracking-widest text-lg"
-        />
-        <Button 
-          type="button" 
-          onClick={handleVerifyCode} 
-          disabled={isVerifying || !verificationCode}
-          className="bg-accent hover:bg-accent/90"
-        >
-          {isVerifying ? 'Verifying...' : 'Verify'}
-        </Button>
-      </div>
-    </div>
-    
-    {/* Resend Code paragraph */}
-    <p className="text-xs text-muted-foreground pt-1 border-t">
-      Didn't get the code?{' '}
-      <button
-        type="button"
-        disabled={loading}
-        onClick={handleResendCode}
-        className="text-accent font-semibold hover:underline cursor-pointer disabled:opacity-50"
-      >
-        {loading ? 'Sending...' : 'Resend code'}
-      </button>
-    </p>
-  </div>
-)}
+                      {showConfirmationMessage && (
+                        <div className="mt-4 p-4 border rounded-lg bg-muted/30 space-y-4 text-center animate-fade-in">
+                          <p className="text-sm font-medium text-green-600">
+                            Confirm: a verification code was sent to your real email.
+                          </p>
+                          
+                          <div className="space-y-2 text-left">
+                            <Label htmlFor="verification-code" className="text-xs font-semibold">Enter Verification Code</Label>
+                            <div className="flex gap-2">
+                              <Input 
+                                id="verification-code"
+                                type="text"
+                                maxLength={6} 
+                                placeholder="Enter code"
+                                value={verificationCode}
+                                onChange={(e) => setVerificationCode(e.target.value)}
+                                className="text-center font-mono tracking-widest text-lg"
+                              />
+                              <Button 
+                                type="button" 
+                                onClick={handleVerifyCode} 
+                                disabled={isVerifying || !verificationCode}
+                                className="bg-accent hover:bg-accent/90"
+                              >
+                                {isVerifying ? 'Verifying...' : 'Verify'}
+                              </Button>
+                            </div>
+                          </div>
+                          
+                          <p className="text-xs text-muted-foreground pt-1 border-t">
+                            Didn't get the code?{' '}
+                            <button
+                              type="button"
+                              disabled={loading}
+                              onClick={handleResendCode}
+                              className="text-accent font-semibold hover:underline cursor-pointer disabled:opacity-50"
+                            >
+                              {loading ? 'Sending...' : 'Resend code'}
+                            </button>
+                          </p>
+                        </div>
+                      )}
 
                       {statusMessage && (
                         <p className={`text-sm font-medium mt-2 text-center ${statusMessage.includes('🎉') ? 'text-green-600' : 'text-red-500'}`}>

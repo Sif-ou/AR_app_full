@@ -13,7 +13,8 @@ import {
   Play, 
   AlertCircle,
   CheckCircle2,
-  Clock
+  Clock,
+  Lock // Imported for the access restriction layout
 } from 'lucide-react';
 
 // --- TypeScript Interfaces ---
@@ -46,6 +47,16 @@ const INITIAL_CAMPAIGNS: PromoCampaign[] = [
 ];
 
 export default function PromoDashboard() {
+  // --- ROLE VERIFICATION GATE ---
+  // Replace this mock hook state with your actual global auth platform (e.g., NextAuth, Clerk, custom context)
+  const [currentUser] = useState({
+    name: "Alex",
+    roles: ["MARKETING MANAGER"] // Change or empty this array to test authorization logic
+  });
+
+  const hasAccess = currentUser?.roles?.includes("MARKETING MANAGER");
+
+  // State Management
   const [campaigns, setCampaigns] = useState<PromoCampaign[]>(INITIAL_CAMPAIGNS);
   const [filterType, setFilterType] = useState<string>('All');
 
@@ -64,6 +75,34 @@ export default function PromoDashboard() {
     ? campaigns 
     : campaigns.filter(c => c.type === filterType);
 
+  // --- ACCESS DENIED UI ---
+  if (!hasAccess) {
+    return (
+      <div className="min-h-screen bg-[#0F172A] text-slate-100 flex items-center justify-center p-6 font-sans antialiased">
+        <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-8 max-w-md w-full text-center shadow-2xl backdrop-blur-md">
+          <div className="inline-flex p-4 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-2xl mb-5">
+            <Lock className="w-8 h-8" />
+          </div>
+          <h2 className="text-xl font-bold text-white mb-2">Access Level Clearance Required</h2>
+          <p className="text-sm text-slate-400 leading-relaxed mb-6">
+            This module processes live financial allocation metrics and budget deployments. You must hold the 
+            <span className="mx-1 px-2 py-0.5 font-mono text-xs text-indigo-300 bg-indigo-950/50 border border-indigo-800/60 rounded">
+              MARKETING MANAGER
+            </span> 
+            role attribute to review or alter campaign incentives.
+          </p>
+          <button 
+            onClick={() => window.history.back()}
+            className="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl py-2.5 text-sm font-semibold transition-colors focus:outline-none"
+          >
+            Return to Directory
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // --- REGULAR RENDERING (Clearance Met) ---
   return (
     <div className="min-h-screen bg-[#0F172A] text-slate-100 p-6 font-sans antialiased">
       
@@ -170,7 +209,6 @@ export default function PromoDashboard() {
             <p className="text-xs text-slate-400 mb-6">Ensuring promo codes bring fresh leads instead of margin dilution.</p>
             
             <div className="flex items-center justify-center py-4">
-              {/* Simple CSS-driven native donut representation */}
               <div className="relative w-32 h-32 rounded-full border-[12px] border-indigo-500 flex items-center justify-center border-t-slate-700">
                 <div className="text-center">
                   <span className="block text-2xl font-bold text-white">65%</span>
@@ -199,7 +237,7 @@ export default function PromoDashboard() {
         </div>
       </section>
 
-      {/* --- LIVE MONITOR MONITOR DATA TABLE --- */}
+      {/* --- LIVE MONITOR DATA TABLE --- */}
       <section className="bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden backdrop-blur-sm">
         <div className="p-5 border-b border-slate-800 flex items-center justify-between">
           <div>
@@ -225,13 +263,11 @@ export default function PromoDashboard() {
             <tbody className="divide-y divide-slate-800/60 font-medium">
               {filteredCampaigns.map((camp) => (
                 <tr key={camp.code} className="hover:bg-slate-800/20 transition-colors group">
-                  {/* Code & Type */}
                   <td className="py-3.5 px-5">
                     <span className="text-white block font-mono font-bold tracking-wide">{camp.code}</span>
                     <span className="text-[11px] text-slate-400">{camp.type}</span>
                   </td>
                   
-                  {/* Dynamic Status Badge */}
                   <td className="py-3.5 px-5">
                     {camp.status === 'Active' && (
                       <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
@@ -250,7 +286,6 @@ export default function PromoDashboard() {
                     )}
                   </td>
                   
-                  {/* Custom Progress Bar Column */}
                   <td className="py-3.5 px-5 min-w-[150px]">
                     <div className="flex items-center gap-2">
                       <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
@@ -263,22 +298,18 @@ export default function PromoDashboard() {
                     </div>
                   </td>
                   
-                  {/* Redemptions */}
                   <td className="py-3.5 px-5 text-right font-mono text-slate-200">
                     {camp.redemptions.toLocaleString()}
                   </td>
                   
-                  {/* CAC */}
                   <td className="py-3.5 px-5 text-right font-mono text-slate-200">
                     ${camp.cac.toFixed(2)}
                   </td>
                   
-                  {/* Net Profit */}
                   <td className="py-3.5 px-5 text-right font-mono text-emerald-400">
                     ${camp.netProfit.toLocaleString()}
                   </td>
                   
-                  {/* Operational Controls */}
                   <td className="py-3.5 px-5 text-center">
                     {camp.status === 'Expired' ? (
                       <span className="text-xs text-slate-500 italic">Locked</span>
@@ -338,4 +369,4 @@ function KPICard({ title, value, change, isPositive, icon, subtitle }: KPICardPr
       </div>
     </div>
   );
-} 
+}

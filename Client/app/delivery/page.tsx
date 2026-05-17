@@ -21,7 +21,8 @@ import {
   Wallet,
   Star,
   ChevronRight,
-  MoreVertical
+  MoreVertical,
+  Lock // Added for Unauthorized State UI
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -52,6 +53,16 @@ const deliveryHistory = [
 ]
 
 export default function DeliveryDashboard() {
+  // --- AUTHENTICATION & ROLE GATEWAY ---
+  // Connect this mock object to your actual useSession() or useAuth() hook.
+  const mockUser = {
+    isAuthenticated: true,
+    roles: ["DELIVERY"] // Toggle or change this string value to test unauthorized states
+  };
+
+  const hasDeliveryAccess = mockUser.isAuthenticated && mockUser.roles.includes("DELIVERY");
+
+  // State Management
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [activeTab, setActiveTab] = useState('active-orders')
 
@@ -61,6 +72,31 @@ export default function DeliveryDashboard() {
     window.open(url, '_blank');
   };
 
+  // --- ACCESS GUARD RENDER ---
+  if (!hasDeliveryAccess) {
+    return (
+      <div className="min-h-screen bg-[#121212] flex flex-col items-center justify-center p-6 font-sans antialiased">
+        <Card className="bg-zinc-900 border-none ring-1 ring-white/10 p-8 max-w-sm text-center shadow-2xl">
+          <div className="inline-flex p-4 bg-red-500/10 text-red-400 border border-red-500/20 rounded-full mb-4">
+            <Lock className="h-8 w-8" />
+          </div>
+          <CardTitle className="text-xl font-bold text-white mb-2">Restricted Area</CardTitle>
+          <CardDescription className="text-zinc-400 text-sm mb-6">
+            Your current account credentials lack transit manifest clearance. This route is exclusively assigned to personnel with the 
+            <code className="text-blue-400 bg-black px-1.5 py-0.5 rounded ml-1 text-xs font-mono">DELIVERY</code> role authorization.
+          </CardDescription>
+          <Button 
+            onClick={() => window.history.back()} 
+            className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 font-medium"
+          >
+            Go Back
+          </Button>
+        </Card>
+      </div>
+    );
+  }
+
+  // --- STANDARD AUTHORIZED RENDER ---
   return (
     <div className="min-h-screen bg-[#121212] flex overflow-x-hidden">
       {/* Mobile Sidebar Overlay */}
@@ -131,6 +167,22 @@ export default function DeliveryDashboard() {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
+        {/* Mobile Header Bar */}
+        <header className="bg-zinc-950/40 p-4 flex items-center justify-between border-b border-white/5 lg:hidden">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => setSidebarOpen(true)}
+            className="text-white hover:bg-white/5"
+          >
+            <Menu className="h-6 w-6" />
+          </Button>
+          <span className="font-bold text-md tracking-tight flex items-center gap-2 text-white">
+            <Package className="text-blue-500 h-4 w-4" /> AR<span className="text-blue-500">Go</span>
+          </span>
+          <div className="w-6 h-6" /> {/* Spacer */}
+        </header>
+
         <main className="p-4 sm:p-6 space-y-6">
           {activeTab === 'active-orders' && (
             <>

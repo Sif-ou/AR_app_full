@@ -13,7 +13,8 @@ import {
   Search,
   CheckCircle,
   Truck,
-  X
+  X,
+  Lock // Added for Access Denied view
 } from 'lucide-react';
 
 // --- TypeScript Interfaces ---
@@ -50,6 +51,17 @@ const INITIAL_STOCK: StockItem[] = [
 const CATEGORIES = ["Living Room", "Dining", "Office", "Bedroom", "Lighting"];
 
 export default function StockDashboard() {
+  // --- ROLE AUTHENTICATION CHECK ---
+  // Replace this mock hook with your actual auth solution (e.g., NextAuth, Clerk, custom context)
+  // Example: const { user } = useAuth();
+  const mockUser = {
+    isAuthenticated: true,
+    roles: ["STOCK", "USER"] // Change this to test the Access Denied screen
+  };
+
+  const hasStockAccess = mockUser.isAuthenticated && mockUser.roles.includes("STOCK");
+
+  // State Declarations
   const [inventory, setInventory] = useState<StockItem[]>(INITIAL_STOCK);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
@@ -67,7 +79,30 @@ export default function StockDashboard() {
     supplier: ''
   });
 
-  // Logic to issue an instant restock order simulation
+  // Render Access Denied Page if the user lacks authorization
+  if (!hasStockAccess) {
+    return (
+      <div className="min-h-screen bg-[#0F172A] text-slate-100 flex flex-col items-center justify-center p-6 font-sans antialiased">
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 max-w-md text-center shadow-2xl">
+          <div className="inline-flex p-4 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-full mb-4">
+            <Lock className="w-8 h-8" />
+          </div>
+          <h1 className="text-xl font-bold text-white mb-2">Access Denied</h1>
+          <p className="text-sm text-slate-400 mb-6">
+            You do not have the clearance required to view or manage showroom inventory. This area requires the <code className="text-amber-400 bg-slate-950 px-1.5 py-0.5 rounded text-xs font-mono">STOCK</code> role allocation.
+          </p>
+          <button 
+            onClick={() => window.history.back()} 
+            className="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium py-2 rounded-lg transition-colors border border-slate-700"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // --- REST OF THE CODE REMAINS UNCHANGED ---
   const triggerQuickReorder = (sku: string) => {
     setInventory(prev => prev.map(item => {
       if (item.sku === sku) {
@@ -77,12 +112,10 @@ export default function StockDashboard() {
     }));
   };
 
-  // Logic to add entirely new item to inventory
   const handleAddStockSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newStock.sku || !newStock.name || !newStock.supplier) return;
 
-    // Determine initial status automatically based on logic thresholds
     let calculatedStatus: 'In Stock' | 'Low Stock' | 'Out of Stock' = 'In Stock';
     if (newStock.currentStock === 0) {
       calculatedStatus = 'Out of Stock';
@@ -104,7 +137,6 @@ export default function StockDashboard() {
 
     setInventory(prev => [completedItem, ...prev]);
     
-    // Reset fields and close modal
     setNewStock({
       sku: '',
       name: '',
@@ -118,7 +150,6 @@ export default function StockDashboard() {
     setIsModalOpen(false);
   };
 
-  // Filter computations
   const filteredInventory = inventory.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           item.sku.toLowerCase().includes(searchQuery.toLowerCase());
@@ -126,7 +157,6 @@ export default function StockDashboard() {
     return matchesSearch && matchesCategory;
   });
 
-  // Derived metrics
   const totalSkuCount = inventory.length;
   const lowStockCount = inventory.filter(i => i.status === 'Low Stock').length;
   const outOfStockCount = inventory.filter(i => i.status === 'Out of Stock').length;
@@ -142,9 +172,7 @@ export default function StockDashboard() {
           <p className="text-sm text-slate-400">Real-time stock valuation, showroom floor allocations, and manufacturing procurement pipeline.</p>
         </div>
         
-        {/* Controls */}
         <div className="flex flex-wrap items-center gap-3">
-          {/* Search Bar input */}
           <div className="relative flex items-center bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-sm w-full sm:w-64">
             <Search className="w-4 h-4 text-slate-500 absolute left-3" />
             <input 
@@ -156,7 +184,6 @@ export default function StockDashboard() {
             />
           </div>
 
-          {/* Category Filter */}
           <div className="flex items-center bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm gap-2">
             <Filter className="w-4 h-4 text-slate-400" />
             <select 
@@ -269,10 +296,10 @@ export default function StockDashboard() {
                 <div>
                   <label className="block text-xs font-semibold uppercase text-slate-400 mb-1.5">Manufacturer / Supplier *</label>
                   <input 
-                    type="text" required placeholder="e.g. محل الابطال."
+                    type="text" required placeholder="e.g. Supplier name..."
                     value={newStock.supplier} onChange={e => setNewStock({...newStock, supplier: e.target.value})}
                     className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-slate-700"
-                />
+                  />
                 </div>
               </div>
 
@@ -329,8 +356,6 @@ export default function StockDashboard() {
 
       {/* --- WAREHOUSE METRICS & CAPACITY BLOCK --- */}
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        
-        {/* Fulfillment Activities Log */}
         <div className="lg:col-span-2 bg-slate-900/60 border border-slate-800 rounded-xl p-5 backdrop-blur-sm">
           <div className="flex items-center justify-between mb-4">
             <div>
@@ -366,7 +391,6 @@ export default function StockDashboard() {
           </div>
         </div>
 
-        {/* Warehouse Floor Volumetric Capacity Gauge */}
         <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5 backdrop-blur-sm flex flex-col justify-between">
           <div>
             <h3 className="text-base font-semibold text-white">Volumetric Staging Capacity</h3>
@@ -425,13 +449,11 @@ export default function StockDashboard() {
 
                 return (
                   <tr key={item.sku} className="hover:bg-slate-800/20 transition-colors group">
-                    {/* Part Identity Details */}
                     <td className="py-3.5 px-5">
                       <span className="text-white block font-semibold text-sm">{item.name}</span>
                       <span className="text-[11px] text-slate-400 font-mono tracking-wide">{item.sku} • {item.category}</span>
                     </td>
                     
-                    {/* Status Rules */}
                     <td className="py-3.5 px-5">
                       {item.status === 'In Stock' && (
                         <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
@@ -450,7 +472,6 @@ export default function StockDashboard() {
                       )}
                     </td>
                     
-                    {/* Visual Capacity Stack bar */}
                     <td className="py-3.5 px-5 text-right">
                       <span className="block font-mono text-white text-sm">{item.currentStock} units</span>
                       <div className="w-24 bg-slate-800 h-1 rounded-full overflow-hidden inline-block mt-1">
@@ -498,7 +519,6 @@ export default function StockDashboard() {
   );
 }
 
-// --- Internal Sub-Component: KPI Cards ---
 function KPICard({ title, value, statusType, icon, subtitle }: KPICardProps) {
   const statusBorderColor = {
     normal: 'border-slate-800 hover:border-slate-700',
