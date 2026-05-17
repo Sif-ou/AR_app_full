@@ -224,7 +224,7 @@ export default function StockDashboard() {
               <div>
                 <label className="block text-xs font-semibold uppercase text-slate-400 mb-1.5">Item Name & Finish Details *</label>
                 <input 
-                  type="text" required placeholder="e.g. Walnut Finished Modern Bookshelf"
+                  type="text" required placeholder="e.g. Aurora Lounge Chair"
                   value={newStock.name} onChange={e => setNewStock({...newStock, name: e.target.value})}
                   className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-slate-700"
                 />
@@ -269,7 +269,7 @@ export default function StockDashboard() {
                 <div>
                   <label className="block text-xs font-semibold uppercase text-slate-400 mb-1.5">Manufacturer / Supplier *</label>
                   <input 
-                    type="text" required placeholder="e.g. Heritage Woods Dist."
+                    type="text" required placeholder="e.g. محل الابطال."
                     value={newStock.supplier} onChange={e => setNewStock({...newStock, supplier: e.target.value})}
                     className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-slate-700"
                 />
