@@ -30,6 +30,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import router from 'next/router'
 
 
 
@@ -97,6 +98,20 @@ export default function ProductPageClient({ params }: { params: Promise<{ id: st
         onClick: () => setIsOpen(true)
       }
     })
+  }
+
+const handleWishlistClick = () => {
+    const token = localStorage.getItem('token')
+
+    if (!token) {
+      toast.error('Please log in to add items to your wishlist')
+      router.push('/account')
+      return
+    }
+
+    const wasFavorited = isFavorited
+    toggleWishlist(product.id)
+    toast.success(wasFavorited ? 'Removed from wishlist' : 'Added to wishlist')
   }
 
   const handleShare = async () => {
@@ -362,7 +377,7 @@ export default function ProductPageClient({ params }: { params: Promise<{ id: st
                 <Button 
                   size="lg" 
                   variant="outline"
-                  onClick={() => toggleWishlist(product.id)}
+                  onClick={handleWishlistClick}
                 >
                   <Heart className={cn("h-5 w-5", isFavorited && "fill-accent text-accent")} />
                 </Button>
