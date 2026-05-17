@@ -12,7 +12,6 @@ export default function ARViewer({ product, onClose }: ARViewerProps) {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    // 1. Properly load the custom element
     if (typeof window !== 'undefined') {
       import('@google/model-viewer').then(() => {
         setLoaded(true); // Only show the viewer once the library is ready
@@ -28,7 +27,7 @@ export default function ARViewer({ product, onClose }: ARViewerProps) {
     };
   }, []);
 
-  // Use the model provided by the database, or a stable fallback for testing
+
   const modelSrc = product.arModel || "https://cdn.jsdelivr.net/gh/Sif-ou/AR_app_full@main/3d models/3d_model_furni-v1.glb";
 
   return (
