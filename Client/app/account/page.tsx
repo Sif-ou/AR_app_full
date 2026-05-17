@@ -193,15 +193,15 @@ const handleVerifyCode = async () => {
     if (response.ok) {
       const data = await response.json();
 
-      // Check if your backend sends the token upon verification success
+      // Ensure your backend sends auth credentials on successful verification
       if (data.token) {
-        // 1. Save credentials to session/local storage to log them in automatically
+        // 1. Commit credentials to localStorage for automatic login session persistence
         localStorage.setItem('token', data.token);
         localStorage.setItem('userRole', data.role || 'USER');
         localStorage.setItem('username', data.username || username); 
         localStorage.setItem('userEmail', data.email || targetEmail);
 
-        // 2. Hydrate client state so UI unlocks immediately
+        // 2. Hydrate local states instantly to bypass login gating rules
         setLoggedInUser({
           name: data.username || username,
           email: data.email || targetEmail
@@ -210,16 +210,16 @@ const handleVerifyCode = async () => {
 
         setStatusMessage('Account verified successfully! Logging you in... 🎉');
 
-        // 3. Clear temporary fields and redirect to home/dashboard
+        // 3. Clear transient OTP states and trigger immediate dashboard or home redirection
         setTimeout(() => {
           setShowConfirmationMessage(false);
           setVerificationCode('');
           handleRoleRedirect(data.role || 'USER');
-        }, 2000);
+        }, 1500);
 
       } else {
-        // Fallback fallback if your backend requires a manual sign-in step after verification
-        setStatusMessage('Account verified successfully! Please sign in below. 🎉');
+        // Fallback fallback if backend does not return tokens on code matching routes
+        setStatusMessage('Account verified! Please manually sign in using your new password. 🎉');
         setTimeout(() => {
           setActiveTab('login');
           setShowConfirmationMessage(false);
