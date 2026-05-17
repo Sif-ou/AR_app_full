@@ -131,19 +131,6 @@ export default function DeliveryDashboard() {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="bg-white border-b h-16 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-40">
-          {/* VISIBLE SIDEBAR BUTTON */}
-          <Button 
-            variant="secondary" 
-            size="icon" 
-            className="lg:hidden mr-2 bg-slate-100 hover:bg-slate-200 border border-slate-200 shadow-sm transition-all" 
-            onClick={() => setSidebarOpen(true)}
-          >
-            <Menu className="h-5 w-5 text-slate-900" />
-          </Button>
-          
-        </header>
-
         <main className="p-4 sm:p-6 space-y-6">
           {activeTab === 'active-orders' && (
             <>
