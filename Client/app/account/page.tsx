@@ -125,6 +125,41 @@ export default function AccountPage() {
     }
   }
 
+
+  const handleResendCode = async () => {
+  // If the user hasn't filled out the email field yet, stop them
+  if (!email) {
+    setStatusMessage("Please enter an email address first.");
+    return;
+  }
+
+  setLoading(true);
+  setStatusMessage('');
+
+  try {
+    // Calling your backend endpoint to trigger a new verification email
+    const response = await fetch('https://ar-app-back-end.onrender.com/api/auth/resend-code', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ email: email })
+    });
+
+    if (response.ok) {
+      setStatusMessage('A new verification code has been dispatched! 🎉');
+    } else {
+      const errorData = await response.json().catch(() => ({}));
+      setStatusMessage(errorData.message || 'Failed to send a new code.');
+    }
+  } catch (error) {
+    setStatusMessage('Network error. Unable to reach backend to resend code.');
+  } finally {
+    setLoading(false);
+  }
+};
+
   if (isCheckingRole) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>
   }
@@ -385,15 +420,30 @@ export default function AccountPage() {
                           </button>
                         </div>
                       </div>
-                      <Button type="submit" className="w-full" disabled={loading}>
+<Button type="submit" className="w-full" disabled={loading}>
   {loading ? 'Creating Account...' : 'Create Account'}
 </Button>
 
-{/* This paragraph will only appear after the button is clicked and processing starts/finishes */}
+{/* 1. The original confirmation paragraph */}
 {showConfirmationMessage && (
-  <p className="mt-2 text-sm text-center text-muted-foreground animate-fade-in">
-    A confirmation code has been sent to your email. Please check your inbox.
-  </p>
+  <div className="mt-3 space-y-2 text-center animate-fade-in">
+    <p className="text-sm font-medium text-green-600">
+      Confirm: a verification code was sent to your real email.
+    </p>
+    
+    {/* 2. The working Resend Code paragraph */}
+    <p className="text-xs text-muted-foreground">
+      Didn't get the code?{' '}
+      <button
+        type="button"
+        disabled={loading}
+        onClick={handleResendCode}
+        className="text-accent font-semibold hover:underline cursor-pointer disabled:opacity-50"
+      >
+        {loading ? 'Sending...' : 'Resend code'}
+      </button>
+    </p>
+  </div>
 )}
 
                       {statusMessage && (
