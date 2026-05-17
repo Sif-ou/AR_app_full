@@ -12,6 +12,7 @@ import { User, Package, Heart, Settings, LogIn, UserPlus, Eye, EyeOff } from 'lu
 import { useRouter } from 'next/navigation'
 
 export default function AccountPage() {
+  const [showConfirmationMessage, setShowConfirmationMessage] = useState(false);
   const router = useRouter()
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [activeTab, setActiveTab] = useState('login')
@@ -289,6 +290,7 @@ export default function AccountPage() {
                           });
 
                           if (response.ok) {
+                            setShowConfirmationMessage(true);
                             setStatusMessage('Successfully registered! Please log in. 🎉');
                             setUsername(''); setEmail(''); setPhoneNumber(''); setPassword(''); setConfirmPassword('');
                             setActiveTab('login');
@@ -384,8 +386,15 @@ export default function AccountPage() {
                         </div>
                       </div>
                       <Button type="submit" className="w-full" disabled={loading}>
-                        {loading ? 'Creating Account...' : 'Create Account'}
-                      </Button>
+  {loading ? 'Creating Account...' : 'Create Account'}
+</Button>
+
+{/* This paragraph will only appear after the button is clicked and processing starts/finishes */}
+{showConfirmationMessage && (
+  <p className="mt-2 text-sm text-center text-muted-foreground animate-fade-in">
+    A confirmation code has been sent to your email. Please check your inbox.
+  </p>
+)}
 
                       {statusMessage && (
                         <p className={`text-sm font-medium mt-2 text-center ${statusMessage.includes('🎉') ? 'text-green-600' : 'text-red-500'}`}>
