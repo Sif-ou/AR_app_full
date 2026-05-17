@@ -9,6 +9,7 @@ type WishlistContextType = {
   toggleWishlist: (productId: WishlistItemId) => void
   isInWishlist: (productId: WishlistItemId) => boolean
   totalWishlistItems: number
+  clearWishlist: () => void
 }
 
 const WishlistContext = createContext<WishlistContextType | undefined>(undefined)
@@ -43,6 +44,10 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     return wishlist.includes(String(productId))
   }
 
+  const clearWishlist = () => {
+     setWishlist([])
+     localStorage.removeItem('wishlist_items')
+   }
   return (
     <WishlistContext.Provider
       value={{ 
@@ -50,6 +55,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
         toggleWishlist,
         isInWishlist,
         totalWishlistItems: wishlist.length,
+        clearWishlist
       }}//هنا يبعث data/functions لكل app.
     >
       {children}

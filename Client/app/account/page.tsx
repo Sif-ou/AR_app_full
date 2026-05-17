@@ -10,8 +10,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { User, Package, Heart, Settings, LogIn, UserPlus, Eye, EyeOff } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { useCart } from '@/lib/cart-context'
+import { useWishlist } from '@/lib/wishlist-context'
 
 export default function AccountPage() {
+  const { clearCart } = useCart()
+  const { clearWishlist } = useWishlist()
   const [verificationCode, setVerificationCode] = useState('');
 const [isVerifying, setIsVerifying] = useState(false);
   const [showConfirmationMessage, setShowConfirmationMessage] = useState(false);
@@ -225,7 +229,7 @@ const handleVerifyCode = async () => {
                   <TabsList className="grid w-full grid-cols-2 mb-6">
                     <TabsTrigger value="login" className="flex items-center gap-2">
                       <LogIn className="h-4 w-4" />
-                      Sign It
+                      Sign In
                     </TabsTrigger>
                     <TabsTrigger value="register" className="flex items-center gap-2">
                       <UserPlus className="h-4 w-4" />
@@ -588,19 +592,25 @@ if (response.ok) {
                 </CardContent>
               </Card>
               <Button
-                variant="outline"
-                className="w-full mt-4"
-                onClick={() => {
-                  localStorage.removeItem('token')
-                  localStorage.removeItem('userRole')
-                  localStorage.removeItem('username')
-                  localStorage.removeItem('userEmail')
-                  setIsLoggedIn(false)
-                  router.push('/account')
-                }}
-              >
-                Sign Out
-              </Button>
+  variant="outline"
+  className="w-full mt-4"
+  onClick={() => {
+    // 1. Clear authentication data
+    localStorage.removeItem('token')
+    localStorage.removeItem('userRole')
+    localStorage.removeItem('username')
+    localStorage.removeItem('userEmail')
+    
+    // 2. Clear the cart state instantly
+    clearCart()
+clearWishlist()
+    // 3. Update login view state and redirect
+    setIsLoggedIn(false)
+    router.push('/account')
+  }}
+>
+  Sign Out
+</Button>
             </div>
 
             <div className="lg:col-span-3 space-y-6">
