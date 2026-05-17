@@ -17,19 +17,7 @@ export function CartDrawer() {
       currency: 'USD'
     }).format(price)
   }
-const router = useRouter();
-const isLoggedIn = false;
 
-const handleCheckoutClick = (e: React.MouseEvent) => {
-  setIsOpen(false);
-
-  if (!isLoggedIn) {
-    // Prevent the default link behavior
-    e.preventDefault(); 
-    // Redirect to login, adding a callback url so they return here after logging in
-    router.push('/account?callbackUrl=/checkout'); 
-  }
-};
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetContent className="w-full sm:max-w-lg flex flex-col bg-background">
@@ -147,12 +135,12 @@ const handleCheckoutClick = (e: React.MouseEvent) => {
               </div>
 
               <div className="space-y-2">
-<Button className="w-full" size="lg" asChild>
-  <Link href="/checkout" onClick={handleCheckoutClick}>
-    Checkout
-    <ArrowRight className="ml-2 h-4 w-4" />
-  </Link>
-</Button>
+ <Button className="w-full" size="lg" asChild>
+                  <Link href="/checkout" onClick={() => setIsOpen(false)}>
+                    Checkout
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
                 <Button 
                   variant="outline" 
                   className="w-full" 
