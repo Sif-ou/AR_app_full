@@ -393,12 +393,12 @@ export default function AdminDashboard() {
               </div>
             </div>
             <div className="flex items-center gap-2 sm:gap-4 ml-4">
-              <Link href="/" target="_self" className="sm:target-blank">
-  <Button variant="outline" size="sm" className="bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white">
-    <Eye className="h-4 w-4 mr-2 text-indigo-400" />
-    View Live Store
-  </Button>
-</Link>
+              <Link href="/" target="_blank" className="hidden sm:block">
+                <Button variant="outline" size="sm" className="bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white">
+                  <Eye className="h-4 w-4 mr-2 text-indigo-400" />
+                  View Live Store
+                </Button>
+              </Link>
               <Button variant="outline" size="icon" className="sm:hidden bg-slate-900 border-slate-800 text-slate-400">
                 <Eye className="h-4 w-4" />
               </Button>
