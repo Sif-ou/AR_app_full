@@ -58,15 +58,16 @@ const [registeredEmail, setRegisteredEmail] = useState('');
   
 
 
-const handleRoleRedirect = (role: string) => {
-    if (role === 'ADMIN') {
-      router.push('/admin')
-    } else {
-      // Checks for ?callbackUrl= in the URL, otherwise falls back to the home page
-      const destination = searchParams.get('callbackUrl') || '/'
-      router.push(destination)
-    }
+ const handleRoleRedirect = (role: string) => {
+  if (role === 'ADMIN') {
+    router.push('/admin')
+  } else {
+    // Looks for ?callbackUrl=/checkout in the URL. If it doesn't exist, goes home ('/')
+    const destination = searchParams.get('callbackUrl') || '/'
+    router.push(destination)
   }
+}
+
   useEffect(() => {
     const token = localStorage.getItem('token')
     const savedName = localStorage.getItem('username')
@@ -168,7 +169,6 @@ if (!targetEmail) {
     setLoading(false);
   }
 };
-
 
 const handleVerifyCode = async () => {
   setIsVerifying(true);
