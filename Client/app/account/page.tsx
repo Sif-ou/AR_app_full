@@ -13,14 +13,13 @@ import { useRouter } from 'next/navigation'
 
 export default function AccountPage() {
   const [verificationCode, setVerificationCode] = useState('');
-  const [isVerifying, setIsVerifying] = useState(false);
+const [isVerifying, setIsVerifying] = useState(false);
   const [showConfirmationMessage, setShowConfirmationMessage] = useState(false);
   const router = useRouter()
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [activeTab, setActiveTab] = useState('login')
   const [activeSection, setActiveSection] = useState('profile') 
-  const [registeredEmail, setRegisteredEmail] = useState('');
-  
+const [registeredEmail, setRegisteredEmail] = useState('');
   // Registration & Auth Form States
   const [loginIdentifier, setLoginIdentifier] = useState('')
   const [loginPassword, setLoginPassword] = useState('')
@@ -53,16 +52,14 @@ export default function AccountPage() {
     wishlist: ['nordica-sofa', 'aurora-armchair']
   })
 
-  // Helper function to navigate based on role cleanly
+
+
+  
+
+
   const handleRoleRedirect = (role: string) => {
     if (role === 'ADMIN') {
       router.push('/admin')
-    } else if (role === 'STOCK') {
-      router.push('/stock')
-    } else if (role === 'DELIVERY') {
-      router.push('/delivery')
-    } else if (role === 'MARKETING MANAGER') {
-      router.push('/marketing')
     } else {
       router.push('/')
     }
@@ -74,8 +71,8 @@ export default function AccountPage() {
     const savedEmail = localStorage.getItem('userEmail')
     const savedRole = localStorage.getItem('userRole')
 
-    if (savedRole === 'ADMIN' || savedRole === 'STOCK' || savedRole === 'DELIVERY' || savedRole === 'MARKETING MANAGER') {
-      handleRoleRedirect(savedRole);
+    if (savedRole === 'ADMIN') {
+      router.push('/admin')
       return;
     }
 
@@ -88,7 +85,7 @@ export default function AccountPage() {
     }
 
     setIsCheckingRole(false) 
-  }, [router])
+  }, [])
 
   const handleRemoveWishlist = (itemToRemove: string) => {
     setUserState((prev) => ({
@@ -134,84 +131,79 @@ export default function AccountPage() {
     }
   }
 
-  const handleResendCode = async () => {
-    const targetEmail = registeredEmail || email;
 
-    if (!targetEmail) {
-      setStatusMessage("No registration email found. Please try registering again.");
-      return;
+ const handleResendCode = async () => {
+const targetEmail = registeredEmail; // Direct point to the saved snapshot
+
+if (!targetEmail) {
+  setStatusMessage('Error: Verification email target missing.');
+  setIsVerifying(false);
+  return;
+}
+
+  setLoading(true);
+  setStatusMessage('');
+
+  try {
+    const response = await fetch('https://ar-app-back-end.onrender.com/api/auth/resend-code', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ email: targetEmail }) // Sends the exact registration email safely
+    });
+
+    if (response.ok) {
+      setStatusMessage('A new verification code has been dispatched! 🎉');
+    } else {
+      const errorData = await response.json().catch(() => ({}));
+      setStatusMessage(errorData.message || 'Failed to send a new code.');
     }
+  } catch (error) {
+    setStatusMessage('Network error. Unable to reach backend to resend code.');
+  } finally {
+    setLoading(false);
+  }
+};
 
-    setLoading(true);
-    setStatusMessage('');
+const handleVerifyCode = async () => {
+  setIsVerifying(true);
+  setStatusMessage('');
 
-    try {
-      const response = await fetch('https://ar-app-back-end.onrender.com/api/auth/resend-code', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({ email: targetEmail })
-      });
+  const targetEmail = registeredEmail || email;
 
-      if (response.ok) {
-        setStatusMessage('A new verification code has been dispatched! 🎉');
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        setStatusMessage(errorData.message || 'Failed to send a new code.');
-      }
-    } catch (error) {
-      setStatusMessage('Network error. Unable to reach backend to resend code.');
-    } finally {
-      setLoading(false);
+  try {
+    const response = await fetch('https://ar-app-back-end.onrender.com/api/auth/verify-code', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ 
+        email: targetEmail, 
+        code: verificationCode 
+      })
+    });
+
+    if (response.ok) {
+      setStatusMessage('Account verified successfully! Redirecting... 🎉');
+      // Automatically switch to the login tab so they can sign in
+      setTimeout(() => {
+        setActiveTab('login');
+        setShowConfirmationMessage(false);
+        setVerificationCode('');
+      }, 2500);
+    } else {
+      const errorData = await response.json().catch(() => ({}));
+      setStatusMessage(errorData.message || 'Invalid or expired verification code.');
     }
-  };
-
-  const handleVerifyCode = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    setIsVerifying(true);
-    setStatusMessage('');
-
-    const targetEmail = registeredEmail; // Safe target now that state isn't overwritten directly
-
-    if (!targetEmail) {
-      setStatusMessage('Error: Verification email target missing.');
-      setIsVerifying(false);
-      return;
-    }
-
-    try {
-      const response = await fetch('https://ar-app-back-end.onrender.com/api/auth/verify-code', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({ 
-          email: targetEmail, 
-          code: verificationCode 
-        })
-      });
-
-      if (response.ok) {
-        setStatusMessage('Account verified successfully! Redirecting... 🎉');
-        setTimeout(() => {
-          setActiveTab('login');
-          setShowConfirmationMessage(false);
-          setVerificationCode('');
-          setRegisteredEmail('');
-        }, 2500);
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        setStatusMessage(errorData.message || 'Invalid or expired verification code.');
-      }
-    } catch (error) {
-      setStatusMessage('Network error. Could not connect to the verification server.');
-    } finally {
-      setIsVerifying(false);
-    }
-  };
+  } catch (error) {
+    setStatusMessage('Network error. Could not connect to the verification server.');
+  } finally {
+    setIsVerifying(false);
+  }
+};
 
   if (isCheckingRole) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>
@@ -233,7 +225,7 @@ export default function AccountPage() {
                   <TabsList className="grid w-full grid-cols-2 mb-6">
                     <TabsTrigger value="login" className="flex items-center gap-2">
                       <LogIn className="h-4 w-4" />
-                      Sign In
+                      Sign It
                     </TabsTrigger>
                     <TabsTrigger value="register" className="flex items-center gap-2">
                       <UserPlus className="h-4 w-4" />
@@ -269,8 +261,9 @@ export default function AccountPage() {
                             localStorage.setItem('username', data.username); 
                             localStorage.setItem('userEmail', data.email);
 
-                            if (['ADMIN', 'STOCK', 'DELIVERY', 'MARKETING MANAGER'].includes(data.role)) {
-                              handleRoleRedirect(data.role);
+                            // 1. Check for admin instantly and return early to stop execution context
+                            if (data.role === 'ADMIN') {
+                              router.push('/admin');
                               return; 
                             }
 
@@ -281,6 +274,7 @@ export default function AccountPage() {
 
                             setStatusMessage('Welcome back! Logging you in... 🎉');
                             setIsLoggedIn(true);
+
                             handleRoleRedirect(data.role);
                             
                           } else {
@@ -335,11 +329,15 @@ export default function AccountPage() {
                         {loading ? 'Authenticating...' : 'Sign In'}
                       </Button>
 
-                      {statusMessage && !showConfirmationMessage && (
+                      {statusMessage && (
                         <p className={`text-sm font-medium mt-2 text-center ${statusMessage.includes('🎉') ? 'text-green-600' : 'text-red-500'}`}>
                           {statusMessage}
                         </p>
                       )}
+
+                      <p className="text-center text-sm text-muted-foreground">
+                        <a href="#" className="text-accent hover:underline">Forgot your password?</a>
+                      </p>
                     </form>
                   </TabsContent>
 
@@ -371,15 +369,17 @@ export default function AccountPage() {
                             })
                           });
 
-                          if (response.ok) {
-                            // Fix: Capture current email value safely in registeredEmail first
-                            setRegisteredEmail(email);
-                            setShowConfirmationMessage(true);
-                            setStatusMessage('Successfully registered! Please verify your account. 🎉');
-                            
-                            // Safe to clear form entries now
-                            setUsername(''); setEmail(''); setPhoneNumber(''); setPassword(''); setConfirmPassword('');
-                          } else {
+if (response.ok) {
+  // 1. Capture the email value safely first
+  setRegisteredEmail(email);
+  setShowConfirmationMessage(true);
+  setStatusMessage('Successfully registered! Please verify your account. 🎉');
+  
+  // 2. Safe to clear form inputs now
+  setUsername(''); setEmail(''); setPhoneNumber(''); setPassword(''); setConfirmPassword('');
+}
+                          
+                          else {
                             const errorData = await response.json().catch(() => ({}));
                             setStatusMessage(errorData.message || `Registration failed: ${response.status}`);
                           }
@@ -391,136 +391,134 @@ export default function AccountPage() {
                       }} 
                       className="space-y-4"
                     >
-                      {/* Hide standard registration items once code validation prompt is open */}
-                      {!showConfirmationMessage && (
-                        <>
-                          <div className="space-y-2">
-                            <Label htmlFor="name">Full Name</Label>
-                            <Input 
-                              id="name" 
-                              type="text" 
-                              placeholder="Enter your name" 
-                              value={username}
-                              onChange={(e) => setUsername(e.target.value)}
-                              required 
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="reg-email">Email</Label>
-                            <Input 
-                              id="reg-email" 
-                              type="email" 
-                              placeholder="Enter your email" 
-                              value={email}
-                              onChange={(e) => setEmail(e.target.value)}
-                              required 
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="reg-phone">Phone Number</Label>
-                            <Input 
-                              id="reg-phone" 
-                              type="tel" 
-                              placeholder="0555123456" 
-                              value={phoneNumber}
-                              maxLength={10}
-                              onChange={(e) => {
-                                const onlyDigits = e.target.value.replace(/\D/g, '');
-                                setPhoneNumber(onlyDigits);
-                              }}
-                              required 
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="reg-password">Password</Label>
-                            <div className="relative">
-                              <Input 
-                                id="reg-password" 
-                                type={showRegPassword ? "text" : "password"} 
-                                placeholder="Create a password" 
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required 
-                                className="pr-10"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => setShowRegPassword(!showRegPassword)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                              >
-                                {showRegPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                              </button>
-                            </div>
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="confirm-password">Confirm Password</Label>
-                            <div className="relative">
-                              <Input 
-                                id="confirm-password" 
-                                type={showConfirmPassword ? "text" : "password"} 
-                                placeholder="Confirm your password" 
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                required 
-                                className="pr-10"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                              >
-                                {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                              </button>
-                            </div>
-                          </div>
-                          <Button type="submit" className="w-full" disabled={loading}>
-                            {loading ? 'Creating Account...' : 'Create Account'}
-                          </Button>
-                        </>
-                      )}
-
-                      {showConfirmationMessage && (
-                        <div className="mt-4 p-4 border rounded-lg bg-muted/30 space-y-4 text-center animate-fade-in">
-                          <p className="text-sm font-medium text-green-600">
-                            Confirm: a verification code was sent to {registeredEmail}.
-                          </p>
-                          
-                          <div className="space-y-2 text-left">
-                            <Label htmlFor="verification-code" className="text-xs font-semibold">Enter Verification Code</Label>
-                            <div className="flex gap-2">
-                              <Input 
-                                id="verification-code"
-                                type="text"
-                                maxLength={6} 
-                                placeholder="Enter code"
-                                value={verificationCode}
-                                onChange={(e) => setVerificationCode(e.target.value)}
-                                className="text-center font-mono tracking-widest text-lg"
-                              />
-                              <Button 
-                                type="button" // Important: Prevents native register form submission rules
-                                onClick={() => handleVerifyCode()} 
-                                disabled={isVerifying || !verificationCode}
-                                className="bg-accent hover:bg-accent/90"
-                              >
-                                {isVerifying ? 'Verifying...' : 'Verify'}
-                              </Button>
-                            </div>
-                          </div>
-                          
-                          <p className="text-xs text-muted-foreground pt-1 border-t">
-                            Didn't get the code?{' '}
-                            <button
-                              type="button"
-                              disabled={loading}
-                              onClick={handleResendCode}
-                              className="text-accent font-semibold hover:underline cursor-pointer disabled:opacity-50"
-                            >
-                              {loading ? 'Sending...' : 'Resend code'}
-                            </button>
-                          </p>
+                      <div className="space-y-2">
+                        <Label htmlFor="name">Full Name</Label>
+                        <Input 
+                          id="name" 
+                          type="text" 
+                          placeholder="Enter your name" 
+                          value={username}
+                          onChange={(e) => setUsername(e.target.value)}
+                          required 
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="reg-email">Email</Label>
+                        <Input 
+                          id="reg-email" 
+                          type="email" 
+                          placeholder="Enter your email" 
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          required 
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="reg-phone">Phone Number</Label>
+                        <Input 
+                          id="reg-phone" 
+                          type="tel" 
+                          placeholder="0555123456" 
+                          value={phoneNumber}
+                          maxLength={10}
+                          onChange={(e) => {
+                            const onlyDigits = e.target.value.replace(/\D/g, '');
+                            setPhoneNumber(onlyDigits);
+                          }}
+                          required 
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="reg-password">Password</Label>
+                        <div className="relative">
+                          <Input 
+                            id="reg-password" 
+                            type={showRegPassword ? "text" : "password"} 
+                            placeholder="Create a password" 
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required 
+                            className="pr-10"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowRegPassword(!showRegPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                          >
+                            {showRegPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
                         </div>
-                      )}
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="confirm-password">Confirm Password</Label>
+                        <div className="relative">
+                          <Input 
+                            id="confirm-password" 
+                            type={showConfirmPassword ? "text" : "password"} 
+                            placeholder="Confirm your password" 
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            required 
+                            className="pr-10"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                          >
+                            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
+                      </div>
+<Button type="submit" className="w-full" disabled={loading || showConfirmationMessage}>
+  {loading ? 'Creating Account...' : 'Create Account'}
+</Button>
+
+{/* The dynamic confirmation panel */}
+{showConfirmationMessage && (
+  <div className="mt-4 p-4 border rounded-lg bg-muted/30 space-y-4 text-center animate-fade-in">
+    <p className="text-sm font-medium text-green-600">
+      Confirm: a verification code was sent to your real email.
+    </p>
+    
+    {/* Verification Code Input Field */}
+    <div className="space-y-2 text-left">
+      <Label htmlFor="verification-code" className="text-xs font-semibold">Enter Verification Code</Label>
+      <div className="flex gap-2">
+        <Input 
+          id="verification-code"
+          type="text"
+          maxLength={6} // Adjust if your OTP code layout length differs
+          placeholder="Enter code"
+          value={verificationCode}
+          onChange={(e) => setVerificationCode(e.target.value)}
+          className="text-center font-mono tracking-widest text-lg"
+        />
+<Button 
+  type="button" 
+  onClick={() => handleVerifyCode()} // This will now clear perfectly without errors
+  disabled={isVerifying || !verificationCode}
+  className="bg-accent hover:bg-accent/90"
+>
+  {isVerifying ? 'Verifying...' : 'Verify'}
+</Button>
+      </div>
+    </div>
+    
+    {/* Resend Code paragraph */}
+    <p className="text-xs text-muted-foreground pt-1 border-t">
+      Didn't get the code?{' '}
+      <button
+        type="button"
+        disabled={loading}
+        onClick={handleResendCode}
+        className="text-accent font-semibold hover:underline cursor-pointer disabled:opacity-50"
+      >
+        {loading ? 'Sending...' : 'Resend code'}
+      </button>
+    </p>
+  </div>
+)}
 
                       {statusMessage && (
                         <p className={`text-sm font-medium mt-2 text-center ${statusMessage.includes('🎉') ? 'text-green-600' : 'text-red-500'}`}>
