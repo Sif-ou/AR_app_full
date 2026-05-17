@@ -1,39 +1,50 @@
 package com.example.demo.User;
 
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class EmailVerificationService {
 
-    private final JavaMailSender mailSender;
+    private final RestClient restClient;
 
-    // Injecting the mail sender automatically configured by Spring Boot
-    public EmailVerificationService(JavaMailSender mailSender) {
-        this.mailSender = mailSender;
+    // This reads your existing PASSWORD_EMAIL_CODE variable from Render
+    @Value("${PASSWORD_EMAIL_CODE}")
+    private String brevoApiKey;
+
+    public EmailVerificationService(RestClient restClient) {
+        this.restClient = restClient;
     }
 
     public void sendVerificationEmail(String recipientEmail, String verificationCode) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        
-        // This must match your verified sender email in Brevo
-        message.setFrom("xdgenshin012@gmail.com"); 
-        message.setTo(recipientEmail);
-        
-        // Email content strings
-        message.setSubject(" Verify Your Account - Ecommerce Store ");
-        message.setText("Hello,\n\n"
-                + "Thank you for registering. Please use the following 6-digit confirmation code to verify your account:\n\n"
-                + "👉 " + verificationCode + "\n\n"
-                + "This code will expire after 15 min . If you did not request this, please ignore this email.\n\n"
-                + "Best regards,\n Your ChatBot Robert ");
+        String url = "https://api.brevo.com/v3/smtp/email";
+
+        // Build the JSON payload required by Brevo's API
+        Map<String, Object> requestBody = Map.of(
+            "sender", Map.of("name", "Ecommerce Store", "email", "xdgenshin012@gmail.com"),
+            "to", List.of(Map.of("email", recipientEmail)),
+            "subject", "Verify Your Account - Ecommerce Store",
+            "htmlContent", "<h3>Hello,</h3><p>Thank you for registering. Please use the following 6-digit confirmation code to verify your account:</p>"
+                    + "<h2 style='color:#2563eb;'>" + verificationCode + "</h2>"
+                    + "<p>This code will expire after 15 minutes.</p><p>Best regards,<br>Your ChatBot Robert</p>"
+        );
 
         try {
-            mailSender.send(message);
-            System.out.println("Verification email sent successfully to " + recipientEmail);
+            restClient.post()
+                    .uri(url)
+                    .header("api-key", brevoApiKey) // Send API key via header
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(requestBody)
+                    .retrieve()
+                    .toBodilessEntity();
+
+            System.out.println("Verification email successfully sent via HTTPS API to " + recipientEmail);
         } catch (Exception e) {
-            System.err.println("Failed to send email: " + e.getMessage());
+            System.err.println("Failed to send email via HTTP API: " + e.getMessage());
         }
     }
 }
