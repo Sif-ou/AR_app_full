@@ -20,6 +20,7 @@ export default function AccountPage() {
   const [activeTab, setActiveTab] = useState('login')
   const [activeSection, setActiveSection] = useState('profile') 
   const [registeredEmail, setRegisteredEmail] = useState('');
+  
   // Registration & Auth Form States
   const [loginIdentifier, setLoginIdentifier] = useState('')
   const [loginPassword, setLoginPassword] = useState('')
@@ -73,18 +74,8 @@ export default function AccountPage() {
     const savedEmail = localStorage.getItem('userEmail')
     const savedRole = localStorage.getItem('userRole')
 
-    // Redirect straight away if a specialized workflow role is detected
-    if (savedRole === 'ADMIN') {
-      router.push('/admin')
-      return;
-    } else if (savedRole === 'STOCK') {
-      router.push('/stock')
-      return;
-    } else if (savedRole === 'DELIVERY') {
-      router.push('/delivery')
-      return;
-    } else if (savedRole === 'MARKETING MANAGER') {
-      router.push('/marketing')
+    if (savedRole === 'ADMIN' || savedRole === 'STOCK' || savedRole === 'DELIVERY' || savedRole === 'MARKETING MANAGER') {
+      handleRoleRedirect(savedRole);
       return;
     }
 
@@ -143,7 +134,6 @@ export default function AccountPage() {
     }
   }
 
-
   const handleResendCode = async () => {
     const targetEmail = registeredEmail || email;
 
@@ -178,12 +168,18 @@ export default function AccountPage() {
     }
   };
 
-  const handleVerifyCode = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleVerifyCode = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setIsVerifying(true);
     setStatusMessage('');
 
-    const targetEmail = registeredEmail || email;
+    const targetEmail = registeredEmail; // Safe target now that state isn't overwritten directly
+
+    if (!targetEmail) {
+      setStatusMessage('Error: Verification email target missing.');
+      setIsVerifying(false);
+      return;
+    }
 
     try {
       const response = await fetch('https://ar-app-back-end.onrender.com/api/auth/verify-code', {
@@ -204,6 +200,7 @@ export default function AccountPage() {
           setActiveTab('login');
           setShowConfirmationMessage(false);
           setVerificationCode('');
+          setRegisteredEmail('');
         }, 2500);
       } else {
         const errorData = await response.json().catch(() => ({}));
@@ -272,13 +269,7 @@ export default function AccountPage() {
                             localStorage.setItem('username', data.username); 
                             localStorage.setItem('userEmail', data.email);
 
-                            // Intercept specialized roles to exit execution tree early
-                            if (
-                              data.role === 'ADMIN' || 
-                              data.role === 'STOCK' || 
-                              data.role === 'DELIVERY' || 
-                              data.role === 'MARKETING MANAGER'
-                            ) {
+                            if (['ADMIN', 'STOCK', 'DELIVERY', 'MARKETING MANAGER'].includes(data.role)) {
                               handleRoleRedirect(data.role);
                               return; 
                             }
@@ -290,7 +281,6 @@ export default function AccountPage() {
 
                             setStatusMessage('Welcome back! Logging you in... 🎉');
                             setIsLoggedIn(true);
-
                             handleRoleRedirect(data.role);
                             
                           } else {
@@ -345,15 +335,11 @@ export default function AccountPage() {
                         {loading ? 'Authenticating...' : 'Sign In'}
                       </Button>
 
-                      {statusMessage && (
+                      {statusMessage && !showConfirmationMessage && (
                         <p className={`text-sm font-medium mt-2 text-center ${statusMessage.includes('🎉') ? 'text-green-600' : 'text-red-500'}`}>
                           {statusMessage}
                         </p>
                       )}
-
-                      <p className="text-center text-sm text-muted-foreground">
-                        <a href="#" className="text-accent hover:underline">Forgot your password?</a>
-                      </p>
                     </form>
                   </TabsContent>
 
@@ -386,11 +372,13 @@ export default function AccountPage() {
                           });
 
                           if (response.ok) {
-                            setShowConfirmationMessage(true);
+                            // Fix: Capture current email value safely in registeredEmail first
                             setRegisteredEmail(email);
-                            setStatusMessage('Successfully registered! Please log in. 🎉');
+                            setShowConfirmationMessage(true);
+                            setStatusMessage('Successfully registered! Please verify your account. 🎉');
+                            
+                            // Safe to clear form entries now
                             setUsername(''); setEmail(''); setPhoneNumber(''); setPassword(''); setConfirmPassword('');
-                            setActiveTab('register');
                           } else {
                             const errorData = await response.json().catch(() => ({}));
                             setStatusMessage(errorData.message || `Registration failed: ${response.status}`);
@@ -403,93 +391,98 @@ export default function AccountPage() {
                       }} 
                       className="space-y-4"
                     >
-                      <div className="space-y-2">
-                        <Label htmlFor="name">Full Name</Label>
-                        <Input 
-                          id="name" 
-                          type="text" 
-                          placeholder="Enter your name" 
-                          value={username}
-                          onChange={(e) => setUsername(e.target.value)}
-                          required 
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="reg-email">Email</Label>
-                        <Input 
-                          id="reg-email" 
-                          type="email" 
-                          placeholder="Enter your email" 
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          required 
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="reg-phone">Phone Number</Label>
-                        <Input 
-                          id="reg-phone" 
-                          type="tel" 
-                          placeholder="0555123456" 
-                          value={phoneNumber}
-                          maxLength={10}
-                          onChange={(e) => {
-                            const onlyDigits = e.target.value.replace(/\D/g, '');
-                            setPhoneNumber(onlyDigits);
-                          }}
-                          required 
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="reg-password">Password</Label>
-                        <div className="relative">
-                          <Input 
-                            id="reg-password" 
-                            type={showRegPassword ? "text" : "password"} 
-                            placeholder="Create a password" 
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required 
-                            className="pr-10"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowRegPassword(!showRegPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                          >
-                            {showRegPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                          </button>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="confirm-password">Confirm Password</Label>
-                        <div className="relative">
-                          <Input 
-                            id="confirm-password" 
-                            type={showConfirmPassword ? "text" : "password"} 
-                            placeholder="Confirm your password" 
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            required 
-                            className="pr-10"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                          >
-                            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                          </button>
-                        </div>
-                      </div>
-                      <Button type="submit" className="w-full" disabled={loading || showConfirmationMessage}>
-                        {loading ? 'Creating Account...' : 'Create Account'}
-                      </Button>
+                      {/* Hide standard registration items once code validation prompt is open */}
+                      {!showConfirmationMessage && (
+                        <>
+                          <div className="space-y-2">
+                            <Label htmlFor="name">Full Name</Label>
+                            <Input 
+                              id="name" 
+                              type="text" 
+                              placeholder="Enter your name" 
+                              value={username}
+                              onChange={(e) => setUsername(e.target.value)}
+                              required 
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="reg-email">Email</Label>
+                            <Input 
+                              id="reg-email" 
+                              type="email" 
+                              placeholder="Enter your email" 
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
+                              required 
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="reg-phone">Phone Number</Label>
+                            <Input 
+                              id="reg-phone" 
+                              type="tel" 
+                              placeholder="0555123456" 
+                              value={phoneNumber}
+                              maxLength={10}
+                              onChange={(e) => {
+                                const onlyDigits = e.target.value.replace(/\D/g, '');
+                                setPhoneNumber(onlyDigits);
+                              }}
+                              required 
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="reg-password">Password</Label>
+                            <div className="relative">
+                              <Input 
+                                id="reg-password" 
+                                type={showRegPassword ? "text" : "password"} 
+                                placeholder="Create a password" 
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required 
+                                className="pr-10"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowRegPassword(!showRegPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                              >
+                                {showRegPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                              </button>
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="confirm-password">Confirm Password</Label>
+                            <div className="relative">
+                              <Input 
+                                id="confirm-password" 
+                                type={showConfirmPassword ? "text" : "password"} 
+                                placeholder="Confirm your password" 
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                required 
+                                className="pr-10"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                              >
+                                {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                              </button>
+                            </div>
+                          </div>
+                          <Button type="submit" className="w-full" disabled={loading}>
+                            {loading ? 'Creating Account...' : 'Create Account'}
+                          </Button>
+                        </>
+                      )}
 
                       {showConfirmationMessage && (
                         <div className="mt-4 p-4 border rounded-lg bg-muted/30 space-y-4 text-center animate-fade-in">
                           <p className="text-sm font-medium text-green-600">
-                            Confirm: a verification code was sent to your real email.
+                            Confirm: a verification code was sent to {registeredEmail}.
                           </p>
                           
                           <div className="space-y-2 text-left">
@@ -505,8 +498,8 @@ export default function AccountPage() {
                                 className="text-center font-mono tracking-widest text-lg"
                               />
                               <Button 
-                                type="button" 
-                                onClick={handleVerifyCode} 
+                                type="button" // Important: Prevents native register form submission rules
+                                onClick={() => handleVerifyCode()} 
                                 disabled={isVerifying || !verificationCode}
                                 className="bg-accent hover:bg-accent/90"
                               >
