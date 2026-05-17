@@ -28,9 +28,7 @@ const handleCheckoutClick = (e: React.MouseEvent) => {
     e.preventDefault(); 
     // Redirect to login, adding a callback url so they return here after logging in
     router.push('/account?callbackUrl=/checkout'); 
-  }else {
-  router.push('/checkout')
-}
+  }
 };
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
