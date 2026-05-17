@@ -92,16 +92,20 @@
 
     </dependencies>
 
-    <build>
+<build>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version> <!-- Explicitly defining the version avoids container defaults -->
                 <configuration>
+                    <source>17</source>
+                    <target>17</target>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
+                            <!-- This will correctly bind to Spring Boot's managed version -->
                             <version>${lombok.version}</version>
                         </path>
                     </annotationProcessorPaths>
@@ -119,4 +123,5 @@
             </plugin>
         </plugins>
     </build>
+
 </project>
