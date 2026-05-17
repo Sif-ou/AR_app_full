@@ -15,5 +15,4 @@ Server folder:
   . The client side and server side are hosted separately on different platforms.
 
 
-  visit the web site : https://ar-app-full-ntpk.vercel.app/
-  also this one : [ar-app-full-delta.vercel.app](https://ar-app-full-delta.vercel.app/)
+  visit the web site : [ar-app-full-delta.vercel.app](https://ar-app-full-delta.vercel.app/)
