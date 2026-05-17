@@ -26,7 +26,7 @@ public class Variants {
 
     @ManyToOne 
     @JoinColumn(name = "color_id", referencedColumnName = "id" )
-    private Color color_id ;
+    private Color color ;
 
 
 
@@ -45,10 +45,10 @@ public class Variants {
     private String description ;
 
 
-    public Variants(Long id, Product product, Color color_id, String name, String sku , int percentage , int quantity) {
+    public Variants(Long id, Product product, Color color, String name, String sku , int percentage , int quantity) {
         this.id = id;
         this.product = product;
-        this.color_id = color_id;
+        this.color = color;
         this.name = name;
         this.sku = sku;
         this.percentage = percentage;
@@ -75,11 +75,11 @@ public class Variants {
     }
 
     public Color getColor_id() {
-        return color_id;
+        return color;
     }
 
-    public void setColor_id(Color color_id) {
-        this.color_id = color_id;
+    public void setColor_id(Color color) {
+        this.color = color;
     }
 
     public String getName() {
@@ -112,6 +112,14 @@ public class Variants {
 
     public void setQuantity(int quantity) {
         this.quantity = quantity;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
 

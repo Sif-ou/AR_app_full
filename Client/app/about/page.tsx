@@ -4,7 +4,7 @@ import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { ArrowRight, Leaf, Truck, Shield, Heart } from 'lucide-react'
+import { ArrowRight, Leaf, Truck, Shield, Heart, Download } from 'lucide-react'
 
 const values = [
   {
@@ -30,9 +30,9 @@ const values = [
 ]
 
 const team = [
-  { name: 'Aymen ', image: 'https://wallpapers.com/images/hd/anonymous-profile-silhouette-b714qekh29tu1anb.jpg' },
-  { name: 'Ali', image: 'https://wallpapers.com/images/hd/anonymous-profile-silhouette-b714qekh29tu1anb.jpg' },
-  { name: 'Seif', image: 'https://wallpapers.com/images/hd/anonymous-profile-silhouette-b714qekh29tu1anb.jpg' },
+  { name: 'Seif ', image: 'https://wallpapers.com/images/hd/anonymous-profile-silhouette-b714qekh29tu1anb.jpg' },
+  { name: 'Aymen',  image: 'https://wallpapers.com/images/hd/anonymous-profile-silhouette-b714qekh29tu1anb.jpg' },
+  { name: 'Ali',  image: 'https://wallpapers.com/images/hd/anonymous-profile-silhouette-b714qekh29tu1anb.jpg' }
 ]
 
 export default function AboutPage() {
@@ -155,22 +155,33 @@ export default function AboutPage() {
         </section>
 
         {/* CTA Section */}
-        <section className="py-20 bg-accent text-accent-foreground">
-          <div className="container mx-auto px-4 text-center">
-            <h2 className="font-serif text-3xl md:text-4xl font-bold mb-6">
-              Ready to transform your space?
-            </h2>
-            <p className="text-lg mb-8 opacity-90 max-w-xl mx-auto">
-              Explore our collection and use AR to see how our furniture looks in your home.
-            </p>
-            <Button size="lg" variant="secondary" asChild>
-              <Link href="/products">
-                Shop Now
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
-          </div>
-        </section>
+       <section className="py-20 bg-accent text-accent-foreground">
+  <div className="container mx-auto px-4 text-center">
+    <h2 className="font-serif text-3xl md:text-4xl font-bold mb-6">
+      Ready to transform your space?
+    </h2>
+    <p className="text-lg mb-8 opacity-90 max-w-xl mx-auto">
+      Explore our collection and use AR to see how our furniture looks in your home.
+    </p>
+    
+    {/* Button Container */}
+    <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
+      <Button size="lg" variant="secondary" asChild>
+        <Link href="/products">
+          Shop Now
+          <ArrowRight className="ml-2 h-5 w-5" />
+        </Link>
+      </Button>
+
+      <Button size="lg" variant="outline" className="bg-transparent border-current" asChild>
+        <Link href="/download">
+          Download App
+          <Download className="ml-2 h-5 w-5" />
+        </Link>
+      </Button>
+    </div>
+  </div>
+</section>
       </main>
       <Footer />
     </>

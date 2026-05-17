@@ -1,4 +1,5 @@
 package com.example.demo.User;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
@@ -49,8 +50,15 @@ public class User implements UserDetails {
     @Column( nullable = false , unique = true  )    
     private int phoneNum;
 
-    private String address;
-    private boolean active;
+
+@Column(name = "verification_code")
+private String verificationCode;
+
+@Column(name = "verification_expiry")
+private LocalDateTime verificationExpiry;
+
+    private String address ;
+    private boolean active ;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -86,5 +94,6 @@ public class User implements UserDetails {
 public String getUsername() {
     return this.username; 
 }
+
 
 }

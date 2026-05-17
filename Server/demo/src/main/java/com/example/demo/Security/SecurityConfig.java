@@ -50,8 +50,13 @@ public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter, UserDetailsService 
                 // Public endpoints - no auth required
                 .requestMatchers("/api/auth/register").permitAll()
                 .requestMatchers("/api/auth/login").permitAll()
+                .requestMatchers("/api/auth/verify-email").permitAll()
                 .requestMatchers("/api/public/**").permitAll()
                 .requestMatchers("/api/chat/**").permitAll()
+                .requestMatchers("/api/add/colors").permitAll()
+                .requestMatchers("/api/add/products").permitAll()
+                .requestMatchers("/api/add/variants").permitAll()
+                .requestMatchers("/api/add/media").permitAll()
 
                 // Everything else requires authentication
                 .anyRequest().authenticated()

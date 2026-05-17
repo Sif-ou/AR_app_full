@@ -64,7 +64,7 @@ export function FeaturedProducts() {
           <div className="flex md:hidden justify-center gap-1 mt-2"> 
             {products.slice(0, 4).map((_, i) => (
               <div key={i} className={cn("h-1 rounded-full bg-accent/20", i === 0 ? "w-4 bg-accent" : "w-1")} />
-            ))} // This creates a simple pagination dot indicator, with the first dot highlighted to indicate the current view.
+            ))} 
           </div>
         </div>
 

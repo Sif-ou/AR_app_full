@@ -17,7 +17,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   const [wishlist, setWishlist] = useState<WishlistItemId[]>([])
 
   useEffect(() => {
-    const saved = localStorage.getItem('wishlist_items')
+    const saved = localStorage.getItem('wishlist_items') //jta ida t9fl lpaga yb9aw mhfoodin
     if (saved) {
       try {
         setWishlist(JSON.parse(saved))
@@ -25,7 +25,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
         console.error('Failed to parse wishlist', e)
       }
     }
-  }, [])
+  }, []) 
 
   useEffect(() => {
     localStorage.setItem('wishlist_items', JSON.stringify(wishlist))
@@ -37,7 +37,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
         ? prev.filter((id) => id !== productId)
         : [...prev, productId]
     )
-  }
+  } // ida kyn ynhih lala yzidoo
 
   const isInWishlist = (productId: WishlistItemId) => {
     return wishlist.includes(String(productId))
@@ -45,12 +45,12 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <WishlistContext.Provider
-      value={{
+      value={{ 
         wishlist,
         toggleWishlist,
         isInWishlist,
         totalWishlistItems: wishlist.length,
-      }}
+      }}//هنا يبعث data/functions لكل app.
     >
       {children}
     </WishlistContext.Provider>
@@ -58,9 +58,9 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useWishlist() {
-  const context = useContext(WishlistContext)
+  const context = useContext(WishlistContext) //
   if (!context) {
     throw new Error('useWishlist must be used within WishlistProvider')
-  }
+  } //إذا استعمل hook خارج Provider: يعطي error
   return context
 }
