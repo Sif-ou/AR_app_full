@@ -51,7 +51,7 @@ export default function PromoDashboard() {
   // Replace this mock hook state with your actual global auth platform (e.g., NextAuth, Clerk, custom context)
   const [currentUser] = useState({
     name: "Alex",
-    roles: ["MARKETING MANAGER"] // Change or empty this array to test authorization logic
+    roles: [""] // Change or empty this array to test authorization logic
   });
 
   const hasAccess = currentUser?.roles?.includes("MARKETING MANAGER");

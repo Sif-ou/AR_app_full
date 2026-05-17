@@ -57,7 +57,7 @@ export default function DeliveryDashboard() {
   // Connect this mock object to your actual useSession() or useAuth() hook.
   const mockUser = {
     isAuthenticated: true,
-    roles: ["DELIVERY"] // Toggle or change this string value to test unauthorized states
+    roles: [""] // Toggle or change this string value to test unauthorized states
   };
 
   const hasDeliveryAccess = mockUser.isAuthenticated && mockUser.roles.includes("DELIVERY");

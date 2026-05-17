@@ -56,7 +56,7 @@ export default function StockDashboard() {
   // Example: const { user } = useAuth();
   const mockUser = {
     isAuthenticated: true,
-    roles: ["STOCK", "USER"] // Change this to test the Access Denied screen
+    roles: [""] // Change this to test the Access Denied screen
   };
 
   const hasStockAccess = mockUser.isAuthenticated && mockUser.roles.includes("STOCK");
