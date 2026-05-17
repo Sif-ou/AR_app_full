@@ -17,7 +17,24 @@ export function CartDrawer() {
       currency: 'USD'
     }).format(price)
   }
+const router = useRouter()
 
+
+const handleCheckoutClick = () => {
+    // Check if the login token exists
+    const token = localStorage.getItem('token')
+
+    // Close the cart drawer so it's not open when they switch pages
+    setIsOpen(false)
+
+    if (!token) {
+      // If NO token, send them to log in
+      router.push('/account')
+    } else {
+      // If token exists, send them to checkout
+      router.push('/checkout')
+    }
+  }
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetContent className="w-full sm:max-w-lg flex flex-col bg-background">
@@ -135,12 +152,14 @@ export function CartDrawer() {
               </div>
 
               <div className="space-y-2">
- <Button className="w-full" size="lg" asChild>
-                  <Link href="/checkout" onClick={() => setIsOpen(false)}>
-                    Checkout
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
+ <Button 
+  className="w-full" 
+  size="lg" 
+  onClick={handleCheckoutClick}
+>
+  Checkout
+  <ArrowRight className="ml-2 h-4 w-4" />
+</Button>
                 <Button 
                   variant="outline" 
                   className="w-full" 
