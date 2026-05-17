@@ -83,13 +83,12 @@
     <scope>test</scope>
 </dependency>
 
-<<<<<<< HEAD
 <dependency>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-mail</artifactId>
 </dependency>
-=======
->>>>>>> f16e108b3e2d5ec9a213aa3387bca8e83cebad5f
+
+
 
     </dependencies>
 
