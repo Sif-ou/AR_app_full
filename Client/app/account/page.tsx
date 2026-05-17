@@ -85,10 +85,14 @@ const [registeredEmail, setRegisteredEmail] = useState('');
         name: savedName || 'User Account',
         email: savedEmail || ''
       })
+      const destination = searchParams.get('callbackUrl')
+    if (destination) {
+      router.push(destination)
+    }
     }
 
     setIsCheckingRole(false) 
-  }, [])
+  }, [router, searchParams])
 
   const handleRemoveWishlist = (itemToRemove: string) => {
     setUserState((prev) => ({
@@ -228,7 +232,7 @@ const handleVerifyCode = async () => {
                   <TabsList className="grid w-full grid-cols-2 mb-6">
                     <TabsTrigger value="login" className="flex items-center gap-2">
                       <LogIn className="h-4 w-4" />
-                      Sign It
+                      Sign In
                     </TabsTrigger>
                     <TabsTrigger value="register" className="flex items-center gap-2">
                       <UserPlus className="h-4 w-4" />
@@ -523,7 +527,7 @@ if (response.ok) {
   </div>
 )}
 
-                      {statusMessage && (
+                      {statusMessage && !showConfirmationMessage && (
                         <p className={`text-sm font-medium mt-2 text-center ${statusMessage.includes('🎉') ? 'text-green-600' : 'text-red-500'}`}>
                           {statusMessage}
                         </p>
