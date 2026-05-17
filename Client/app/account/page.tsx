@@ -24,6 +24,7 @@ const [isVerifying, setIsVerifying] = useState(false);
   const [activeTab, setActiveTab] = useState('login')
   const [activeSection, setActiveSection] = useState('profile') 
 const [registeredEmail, setRegisteredEmail] = useState('');
+const [registeredPassword, setRegisteredPassword] = useState('');
   // Registration & Auth Form States
   const [loginIdentifier, setLoginIdentifier] = useState('')
   const [loginPassword, setLoginPassword] = useState('')
@@ -178,7 +179,8 @@ const handleVerifyCode = async () => {
   const targetEmail = registeredEmail || email;
 
   try {
-    const response = await fetch('https://ar-app-back-end.onrender.com/api/auth/verify-code', {
+    // 1. Verify the OTP Code
+    const verifyResponse = await fetch('https://ar-app-back-end.onrender.com/api/auth/verify-code', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -190,48 +192,62 @@ const handleVerifyCode = async () => {
       })
     });
 
-    if (response.ok) {
-      const data = await response.json();
+    if (verifyResponse.ok) {
+      setStatusMessage('Code verified! Logging you into your dashboard... 🚀');
 
-      // Ensure your backend sends auth credentials on successful verification
-      if (data.token) {
-        // 1. Commit credentials to localStorage for automatic login session persistence
+      // 2. Run background automatic login using the registered snapshot credentials
+      const loginResponse = await fetch('https://ar-app-back-end.onrender.com/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ 
+          identifier: targetEmail, 
+          password: registeredPassword // Uses saved password snapshot
+        })
+      });
+
+      if (loginResponse.ok) {
+        const data = await loginResponse.json();
+
+        // 3. Save auth credentials to log the user in completely
         localStorage.setItem('token', data.token);
-        localStorage.setItem('userRole', data.role || 'USER');
-        localStorage.setItem('username', data.username || username); 
-        localStorage.setItem('userEmail', data.email || targetEmail);
+        localStorage.setItem('userRole', data.role);
+        localStorage.setItem('username', data.username); 
+        localStorage.setItem('userEmail', data.email);
 
-        // 2. Hydrate local states instantly to bypass login gating rules
         setLoggedInUser({
-          name: data.username || username,
-          email: data.email || targetEmail
+          name: data.username,
+          email: data.email
         });
+
         setIsLoggedIn(true);
+        setStatusMessage('Account verified and logged in successfully! Redirecting... 🎉');
 
-        setStatusMessage('Account verified successfully! Logging you in... 🎉');
-
-        // 3. Clear transient OTP states and trigger immediate dashboard or home redirection
+        // 4. Reset views and clear code states before sending home
         setTimeout(() => {
           setShowConfirmationMessage(false);
           setVerificationCode('');
-          handleRoleRedirect(data.role || 'USER');
-        }, 1500);
+          setRegisteredPassword(''); // Clear security state
+          handleRoleRedirect(data.role);
+        }, 2000);
 
       } else {
-        // Fallback fallback if backend does not return tokens on code matching routes
-        setStatusMessage('Account verified! Please manually sign in using your new password. 🎉');
+        // Fallback if background login failed for unexpected reasons
+        setStatusMessage('Account verified successfully! Please log in manually on the Sign In tab.');
         setTimeout(() => {
           setActiveTab('login');
           setShowConfirmationMessage(false);
           setVerificationCode('');
-        }, 2000);
+        }, 2500);
       }
     } else {
-      const errorData = await response.json().catch(() => ({}));
+      const errorData = await verifyResponse.json().catch(() => ({}));
       setStatusMessage(errorData.message || 'Invalid or expired verification code.');
     }
   } catch (error) {
-    setStatusMessage('Network error. Could not connect to the verification server.');
+    setStatusMessage('Network error during verification processing.');
   } finally {
     setIsVerifying(false);
   }
@@ -404,6 +420,7 @@ const handleVerifyCode = async () => {
 if (response.ok) {
   // 1. Capture the email value safely first
   setRegisteredEmail(email);
+  setRegisteredPassword(password);
   setShowConfirmationMessage(true);
   setStatusMessage('Successfully registered! Please verify your account. 🎉');
   
