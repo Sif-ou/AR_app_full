@@ -27,7 +27,7 @@ const handleCheckoutClick = (e: React.MouseEvent) => {
     // Prevent the default link behavior
     e.preventDefault(); 
     // Redirect to login, adding a callback url so they return here after logging in
-    router.push('/account?callbackUrl=/checkout'); 
+    router.push('/login?callbackUrl=/checkout'); 
   }
 };
   return (

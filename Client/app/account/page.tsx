@@ -9,13 +9,14 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { User, Package, Heart, Settings, LogIn, UserPlus, Eye, EyeOff } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useRouter,useSearchParams } from 'next/navigation'
 
 export default function AccountPage() {
   const [verificationCode, setVerificationCode] = useState('');
 const [isVerifying, setIsVerifying] = useState(false);
   const [showConfirmationMessage, setShowConfirmationMessage] = useState(false);
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [activeTab, setActiveTab] = useState('login')
   const [activeSection, setActiveSection] = useState('profile') 
@@ -57,14 +58,15 @@ const [registeredEmail, setRegisteredEmail] = useState('');
   
 
 
-  const handleRoleRedirect = (role: string) => {
+const handleRoleRedirect = (role: string) => {
     if (role === 'ADMIN') {
       router.push('/admin')
     } else {
-      router.push('/')
+      // Checks for ?callbackUrl= in the URL, otherwise falls back to the home page
+      const destination = searchParams.get('callbackUrl') || '/'
+      router.push(destination)
     }
   }
-
   useEffect(() => {
     const token = localStorage.getItem('token')
     const savedName = localStorage.getItem('username')
@@ -166,6 +168,7 @@ if (!targetEmail) {
     setLoading(false);
   }
 };
+
 
 const handleVerifyCode = async () => {
   setIsVerifying(true);
