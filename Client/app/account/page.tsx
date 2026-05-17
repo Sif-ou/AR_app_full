@@ -12,6 +12,8 @@ import { User, Package, Heart, Settings, LogIn, UserPlus, Eye, EyeOff } from 'lu
 import { useRouter } from 'next/navigation'
 
 export default function AccountPage() {
+  const [verificationCode, setVerificationCode] = useState('');
+const [isVerifying, setIsVerifying] = useState(false);
   const [showConfirmationMessage, setShowConfirmationMessage] = useState(false);
   const router = useRouter()
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -158,6 +160,45 @@ const [registeredEmail, setRegisteredEmail] = useState('');
     setStatusMessage('Network error. Unable to reach backend to resend code.');
   } finally {
     setLoading(false);
+  }
+};
+
+const handleVerifyCode = async (e: { preventDefault: () => void }) => {
+  e.preventDefault();
+  setIsVerifying(true);
+  setStatusMessage('');
+
+  const targetEmail = registeredEmail || email;
+
+  try {
+    const response = await fetch('https://ar-app-back-end.onrender.com/api/auth/verify-code', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ 
+        email: targetEmail, 
+        code: verificationCode 
+      })
+    });
+
+    if (response.ok) {
+      setStatusMessage('Account verified successfully! Redirecting... 🎉');
+      // Automatically switch to the login tab so they can sign in
+      setTimeout(() => {
+        setActiveTab('login');
+        setShowConfirmationMessage(false);
+        setVerificationCode('');
+      }, 2500);
+    } else {
+      const errorData = await response.json().catch(() => ({}));
+      setStatusMessage(errorData.message || 'Invalid or expired verification code.');
+    }
+  } catch (error) {
+    setStatusMessage('Network error. Could not connect to the verification server.');
+  } finally {
+    setIsVerifying(false);
   }
 };
 
@@ -422,19 +463,43 @@ const [registeredEmail, setRegisteredEmail] = useState('');
                           </button>
                         </div>
                       </div>
-<Button type="submit" className="w-full" disabled={loading}>
+<Button type="submit" className="w-full" disabled={loading || showConfirmationMessage}>
   {loading ? 'Creating Account...' : 'Create Account'}
 </Button>
 
-{/* 1. The original confirmation paragraph */}
+{/* The dynamic confirmation panel */}
 {showConfirmationMessage && (
-  <div className="mt-3 space-y-2 text-center animate-fade-in">
+  <div className="mt-4 p-4 border rounded-lg bg-muted/30 space-y-4 text-center animate-fade-in">
     <p className="text-sm font-medium text-green-600">
       Confirm: a verification code was sent to your real email.
     </p>
     
-    {/* 2. The working Resend Code paragraph */}
-    <p className="text-xs text-muted-foreground">
+    {/* Verification Code Input Field */}
+    <div className="space-y-2 text-left">
+      <Label htmlFor="verification-code" className="text-xs font-semibold">Enter Verification Code</Label>
+      <div className="flex gap-2">
+        <Input 
+          id="verification-code"
+          type="text"
+          maxLength={6} // Adjust if your OTP code layout length differs
+          placeholder="Enter code"
+          value={verificationCode}
+          onChange={(e) => setVerificationCode(e.target.value)}
+          className="text-center font-mono tracking-widest text-lg"
+        />
+        <Button 
+          type="button" 
+          onClick={handleVerifyCode} 
+          disabled={isVerifying || !verificationCode}
+          className="bg-accent hover:bg-accent/90"
+        >
+          {isVerifying ? 'Verifying...' : 'Verify'}
+        </Button>
+      </div>
+    </div>
+    
+    {/* Resend Code paragraph */}
+    <p className="text-xs text-muted-foreground pt-1 border-t">
       Didn't get the code?{' '}
       <button
         type="button"
