@@ -7,17 +7,29 @@ import { Button } from '@/components/ui/button'
 import { useCart } from '@/lib/cart-context'
 import { Minus, Plus, X, ShoppingBag, ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useRouter } from 'next/navigation'
 
 export function CartDrawer() {
   const { items, isOpen, setIsOpen, removeItem, updateQuantity, totalPrice, totalItems } = useCart()
-
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD'
     }).format(price)
   }
+const router = useRouter();
+const isLoggedIn = false;
 
+const handleCheckoutClick = (e: React.MouseEvent) => {
+  setIsOpen(false);
+
+  if (!isLoggedIn) {
+    // Prevent the default link behavior
+    e.preventDefault(); 
+    // Redirect to login, adding a callback url so they return here after logging in
+    router.push('/login?callbackUrl=/checkout'); 
+  }
+};
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetContent className="w-full sm:max-w-lg flex flex-col bg-background">
@@ -135,12 +147,12 @@ export function CartDrawer() {
               </div>
 
               <div className="space-y-2">
-                <Button className="w-full" size="lg" asChild>
-                  <Link href="/checkout" onClick={() => setIsOpen(false)}>
-                    Checkout
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
+<Button className="w-full" size="lg" asChild>
+  <Link href="/checkout" onClick={handleCheckoutClick}>
+    Checkout
+    <ArrowRight className="ml-2 h-4 w-4" />
+  </Link>
+</Button>
                 <Button 
                   variant="outline" 
                   className="w-full" 
