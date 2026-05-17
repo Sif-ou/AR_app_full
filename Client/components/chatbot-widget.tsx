@@ -108,6 +108,8 @@ export function ChatbotWidget() {
     }
   }
 
+
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
@@ -118,21 +120,21 @@ export function ChatbotWidget() {
   return (
     <>
       {!isOpen && (
-        <button
-          onClick={() => setIsOpen(true)}
-          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 w-14 h-14 bg-accent text-accent-foreground rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition-all"
-        >
+       <button
+  onClick={() => setIsOpen(true)}
+  className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 w-14 h-14 bg-accent text-accent-foreground rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition-all"
+>
           <MessageCircle className="h-6 w-6" />
         </button>
       )}
 
       {isOpen && (
         <div className={cn(
-          "fixed z-50 bg-card border border-border flex flex-col transition-all duration-300 shadow-2xl",
-          isExpanded 
-            ? "inset-0 md:inset-6 md:rounded-xl" 
-            : "bottom-0 right-0 w-full h-[90vh] rounded-t-2xl sm:bottom-6 sm:right-6 sm:w-[380px] sm:h-[600px] sm:max-h-[85vh] sm:rounded-xl"
-        )}>
+  "fixed z-50 bg-card border border-border flex flex-col transition-all duration-300 shadow-2xl",
+  isExpanded 
+    ? "inset-0 md:inset-6 md:rounded-xl" 
+    : "bottom-0 right-0 w-full h-[90vh] rounded-t-2xl sm:bottom-6 sm:right-6 sm:w-[380px] sm:h-[600px] sm:max-h-[85vh] sm:rounded-xl"
+)}>
           <div className="flex items-center justify-between p-4 border-b shrink-0">
             <div className="flex items-center gap-3">
               <Sparkles className="h-5 w-5 text-accent" />
@@ -142,8 +144,7 @@ export function ChatbotWidget() {
               </div>
             </div>
             <div className="flex gap-1">
-              {/* Hidden on small mobile views as full maximize is trivial or unnecessary on tiny interfaces */}
-              <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)} className="hidden sm:inline-flex">
+              <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)}>
                 {isExpanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
               </Button>
               <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
@@ -159,13 +160,13 @@ export function ChatbotWidget() {
                   {m.role === 'assistant' ? <Bot className="h-4 w-4 text-accent" /> : <User className="h-4 w-4 text-muted-foreground" />}
                 </div> 
                 <div className={cn("flex-1", m.role === 'user' && "text-right")}>
-                  <div className={cn("rounded-xl px-4 py-2 inline-block max-w-[85%] sm:max-w-[90%] text-sm shadow-sm break-words text-left", m.role === 'assistant' ? "bg-muted" : "bg-accent text-accent-foreground")}>
+                  <div className={cn("rounded-xl px-4 py-2 inline-block max-w-[90%] text-sm shadow-sm", m.role === 'assistant' ? "bg-muted" : "bg-accent text-accent-foreground")}>
                     {m.content}
                   </div>
                   {m.quickReplies && m.quickReplies.length > 0 && (
-                    <div className={cn("flex flex-wrap gap-2 mt-2", m.role === 'user' && "justify-end")}>
+                    <div className="flex flex-wrap gap-2 mt-2">
                       {m.quickReplies.map(r => (
-                        <button key={r} onClick={() => handleSend(r)} className="text-[10px] px-2.5 py-1 rounded-full border bg-background hover:bg-muted active:scale-95 transition-transform">
+                        <button key={r} onClick={() => handleSend(r)} className="text-[10px] px-2 py-1 rounded-full border bg-background hover:bg-muted">
                           {r}
                         </button>
                       ))}
@@ -174,19 +175,19 @@ export function ChatbotWidget() {
                 </div>
               </div>
             ))} 
-            {isTyping && <div className="text-xs text-muted-foreground animate-pulse px-11">Assistant is thinking...</div>}
+            {isTyping && <div className="text-xs text-muted-foreground animate-pulse px-12">Assistant is thinking...</div>}
           </div>
 
-          <form onSubmit={(e) => { e.preventDefault(); handleSend() }} className="p-4 border-t flex gap-2 bg-card rounded-b-2xl sm:rounded-b-xl pb-6 sm:pb-4">
+          <form onSubmit={(e) => { e.preventDefault(); handleSend() }} className="p-4 border-t flex gap-2">
             <Input 
               ref={inputRef}
               placeholder="Type your message..."
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="text-sm flex-1"
+              className="text-sm"
             />
-            <Button type="submit" size="icon" disabled={!inputValue.trim()} className="shrink-0">
+            <Button type="submit" size="icon" disabled={!inputValue.trim()}>
               <Send className="h-4 w-4" />
             </Button>
           </form>
