@@ -42,36 +42,50 @@ public class AuthService {
     }
 
 
+public AuthResponse register(RegisterRequest request) {
+    Role userRole = roleRepository.findByRoleName("CLIENT")
+        .orElseThrow(() -> new RuntimeException("Role not found"));
 
-    public AuthResponse register(RegisterRequest request) {
-        Role userRole = roleRepository.findByRoleName("CLIENT")
-            .orElseThrow(() -> new RuntimeException("Role not found"));
-
-        // 2. Generate the 6-digit verification code
-        String code = String.format("%06d", new Random().nextInt(999999));
-
-        var user = User.builder()
-                .username(request.getUsername())
-                .email(request.getEmail())
-                .phoneNum(request.getPhoneNum())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .role(userRole) 
-                .active(false) // 3. Set to FALSE initially
-                .verificationCode(code) // Set code (Make sure these setters exist in User entity)
-                .verificationExpiry(LocalDateTime.now().plusMinutes(15)) // Set 15 min expiry
-                .build();
-
-        userRepository.save(user);
-
-        // 4. Send the verification code via email
-        emailVerificationService.sendVerificationEmail(user.getEmail(), code);
-
-        // 5. Return an empty token or a message indicating registration success pending verification
-        return AuthResponse.builder()
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .build();
+    // Check unique constraints manually to provide clear errors
+    if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+        throw new RuntimeException("Email is already registered.");
     }
+
+    // Generate the 6-digit verification code
+    String code = String.format("%06d", new Random().nextInt(999999));
+
+    var user = User.builder()
+            .username(request.getUsername())
+            .email(request.getEmail())
+            .phoneNum(request.getPhoneNum())
+            .password(passwordEncoder.encode(request.getPassword()))
+            .role(userRole) 
+            .active(false) // Set to FALSE initially
+            .verificationCode(code) 
+            .verificationExpiry(LocalDateTime.now().plusMinutes(15)) 
+            .build();
+
+    // 1. This saves the user to your database
+    userRepository.save(user);
+
+    // 2. CRITICAL PROTECTION: catch email errors so they don't erase the database record!
+    try {
+        emailVerificationService.sendVerificationEmail(user.getEmail(), code);
+    } catch (Exception e) {
+        // This prints the error to your logs but allows the method to finish successfully!
+        System.err.println("WARNING: User saved, but verification email failed to dispatch: " + e.getMessage());
+    }
+
+    // 3. Return response so the frontend knows registration was successful
+    return AuthResponse.builder()
+            .username(user.getUsername())
+            .email(user.getEmail())
+            .build();
+}
+
+
+
+
 
 
     public AuthResponse authenticate(AuthRequest request) {
@@ -356,3 +370,44 @@ public AuthResponse authenticate(AuthRequest request) {
 }
 */
 
+/*
+
+
+    public AuthResponse register(RegisterRequest request) {
+        Role userRole = roleRepository.findByRoleName("CLIENT")
+            .orElseThrow(() -> new RuntimeException("Role not found"));
+
+        // 2. Generate the 6-digit verification code
+        String code = String.format("%06d", new Random().nextInt(999999));
+
+        var user = User.builder()
+                .username(request.getUsername())
+                .email(request.getEmail())
+                .phoneNum(request.getPhoneNum())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .role(userRole) 
+                .active(false) // 3. Set to FALSE initially
+                .verificationCode(code) // Set code (Make sure these setters exist in User entity)
+                .verificationExpiry(LocalDateTime.now().plusMinutes(15)) // Set 15 min expiry
+                .build();
+
+        userRepository.save(user);
+
+        // 4. Send the verification code via email
+        emailVerificationService.sendVerificationEmail(user.getEmail(), code);
+
+        // 5. Return an empty token or a message indicating registration success pending verification
+        return AuthResponse.builder()
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .build();
+    }
+
+
+
+
+
+
+
+
+*/
