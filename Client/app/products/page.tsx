@@ -1,25 +1,25 @@
 'use client'
 
-import { useState, useMemo, useEffect, Suspense } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { CartDrawer } from '@/components/cart-drawer'
 import { ProductCard } from '@/components/product-card'
 import { ChatbotWidget } from '@/components/chatbot-widget'
-import { products, categories } from '@/lib/data'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Slider } from '@/components/ui/slider'
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { SlidersHorizontal, Search, X, Grid3X3, LayoutGrid, Sparkles } from 'lucide-react'
+import { SlidersHorizontal, Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 
-type SortOption = 'featured' | 'price-low' | 'price-high' | 'rating' | 'newest'
+// Static lookup fallback for UI filter choices layout
+import { categories } from '@/lib/data' 
 
+type SortOption = 'featured' | 'price-low' | 'price-high' | 'rating' | 'newest'
 
 export default function ProductsPage() {
   return (
@@ -34,17 +34,19 @@ export default function ProductsPage() {
   )
 }
 
-
 function ProductsContent() {
   const searchParams = useSearchParams()
 
+  // State slices
+  const [products, setProducts] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const [priceRange, setPriceRange] = useState([0, 5000])
   const [sortBy, setSortBy] = useState<SortOption>('featured')
-  const [viewMode, setViewMode] = useState<'grid' | 'compact'>('grid')
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
 
+  // Sync category parameter if coming from external navigation links
   useEffect(() => {
     const category = searchParams.get('category')
     if (category && categories.find(c => c.id === category)) {
@@ -52,22 +54,40 @@ function ProductsContent() {
     }
   }, [searchParams])
 
-  const filteredProducts = useMemo(() => {
-    return products
-      .filter(product => {
-        const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                             product.description.toLowerCase().includes(searchQuery.toLowerCase())
-        const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(product.category)
-        const matchesPrice = product.price >= priceRange[0] && product.price <= priceRange[1]
-        return matchesSearch && matchesCategory && matchesPrice
-      })
-      .sort((a, b) => {
-        if (sortBy === 'price-low') return a.price - b.price
-        if (sortBy === 'price-high') return b.price - a.price
-        if (sortBy === 'rating') return b.rating - a.rating
-        if (sortBy === 'newest') return b.isNew ? 1 : -1
-        return 0
-      })
+  // Core Data Fetching Engine
+  useEffect(() => {
+    const fetchFilteredData = async () => {
+      setLoading(true)
+      try {
+        const query = new URLSearchParams({
+          search: searchQuery,
+          minPrice: priceRange[0].toString(),
+          maxPrice: priceRange[1].toString(),
+          sortBy: sortBy
+        })
+
+        if (selectedCategories.length > 0) {
+          query.append('categories', selectedCategories.join(','))
+        }
+
+        const response = await fetch(`/api/products?${query.toString()}`)
+        if (response.ok) {
+          const data = await response.json()
+          setProducts(data)
+        }
+      } catch (err) {
+        console.error("Error connecting to data layer: ", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    // Simple debounce mechanism to stop database pounding during active type/sliders movements
+    const delayDebounceFn = setTimeout(() => {
+      fetchFilteredData()
+    }, 400)
+
+    return () => clearTimeout(delayDebounceFn)
   }, [searchQuery, selectedCategories, priceRange, sortBy])
 
   const clearFilters = () => {
@@ -89,7 +109,7 @@ function ProductsContent() {
             <div>
               <h1 className="text-3xl font-bold tracking-tight">Furniture Collection</h1>
               <p className="text-muted-foreground text-sm mt-1">
-                Showing {filteredProducts.length} of {products.length} items
+                {loading ? 'Updating inventory status...' : `Showing ${products.length} live database records`}
               </p>
             </div>
             
@@ -117,7 +137,6 @@ function ProductsContent() {
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="right" className="w-full sm:w-[420px] p-0 flex flex-col">
-                  {/* --- PRO FILTER WINDOW START --- */}
                   <div className="flex items-center justify-between px-6 py-4 border-b">
                     <SheetHeader className="text-left">
                       <SheetTitle className="text-xl font-bold italic tracking-tight">Refine Collection</SheetTitle>
@@ -128,7 +147,7 @@ function ProductsContent() {
                   </div>
 
                   <div className="flex-1 overflow-y-auto px-6 py-8 space-y-10">
-                    {/* Category Section with Buttons */}
+                    {/* Category Selection Blocks */}
                     <div className="space-y-4">
                       <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/70">Categories</h3>
                       <div className="grid grid-cols-2 gap-2">
@@ -147,7 +166,7 @@ function ProductsContent() {
                               className={cn(
                                 "flex items-center justify-between px-4 py-3 rounded-xl border text-sm transition-all duration-200",
                                 isActive 
-                                  ? "bg-primary text-red-500 border-primary shadow-md shadow-primary/20 scale-[0.98]" 
+                                  ? "bg-primary text-white border-primary shadow-md shadow-primary/20 scale-[0.98]" 
                                   : "bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
                               )}
                             >
@@ -162,7 +181,7 @@ function ProductsContent() {
                       </div>
                     </div>
 
-                    {/* Pro Price Section */}
+                    {/* Price Slider Blocks */}
                     <div className="space-y-6">
                       <div className="flex items-center justify-between">
                         <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/70">Price Range</h3>
@@ -197,13 +216,12 @@ function ProductsContent() {
 
                   <div className="p-6 border-t mt-auto">
                     <Button 
-                      className="w-full h-12 rounded-2xl text-md font-bold shadow-lg shadow-primary/25 transition-transform active:scale-95" 
+                      className="w-full h-12 rounded-2xl text-md font-bold shadow-lg shadow-primary/25" 
                       onClick={() => setIsFilterSheetOpen(false)}
                     >
-                      Show {filteredProducts.length} Products
+                      Show Products
                     </Button>
                   </div>
-                  {/* --- PRO FILTER WINDOW END --- */}
                 </SheetContent>
               </Sheet>
 
@@ -222,22 +240,28 @@ function ProductsContent() {
             </div>
           </div>
 
-          <div className={cn(
-            "grid gap-6",
-            viewMode === 'grid' ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "grid-cols-1"
-          )}>
-            {filteredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          {/* Loader or Product Matrix Display */}
+          {loading ? (
+            <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 animate-pulse">
+              {[...Array(8)].map((_, idx) => (
+                <div key={idx} className="h-80 bg-slate-200/60 rounded-3xl" />
+              ))}
+            </div>
+          ) : (
+            <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {products.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
 
-          {filteredProducts.length === 0 && (
+          {!loading && products.length === 0 && (
             <div className="flex flex-col items-center justify-center py-24 text-center rounded-[2.5rem] border-2 border-dashed border-slate-200 bg-white/50">
               <div className="rounded-full bg-white p-8 mb-6 shadow-xl border border-slate-100">
                 <Search className="h-12 w-12 text-slate-300" />
               </div>
               <h2 className="text-2xl font-bold tracking-tight">No products found</h2>
-              <p className="text-muted-foreground mt-2 max-w-xs mx-auto">Try adjusting your filters or price range to find what you're looking for.</p>
+              <p className="text-muted-foreground mt-2 max-w-xs mx-auto">Try adjusting your filters or price range.</p>
               <Button variant="default" onClick={clearFilters} className="mt-8 rounded-xl px-10 h-11">
                 Clear all filters
               </Button>
@@ -252,7 +276,6 @@ function ProductsContent() {
   )
 }
 
-// Helper icons needed
 function RotateCcw(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
