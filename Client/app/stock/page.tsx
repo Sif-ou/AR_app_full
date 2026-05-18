@@ -57,18 +57,18 @@ export default function StockDashboard() {
         setIsAuthorized(true)
       } else {
         setIsAuthorized(false)
-        router.replace('/login') // Wrong role? Kick them out.
+        router.replace('/account') // Wrong role? Kick them out.
       }
     } catch (error) {
       setIsAuthorized(false)
-      router.replace('/login')
+      router.replace('/account')
     }
   }, [router])
 
   // --- SIGN OUT HANDLER ---
   const handleSignOut = () => {
     localStorage.clear()             // 1. Vaporize the storage completely
-    router.replace('/login')         // 2. Redirect and replace history state so 'Back' button fails
+    router.replace('/account')         // 2. Redirect and replace history state so 'Back' button fails
   }
 
   // Loading state (Blank screen or spinner) while confirming credentials
