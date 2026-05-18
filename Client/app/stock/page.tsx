@@ -164,6 +164,14 @@ const handleAddProduct = async (e: React.FormEvent) => {
 };
 
 
+const handleSignOut = () => {
+  // Clear out the auth token and any user permissions data from cache
+  localStorage.removeItem("token") 
+  
+  // Route the window back home
+  router.push('/')
+}
+
 const handleAddColor = async (e: React.FormEvent) => {
   e.preventDefault();
   setIsSubmitting(true);
@@ -243,10 +251,7 @@ const handleAddMedia = async (e: React.FormEvent) => {
   setIsSubmitting(false);
 };
 
-  const handleSignOut = () => {
-    localStorage.clear()     
-    router.replace('/')      
-  }
+
 
   // --- SECURITY RENDERING ---
   if (isAuthorized === null) return <div className="min-h-screen bg-[#121212]" />
@@ -295,6 +300,56 @@ const handleAddMedia = async (e: React.FormEvent) => {
               <X className="h-6 w-6" />
             </Button>
           </div>
+
+<aside className={cn(
+  "fixed inset-y-0 left-0 z-[52] w-64 bg-zinc-950 border-r border-white/5 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:z-auto",
+  sidebarOpen ? "translate-x-0" : "-translate-x-full"
+)}>
+  <div className="flex flex-col h-full">
+    {/* Sidebar Top Title Wrapper */}
+    <div className="p-6 border-b border-white/5 flex items-center justify-between">
+      <span className="font-bold text-xl tracking-tight flex items-center gap-2 text-white">
+        <Layers className="text-blue-500 h-5 w-5" /> AR<span className="text-blue-500">Stock</span>
+      </span>
+      <Button variant="ghost" size="icon" className="lg:hidden text-white" onClick={() => setSidebarOpen(false)}>
+        <X className="h-6 w-6" />
+      </Button>
+    </div>
+
+    {/* Center Navigation Links Area */}
+    <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+      {[
+        { id: 'inventory', label: 'Products', icon: Package },
+        { id: 'colors', label: 'Colors', icon: Palette },
+        { id: 'variants', label: 'Variants', icon: Combine },
+        { id: 'media', label: 'Media Assets', icon: ImageIcon },
+      ].map(item => (
+        <button
+          key={item.id}
+          onClick={() => { setActiveTab(item.id); setSidebarOpen(false); }}
+          className={cn(
+            "w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-left font-medium",
+            activeTab === item.id ? "bg-blue-600 text-white shadow-lg shadow-blue-600/10" : "text-zinc-400 hover:text-white hover:bg-white/5"
+          )}
+        >
+          <item.icon className="h-5 w-5 flex-shrink-0" />
+          <span className="truncate">{item.label}</span>
+        </button>
+      ))}
+    </nav>
+
+    {/* --- NEW SIGN OUT ACTION BAR --- */}
+    <div className="p-4 border-t border-white/5 bg-zinc-950/50">
+      <button
+        onClick={handleSignOut}
+        className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all text-left group"
+      >
+        <LogOut className="h-5 w-5 flex-shrink-0 transition-transform group-hover:-translate-x-0.5" />
+        <span>Sign Out</span>
+      </button>
+    </div>
+  </div>
+</aside>
 
           <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
             {[
@@ -537,5 +592,9 @@ const handleAddMedia = async (e: React.FormEvent) => {
         </div>
       )}
     </div>
+
+
+
+
   )
 }
