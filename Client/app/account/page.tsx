@@ -20,12 +20,7 @@ export default function AccountPage() {
 const [isVerifying, setIsVerifying] = useState(false);
   const [showConfirmationMessage, setShowConfirmationMessage] = useState(false);
   const router = useRouter()
-  const [isLoggedIn, setIsLoggedIn] = useState(() => {
-  if (typeof window !== 'undefined') {
-    return !!localStorage.getItem('token');
-  }
-  return false;
-});
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [activeTab, setActiveTab] = useState('login')
   const [activeSection, setActiveSection] = useState('profile') 
 const [registeredEmail, setRegisteredEmail] = useState('');
@@ -41,7 +36,7 @@ const [registeredPassword, setRegisteredPassword] = useState('');
   const [loading, setLoading] = useState(false)
   const [statusMessage, setStatusMessage] = useState('')
   const [isCheckingRole, setIsCheckingRole] = useState(true)
-
+const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   // Password Visibility States
   const [showLoginPassword, setShowLoginPassword] = useState(false)
   const [showRegPassword, setShowRegPassword] = useState(false)
@@ -75,27 +70,22 @@ const [registeredPassword, setRegisteredPassword] = useState('');
     }
   }
 
-  useEffect(() => {
-  const token = localStorage.getItem('token')
-  const savedName = localStorage.getItem('username')
-  const savedEmail = localStorage.getItem('userEmail')
-  const savedRole = localStorage.getItem('userRole')
+useEffect(() => {
+  const token = localStorage.getItem('token');
+  const role = localStorage.getItem('user_role');
 
   if (token) {
-    setLoggedInUser({
-      name: savedName || 'User Account',
-      email: savedEmail || ''
-    });
-
-    if (savedRole === 'ADMIN') {
+    if (role === 'ADMIN') {
       router.push('/admin');
       return;
+    } else {
+      router.push('/dashboard');
+      return;
     }
-  } else {
-    setIsLoggedIn(false);
   }
-
-  setIsCheckingRole(false);
+  
+  // ADD THIS LINE HERE
+  setIsCheckingAuth(false); 
 }, [router]);
 
   const handleRemoveWishlist = (itemToRemove: string) => {
@@ -259,9 +249,9 @@ const handleVerifyCode = async () => {
   }
 };
 
-  if (isCheckingRole) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>
-  }
+ if (isCheckingAuth) {
+  return <div className="min-h-screen flex items-center justify-center">Loading...</div>
+}
 
   if (!isLoggedIn) {
     return (
