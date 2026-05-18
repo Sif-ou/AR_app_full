@@ -86,7 +86,6 @@ export default function AdminDashboard() {
 
 
 
-
 const [newPassword, setNewPassword] = useState('')
 const [newPhone, setNewPhone] = useState('')
 
@@ -99,20 +98,20 @@ const handleProvisionAccount = async (e: React.FormEvent) => {
     return;
   }
 
-  try {
+try {
     const token = localStorage.getItem('token'); // Retrieve auth handle
     
-    const response = await fetch('https://ar-app-back-end.onrender.com/api/admin/provision-account', {
+    const response = await fetch('https://ar-app-back-end.onrender.com/api/admin/add/account', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}` // Pass JWT vector to backend security context
+        'Authorization': `Bearer ${token}` 
       },
       body: JSON.stringify({
         username: newName,
         email: newEmail,
         password: newPassword,
-        phoneNumber: newPhone,
+        phoneNumber: Number(newPhone), 
         role: newRole
       })
     });
