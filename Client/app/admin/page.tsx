@@ -17,7 +17,6 @@ import {
   ShoppingCart,
   Users,
   DollarSign,
-  Eye,
   Sparkles,
   Search,
   Menu,
@@ -34,7 +33,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-// Explicitly define the database mapping layout to satisfy TypeScript
+// Database mapping layout layout
 interface Account {
   id: number;
   username: string;
@@ -44,7 +43,7 @@ interface Account {
   roleName: string;
 }
 
-// Mock data for dashboard analytics
+// Analytics metric indicators
 const stats = [
   { title: 'Total Revenue', value: '$124,592', change: '+12.5%', trend: 'up', icon: DollarSign },
   { title: 'Orders', value: '1,429', change: '+8.2%', trend: 'up', icon: ShoppingCart },
@@ -75,14 +74,14 @@ export default function AdminDashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [newName, setNewName] = useState('')
   const [newEmail, setNewEmail] = useState('')
-  const [newRole, setNewRole] = useState('User')
+  const [newRole, setNewRole] = useState('CLIENT')
   const [newPassword, setNewPassword] = useState('')
   const [newPhone, setNewPhone] = useState('')
   
   const [adminName, setAdminName] = useState('Admin User')
   const [adminEmail, setAdminEmail] = useState('admin@Gmail.com')
 
-  // Fetch live profiles out of PostgreSQL database
+  // Fetch profiles out of backend system
   const fetchAccounts = async () => {
     try {
       setIsLoadingAccounts(true);
@@ -143,14 +142,14 @@ export default function AdminDashboard() {
         return;
       }
 
-      alert(data.message);
+      alert(data.message || "Account provisioned successfully.");
       
       // Reset State parameters & refresh database stream
       setNewName('');
       setNewEmail('');
       setNewPassword('');
       setNewPhone('');
-      setNewRole('User');
+      setNewRole('CLIENT');
       setIsModalOpen(false);
       
       fetchAccounts();
@@ -178,9 +177,6 @@ export default function AdminDashboard() {
       if (!response.ok) {
         throw new Error(`Server status change failure: ${response.status}`);
       }
-
-      const data = await response.json();
-      console.log("Status updated successfully:", data);
 
       fetchAccounts();
 
@@ -210,7 +206,6 @@ export default function AdminDashboard() {
         const data = await response.json();
         alert(data.message || "Account permanently purged from database successfully.");
         
-        // Filter out from local UI state instantly
         setAccounts(prev => prev.filter(acc => acc.id !== id));
       } catch (error) {
         console.error("Administrative entity removal error:", error);
@@ -235,7 +230,7 @@ export default function AdminDashboard() {
 
       const timer = setTimeout(() => {
         setIsAuthorized(true)
-      }, 1500)
+      }, 1000)
 
       return () => clearTimeout(timer)
     }
@@ -245,7 +240,7 @@ export default function AdminDashboard() {
     return (
       <div className="min-h-screen bg-[#0F172A] flex flex-col items-center justify-center space-y-3 font-sans antialiased">
         <div className="text-4xl animate-bounce mb-2">👋</div>
-        <h1 className="text-2xl font-bold text-white tracking-wide animate-in fade-in duration-300">
+        <h1 className="text-2xl font-bold text-white tracking-wide">
           Hello, Admin
         </h1>
         <p className="text-slate-400 text-sm font-medium">
@@ -411,7 +406,7 @@ export default function AdminDashboard() {
         />
       )}
 
-      {/* Sidebar Navigation Context */}
+      {/* Sidebar Navigation */}
       <aside className={cn(
         "fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 border-r border-slate-800 flex flex-col transition-transform duration-300 lg:translate-x-0 lg:static lg:h-screen shrink-0",
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -474,25 +469,14 @@ export default function AdminDashboard() {
             }}
             className="w-full border-slate-800 bg-slate-900/40 hover:bg-rose-950/20 hover:text-rose-400 hover:border-rose-900/30 text-slate-400 justify-start gap-2"
           >
-            <LogOut className="h-4 w-4 text-slate-500 hover:text-rose-400" />
+            <LogOut className="h-4 w-4 text-slate-500" />
             <span>Sign Out</span>
           </Button>
         </div>
       </aside>
 
-      {/* Main Panel Frame Viewport */}
+      {/* Main Viewport Content Layout */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
-        <header className="h-16 border-b border-slate-800/80 bg-slate-900/50 backdrop-blur px-6 flex items-center justify-between sticky top-0 z-40">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" className="lg:hidden text-slate-400 hover:text-white" onClick={() => setSidebarOpen(true)}>
-              <Menu className="h-5 w-5" />
-            </Button>
-            <h1 className="text-lg font-bold text-white capitalize tracking-wide hidden sm:block">
-              {activeTab === 'overview' ? 'Operational Hub Overview' : 'System Registry Access Control'}
-            </h1>
-          </div>
-        </header>
-
         <header className="h-16 border-b border-slate-800/80 bg-slate-900/50 backdrop-blur px-6 flex items-center justify-between sticky top-0 z-40">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" className="lg:hidden text-slate-400 hover:text-white" onClick={() => setSidebarOpen(true)}>
@@ -720,6 +704,7 @@ export default function AdminDashboard() {
                       <SelectItem value="ADMIN" className="focus:bg-indigo-600 focus:text-white text-sm">ADMIN (Full Authority)</SelectItem>
                       <SelectItem value="DELIVERY" className="focus:bg-indigo-600 focus:text-white text-sm">DELIVERY (Logistics Operations)</SelectItem>
                       <SelectItem value="STOCK" className="focus:bg-indigo-600 focus:text-white text-sm">STOCK (Warehouse & Inventory)</SelectItem>
+                      <SelectItem value="MARKETING MANAGER" className="focus:bg-indigo-600 focus:text-white text-sm">MARKETING MANAGER (Campaign Strategy)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
