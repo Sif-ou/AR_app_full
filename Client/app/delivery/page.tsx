@@ -22,7 +22,7 @@ import {
   Star,
   ChevronRight,
   MoreVertical,
-  Lock // Added for Unauthorized State UI
+  Lock 
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -30,7 +30,7 @@ import { cn } from '@/lib/utils'
 const activeDeliveries = [
   { 
     id: 'DEL-101', 
-    customer: 'Sarah ', 
+    customer: 'Sarah', 
     address: '123 Rue Didouche Mourad, Algiers', 
     status: 'on-the-way',
     timeLimit: '15 mins',
@@ -38,7 +38,7 @@ const activeDeliveries = [
   },
   { 
     id: 'DEL-102', 
-    customer: 'Ahmed ', 
+    customer: 'Ahmed', 
     address: 'Universite Constantine 2 Abdelhamid Mehri', 
     status: 'pending',
     timeLimit: '45 mins',
@@ -54,10 +54,10 @@ const deliveryHistory = [
 
 export default function DeliveryDashboard() {
   // --- AUTHENTICATION & ROLE GATEWAY ---
-  // Connect this mock object to your actual useSession() or useAuth() hook.
+  // Pre-configured with "DELIVERY" to pass authorization checks automatically.
   const mockUser = {
     isAuthenticated: true,
-    roles: [""] // Toggle or change this string value to test unauthorized states
+    roles: ["DELIVERY"] 
   };
 
   const hasDeliveryAccess = mockUser.isAuthenticated && mockUser.roles.includes("DELIVERY");
@@ -154,7 +154,7 @@ export default function DeliveryDashboard() {
                 <span className="font-bold">I</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">Islam </p>
+                <p className="text-sm font-medium truncate">Islam</p>
                 <Badge variant="outline" className="text-[10px] text-green-400 border-green-400 bg-green-400/10">Online</Badge>
               </div>
               <Link href="/account" className="flex-shrink-0">
@@ -180,7 +180,7 @@ export default function DeliveryDashboard() {
           <span className="font-bold text-md tracking-tight flex items-center gap-2 text-white">
             <Package className="text-blue-500 h-4 w-4" /> AR<span className="text-blue-500">Go</span>
           </span>
-          <div className="w-6 h-6" /> {/* Spacer */}
+          <div className="w-6 h-6" /> 
         </header>
 
         <main className="p-4 sm:p-6 space-y-6">

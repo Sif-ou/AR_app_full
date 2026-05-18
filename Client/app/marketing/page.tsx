@@ -14,7 +14,7 @@ import {
   AlertCircle,
   CheckCircle2,
   Clock,
-  Lock // Imported for the access restriction layout
+  Lock 
 } from 'lucide-react';
 
 // --- TypeScript Interfaces ---
@@ -48,10 +48,10 @@ const INITIAL_CAMPAIGNS: PromoCampaign[] = [
 
 export default function PromoDashboard() {
   // --- ROLE VERIFICATION GATE ---
-  // Replace this mock hook state with your actual global auth platform (e.g., NextAuth, Clerk, custom context)
+  // Pre-configured with "MARKETING MANAGER" to pass verification. Clear or alter to test access restriction.
   const [currentUser] = useState({
     name: "Alex",
-    roles: [""] // Change or empty this array to test authorization logic
+    roles: ["MARKETING MANAGER"] 
   });
 
   const hasAccess = currentUser?.roles?.includes("MARKETING MANAGER");
