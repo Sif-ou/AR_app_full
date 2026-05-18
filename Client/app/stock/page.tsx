@@ -19,11 +19,12 @@ import {
   Loader2,
   Palette,
   Combine,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Trash2,
+  Pipette
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-// --- SPRING BOOT ENTITY INTERFACES ---
 interface Product {
   id: number;
   name: string;
@@ -67,7 +68,6 @@ export default function StockDashboard() {
   const [activeTab, setActiveTab] = useState('inventory')
   const [searchQuery, setSearchQuery] = useState('')
   
-  // --- DYNAMIC API STATE ---
   const [inventory, setInventory] = useState<Product[]>([])
   const [colors, setColors] = useState<Color[]>([])
   const [variants, setVariants] = useState<Variant[]>([])
@@ -77,32 +77,27 @@ export default function StockDashboard() {
   const [fetchError, setFetchError] = useState<string | null>(null)
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null)
 
-  // --- MODAL & FORM STATES ---
   const [activeModal, setActiveModal] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [deletingId, setDeletingId] = useState<number | null>(null)
 
-  // Form Data States
   const [productForm, setProductForm] = useState({ name: '', quantity: 0, category: '', description: '', heigh: 0, width: 0, depth: 0 })
-  const [colorForm, setColorForm] = useState({ name: '', hexCode: '#000000' })
+  const [colorForm, setColorForm] = useState({ name: '', hexCode: '#3b82f6' })
   const [variantForm, setVariantForm] = useState({ productId: '', colorId: '', name: '', sku: '', percentage: 0, quantity: 0, description: '' })
   const [mediaForm, setMediaForm] = useState({ variantId: '', staticImage: '', model3d: '' })
 
-  // Use a ref to prevent any potential race-condition double fetching in React StrictMode
   const hasFetched = useRef(false)
 
-  // --- SAFE TOKEN SANITIZER HELPER ---
   const getCleanAuthToken = useCallback(() => {
     if (typeof window === 'undefined') return null;
     let token = localStorage.getItem("token")
     if (!token) return null
-    
     if (token.startsWith('Bearer ')) {
       token = token.slice(7).trim()
     }
     return token
   }, [])
 
-  // --- COMPONENT LEVEL FETCH CALLS ---
   const fetchAllData = useCallback(async () => {
     const token = getCleanAuthToken();
     if (!token) {
@@ -123,7 +118,6 @@ export default function StockDashboard() {
         fetch(`${BASE_URL}/media`, { headers: { 'Authorization': `Bearer ${token}` } }),
       ]);
 
-      // If ANY endpoint yields a 403, immediately clear state, token, and kill authorization
       if (resProducts.status === 403 || resColors.status === 403 || resVariants.status === 403 || resMedia.status === 403) {
         localStorage.removeItem("token");
         setFetchError("Access Denied (403): Your token is expired or lacks permissions.");
@@ -146,18 +140,16 @@ export default function StockDashboard() {
       setVariants(Array.isArray(variantsData) ? variantsData : []);
       setMedia(Array.isArray(mediaData) ? mediaData : []);
       
-      // Validation passed securely from server response status codes
       setIsAuthorized(true); 
       
     } catch (error) {
       console.error("Database connection failure:", error);
-      setFetchError("Network connection failure or CORS mismatch. If your Render backend is sleeping, please wait a minute and refresh.");
+      setFetchError("Network connection failure or CORS mismatch.");
     } finally {
       setIsLoading(false);
     }
   }, [getCleanAuthToken]);
 
-  // --- SINGLE CLEAN SECURITY & DATA LIFECYCLE ---
   useEffect(() => {
     const token = getCleanAuthToken();
     if (!token) {
@@ -171,7 +163,31 @@ export default function StockDashboard() {
     }
   }, [getCleanAuthToken, fetchAllData]);
 
-  // --- MUTATION POST HANDLERS ---
+  const handleDelete = async (endpointTarget: string, id: number) => {
+    if (!confirm(`Are you sure you want to delete this ${endpointTarget.slice(0, -1)}?`)) return;
+    
+    setDeletingId(id);
+    try {
+      const token = getCleanAuthToken();
+      const res = await fetch(`${BASE_URL}/${endpointTarget}/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (res.ok) {
+        fetchAllData();
+      } else {
+        const errText = await res.text();
+        alert(`Deletion failed: ${errText || 'Check database constraints (e.g. references)'}`);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Network error occurred during deletion.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
@@ -179,10 +195,7 @@ export default function StockDashboard() {
       const token = getCleanAuthToken()
       const res = await fetch(`${BASE_URL}/add/products`, {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(productForm)
       })
       if (res.ok) {
@@ -201,15 +214,12 @@ export default function StockDashboard() {
       const token = getCleanAuthToken()
       const res = await fetch(`${BASE_URL}/add/colors`, {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(colorForm)
       })
       if (res.ok) {
         setActiveModal(null)
-        setColorForm({ name: '', hexCode: '#000000' })
+        setColorForm({ name: '', hexCode: '#3b82f6' })
         fetchAllData()
       } else alert(await res.text())
     } catch (err) { console.error(err) }
@@ -232,10 +242,7 @@ export default function StockDashboard() {
       }
       const res = await fetch(`${BASE_URL}/variants/add`, {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(payload)
       })
       if (res.ok) {
@@ -259,10 +266,7 @@ export default function StockDashboard() {
       }
       const res = await fetch(`${BASE_URL}/media/add`, {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(payload)
       })
       if (res.ok) {
@@ -297,15 +301,9 @@ export default function StockDashboard() {
           </div>
           <CardTitle className="text-xl font-bold text-white mb-2">Access Denied</CardTitle>
           <CardDescription className="text-zinc-400 text-sm mb-6">
-            {fetchError || "You lack inventory control clearance or your session expired. This dashboard requires valid configuration setup permissions."}
+            {fetchError || "You lack inventory control clearance or your session expired."}
           </CardDescription>
-          <Button 
-            onClick={() => {
-              localStorage.clear();
-              router.push('/account');
-            }} 
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium"
-          >
+          <Button onClick={() => { localStorage.clear(); router.push('/account'); }} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium">
             Go to Login Page
           </Button>
         </Card>
@@ -363,10 +361,7 @@ export default function StockDashboard() {
           </nav>
 
           <div className="p-4 border-t border-white/5 bg-zinc-950/50">
-            <button
-              onClick={handleSignOut}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all text-left group"
-            >
+            <button onClick={handleSignOut} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all text-left group">
               <LogOut className="h-5 w-5 flex-shrink-0 transition-transform group-hover:-translate-x-0.5" />
               <span>Sign Out</span>
             </button>
@@ -395,17 +390,9 @@ export default function StockDashboard() {
             <div className="flex items-center gap-3 self-start sm:self-auto w-full sm:w-auto">
               <div className="relative flex-1 sm:w-64">
                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-500" />
-                <Input 
-                  placeholder={`Search ${activeTab}...`} 
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  className="pl-9 bg-zinc-900/50 border-white/10 text-white placeholder-zinc-500"
-                />
+                <Input placeholder={`Search ${activeTab}...`} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 bg-zinc-900/50 border-white/10 text-white placeholder-zinc-500" />
               </div>
-              <Button 
-                onClick={() => setActiveModal(activeTab)}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-medium flex items-center gap-2"
-              >
+              <Button onClick={() => setActiveModal(activeTab)} className="bg-blue-600 hover:bg-blue-700 text-white font-medium flex items-center gap-2">
                 <Plus className="h-4 w-4" /> Add {activeTab.slice(0, -1)}
               </Button>
             </div>
@@ -429,11 +416,20 @@ export default function StockDashboard() {
                   {filteredInventory.map(item => {
                     const status = getStockStatus(item.quantity);
                     return (
-                      <Card key={item.id} className="bg-zinc-900 border-none ring-1 ring-white/5 shadow-xl flex flex-col">
+                      <Card key={item.id} className="bg-zinc-900 border-none ring-1 ring-white/5 shadow-xl flex flex-col relative group">
                         <CardContent className="p-5 space-y-4 flex-1 flex flex-col">
                           <div className="flex justify-between items-start">
                             <Badge className="bg-zinc-800 text-zinc-400">{item.category}</Badge>
-                            <span className="text-xs text-zinc-500 font-mono">#{item.id}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-zinc-500 font-mono">#{item.id}</span>
+                              <button 
+                                onClick={() => handleDelete('products', item.id)} 
+                                disabled={deletingId === item.id}
+                                className="text-zinc-500 hover:text-red-400 p-1 transition-colors"
+                              >
+                                {deletingId === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                              </button>
+                            </div>
                           </div>
                           <h3 className="font-bold text-white text-lg">{item.name}</h3>
                           <p className="text-xs text-zinc-400 flex-1">{item.description}</p>
@@ -454,11 +450,18 @@ export default function StockDashboard() {
               {activeTab === 'colors' && (
                 <div className="grid gap-4 grid-cols-2 sm:grid-cols-4 lg:grid-cols-6">
                   {colors.map(color => (
-                    <Card key={color.id} className="bg-zinc-900 border-none ring-1 ring-white/5">
+                    <Card key={color.id} className="bg-zinc-900 border-none ring-1 ring-white/5 relative group">
+                      <button 
+                        onClick={() => handleDelete('colors', color.id)} 
+                        disabled={deletingId === color.id}
+                        className="absolute top-2 right-2 text-zinc-500 hover:text-red-400 p-1 transition-colors z-10"
+                      >
+                        {deletingId === color.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                      </button>
                       <CardContent className="p-4 flex flex-col items-center gap-3">
                         <div className="w-12 h-12 rounded-full border-2 border-white/10 shadow-lg" style={{ backgroundColor: color.hexCode }} />
                         <div className="text-center">
-                          <p className="font-bold text-white text-sm">{color.name}</p>
+                          <p className="font-bold text-white text-sm truncate max-w-[100px]">{color.name}</p>
                           <p className="text-xs text-zinc-500 font-mono">{color.hexCode}</p>
                         </div>
                       </CardContent>
@@ -472,9 +475,18 @@ export default function StockDashboard() {
                   {variants.map(variant => (
                     <Card key={variant.id} className="bg-zinc-900 border-none ring-1 ring-white/5 shadow-xl">
                       <CardContent className="p-5 space-y-3">
-                        <div className="flex justify-between">
+                        <div className="flex justify-between items-center">
                           <Badge className="bg-blue-500/10 text-blue-400">SKU: {variant.sku}</Badge>
-                          <span className="text-xs text-zinc-500">ID: #{variant.id}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-zinc-500">ID: #{variant.id}</span>
+                            <button 
+                              onClick={() => handleDelete('variants', variant.id)} 
+                              disabled={deletingId === variant.id}
+                              className="text-zinc-500 hover:text-red-400 p-1 transition-colors"
+                            >
+                              {deletingId === variant.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                            </button>
+                          </div>
                         </div>
                         <h3 className="font-bold text-white">{variant.name}</h3>
                         <p className="text-xs text-zinc-400">{variant.description}</p>
@@ -495,9 +507,18 @@ export default function StockDashboard() {
               {activeTab === 'media' && (
                 <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
                   {media.map(item => (
-                    <Card key={item.id} className="bg-zinc-900 border-none ring-1 ring-white/5">
+                    <Card key={item.id} className="bg-zinc-900 border-none ring-1 ring-white/5 relative group">
                       <CardContent className="p-0">
-                        <img src={item.static_image} alt="Media Asset" className="w-full h-48 object-cover rounded-t-xl" />
+                        <div className="relative">
+                          <img src={item.static_image} alt="Media Asset" className="w-full h-48 object-cover rounded-t-xl" />
+                          <button 
+                            onClick={() => handleDelete('media', item.id)} 
+                            disabled={deletingId === item.id}
+                            className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm rounded-full text-zinc-300 hover:text-red-400 p-2 transition-colors"
+                          >
+                            {deletingId === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                          </button>
+                        </div>
                         <div className="p-4 space-y-2">
                           <p className="text-sm font-bold text-white truncate">Linked to Variant ID: #{item.variant?.id}</p>
                           <p className="text-xs text-zinc-400 font-mono truncate">Model: {item.model_3d || 'None'}</p>
@@ -538,11 +559,39 @@ export default function StockDashboard() {
                 </form>
               )}
 
+              {/* --- INTERACTIVE VISUAL PALETTE COLOR PICKER --- */}
               {activeModal === 'colors' && (
                 <form onSubmit={handleAddColor} className="space-y-4">
-                  <div className="space-y-1"><label className="text-xs text-zinc-400">Color Name</label><Input required className="bg-zinc-900 border-white/10 text-white" value={colorForm.name} onChange={e => setColorForm({...colorForm, name: e.target.value})} /></div>
-                  <div className="space-y-1"><label className="text-xs text-zinc-400">Hex Code</label><Input required type="color" className="w-full h-12 bg-zinc-900 border-white/10 p-1" value={colorForm.hexCode} onChange={e => setColorForm({...colorForm, hexCode: e.target.value})} /></div>
-                  <Button type="submit" disabled={isSubmitting} className="w-full bg-blue-600 text-white mt-4">{isSubmitting ? 'Saving...' : 'Save Color'}</Button>
+                  <div className="space-y-1">
+                    <label className="text-xs text-zinc-400">Color Designation Name</label>
+                    <Input required placeholder="e.g. Royal Blue" className="bg-zinc-900 border-white/10 text-white" value={colorForm.name} onChange={e => setColorForm({...colorForm, name: e.target.value})} />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-xs text-zinc-400 block">Click Panel to Pick Visual Shade</label>
+                    <div className="flex items-center gap-3 bg-zinc-900 border border-white/10 p-3 rounded-md transition-all">
+                      {/* Interactive block input that launches the color dashboard */}
+                      <div className="relative w-14 h-14 rounded-lg overflow-hidden border border-white/20 shadow-inner group-hover:scale-105 transition-transform flex-shrink-0 cursor-pointer">
+                        <input 
+                          type="color" 
+                          className="absolute inset-0 scale-150 cursor-pointer opacity-100" 
+                          value={colorForm.hexCode} 
+                          onChange={e => setColorForm({...colorForm, hexCode: e.target.value})} 
+                        />
+                      </div>
+                      
+                      {/* Synchronized readout text display box */}
+                      <div className="flex-1 min-w-0">
+                        <span className="text-xs block text-zinc-500 font-medium uppercase tracking-wider mb-0.5">Hex Code Captured</span>
+                        <div className="flex items-center gap-1.5 font-mono text-sm text-white font-semibold">
+                          <Pipette className="h-3.5 w-3.5 text-blue-500" />
+                          {colorForm.hexCode.toUpperCase()}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Button type="submit" disabled={isSubmitting} className="w-full bg-blue-600 text-white mt-4 shadow-lg shadow-blue-600/20">{isSubmitting ? 'Saving...' : 'Save New Color Matrix'}</Button>
                 </form>
               )}
 

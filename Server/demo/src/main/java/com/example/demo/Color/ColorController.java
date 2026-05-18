@@ -40,4 +40,17 @@ public class ColorController {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+@PreAuthorize("hasAuthority('STOCK') or hasRole('STOCK')")
+@DeleteMapping("/colors/{id}")
+public ResponseEntity<?> deleteColor(@PathVariable Long id) {
+    try {
+        colorService.deleteColor(id);
+        return new ResponseEntity<>("Color deleted successfully", HttpStatus.OK);
+    } catch (IllegalArgumentException e) {
+        return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+    } catch (Exception e) {
+        return new ResponseEntity<>("An error occurred while deleting the color.", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+}
 }

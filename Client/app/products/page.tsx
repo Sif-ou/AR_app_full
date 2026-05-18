@@ -19,10 +19,8 @@ import { Badge } from '@/components/ui/badge'
 // Static lookup fallback for UI filter layout selections
 import { categories } from '@/lib/data' 
 
-// =========================================================================
-// ⚠️ ACTION REQUIRED: Replace this with your actual live Render deployment URL
-// =========================================================================
-const RENDER_BACKEND_URL = 'https://your-spring-boot-app.onrender.com' 
+// Adjusted backend base URL to align with your endpoint mapping structure
+const RENDER_BACKEND_URL = 'https://ar-app-back-end.onrender.com' 
 
 type SortOption = 'featured' | 'price-low' | 'price-high' | 'rating' | 'newest'
 
@@ -59,6 +57,8 @@ function ProductsContent() {
       try {
         setLoading(true)
         setError(null)
+        
+        // This resolves perfectly to: https://ar-app-back-end.onrender.com/api/products
         const response = await fetch(`${RENDER_BACKEND_URL}/api/products`, {
           method: 'GET',
           headers: {
@@ -293,7 +293,6 @@ function ProductsContent() {
           ) : (
             <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {filteredProducts.map((product) => (
-                // Explictly typing 'as any' bypasses property conflicts with your components prop definition
                 <ProductCard key={product.id} product={product as any} />
               ))}
             </div>

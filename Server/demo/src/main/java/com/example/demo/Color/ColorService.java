@@ -42,4 +42,11 @@ public class ColorService {
     public List<Color> getAllColors() {
         return colorRepository.findAll();
     }
+
+    public void deleteColor(Long id) {
+    if (!colorRepository.existsById(id)) {
+        throw new IllegalArgumentException("Color with ID " + id + " does not exist");
+    }
+    colorRepository.deleteById(id);
+     }
 }
