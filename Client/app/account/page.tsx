@@ -222,7 +222,6 @@ const handleVerifyCode = async () => {
           email: data.email
         });
 
-        setIsLoggedIn(true);
         setStatusMessage('Account verified and logged in successfully! Redirecting... 🎉');
 
         // 4. Reset views and clear code states before sending home
