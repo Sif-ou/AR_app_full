@@ -36,7 +36,7 @@ const [registeredPassword, setRegisteredPassword] = useState('');
   const [loading, setLoading] = useState(false)
   const [statusMessage, setStatusMessage] = useState('')
   const [isCheckingRole, setIsCheckingRole] = useState(true)
-const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
   // Password Visibility States
   const [showLoginPassword, setShowLoginPassword] = useState(false)
   const [showRegPassword, setShowRegPassword] = useState(false)
@@ -70,23 +70,27 @@ const [isCheckingAuth, setIsCheckingAuth] = useState(true);
     }
   }
 
-useEffect(() => {
-  const token = localStorage.getItem('token');
-  const role = localStorage.getItem('user_role');
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+    const savedName = localStorage.getItem('username')
+    const savedEmail = localStorage.getItem('userEmail')
+    const savedRole = localStorage.getItem('userRole')
 
-  if (token) {
-    if (role === 'ADMIN') {
-      router.push('/admin');
-      return;
-    } else {
-      router.push('/dashboard');
+    if (savedRole === 'ADMIN') {
+      router.push('/admin')
       return;
     }
-  }
-  
-  // ADD THIS LINE HERE
-  setIsCheckingAuth(false); 
-}, [router]);
+
+    if (token) {
+      setIsLoggedIn(true)
+      setLoggedInUser({
+        name: savedName || 'User Account',
+        email: savedEmail || ''
+      })
+    }
+
+    setIsCheckingRole(false) 
+  }, [])
 
   const handleRemoveWishlist = (itemToRemove: string) => {
     setUserState((prev) => ({
@@ -249,9 +253,9 @@ const handleVerifyCode = async () => {
   }
 };
 
- if (isCheckingAuth) {
-  return <div className="min-h-screen flex items-center justify-center">Loading...</div>
-}
+  if (isCheckingRole) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>
+  }
 
   if (!isLoggedIn) {
     return (
