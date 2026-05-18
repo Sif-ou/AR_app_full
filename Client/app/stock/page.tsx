@@ -1,5 +1,6 @@
 'use client'
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation'; // Imported for pushing to home page
 import { 
   Package, 
   AlertTriangle, 
@@ -51,14 +52,28 @@ const INITIAL_STOCK: StockItem[] = [
 const CATEGORIES = ["Living Room", "Dining", "Office", "Bedroom", "Lighting"];
 
 export default function StockDashboard() {
-  // --- ROLE & AUTH STATE MANAGEMENT ---
-  // Initializes the state checking local storage (or defaults to 'STOCK' if none exists yet)
-  const [userRole, setUserRole] = useState<string | null>(() => {
+  const router = useRouter(); // Next.js router engine
+  
+  // Track mounting to avoid Next.js hydration errors with localStorage
+  const [isMounted, setIsMounted] = useState<boolean>(false);
+
+  // Read explicitly from localStorage dynamically
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    setIsMounted(true);
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('role') || 'STOCK';
+      // Pulls active role. If empty, falls back to 'STOCK' for development
+      const savedRole = localStorage.getItem('role');
+      if (savedRole) {
+        setUserRole(savedRole);
+      } else {
+        // Fallback placeholder so it doesn't instantly block you during initial load
+        localStorage.setItem('role', 'STOCK');
+        setUserRole('STOCK');
+      }
     }
-    return 'STOCK';
-  });
+  }, []);
 
   const [inventory, setInventory] = useState<StockItem[]>(INITIAL_STOCK);
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -77,16 +92,21 @@ export default function StockDashboard() {
     supplier: ''
   });
 
-  // --- SIGN OUT LOGIC ---
+  // --- FORCE OUT AND ROUTE HOME LOGIC ---
   const handleSignOut = () => {
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('role');
-      localStorage.removeItem('token'); // Clears standard auth token if tracking one
+      localStorage.clear(); // Wipes everything including 'role'
     }
-    setUserRole(null); // Instantly triggers lock-out UI state
+    setUserRole(null);
+    router.push('/'); // Force-pushes user state window back to Home layout page
   };
 
-  // Strict enforcement: Block any user whose role is NOT explicitly 'STOCK'
+  // Prevent server side hydration mismatches before mounting settles
+  if (!isMounted) {
+    return <div className="min-h-screen bg-[#0F172A]" />;
+  }
+
+  // Strict enforcement gateway block
   if (userRole !== 'STOCK') {
     return (
       <div className="min-h-screen bg-[#0F172A] flex items-center justify-center p-4">
@@ -96,9 +116,12 @@ export default function StockDashboard() {
           <p className="text-sm text-slate-400 mb-4">
             This module is restricted. Your session has ended or you lack authorized 'STOCK' management clearances.
           </p>
-          <div className="text-xs text-slate-500 bg-slate-950 p-2 rounded font-mono border border-slate-800">
-            Status: Unauthorized / Signed Out
-          </div>
+          <button 
+            onClick={() => router.push('/')}
+            className="w-full bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold py-2 px-4 rounded transition-colors border border-slate-700"
+          >
+            Return to Home Page
+          </button>
         </div>
       </div>
     );
