@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@CrossOrigin(origins = "*") 
 @RequestMapping("/api") // Target URL: http://localhost:8080/api/colors
 public class ColorController {
 
