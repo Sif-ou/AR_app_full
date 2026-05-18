@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardTitle, CardDescription } from '@/components/ui/card'
@@ -87,6 +87,9 @@ export default function StockDashboard() {
   const [variantForm, setVariantForm] = useState({ productId: '', colorId: '', name: '', sku: '', percentage: 0, quantity: 0, description: '' })
   const [mediaForm, setMediaForm] = useState({ variantId: '', staticImage: '', model3d: '' })
 
+  // Use a ref to prevent any potential race-condition double fetching in React StrictMode
+  const hasFetched = useRef(false)
+
   // --- SAFE TOKEN SANITIZER HELPER ---
   const getCleanAuthToken = useCallback(() => {
     if (typeof window === 'undefined') return null;
@@ -124,7 +127,7 @@ export default function StockDashboard() {
       if (resProducts.status === 403 || resColors.status === 403 || resVariants.status === 403 || resMedia.status === 403) {
         localStorage.removeItem("token");
         setFetchError("Access Denied (403): Your token is expired or lacks permissions.");
-        setIsAuthorized(false); // Crucial: forces interface update immediately
+        setIsAuthorized(false); 
         setIsLoading(false);
         return;
       }
@@ -142,7 +145,9 @@ export default function StockDashboard() {
       setColors(Array.isArray(colorsData) ? colorsData : []);
       setVariants(Array.isArray(variantsData) ? variantsData : []);
       setMedia(Array.isArray(mediaData) ? mediaData : []);
-      setIsAuthorized(true); // Confirmed valid endpoints
+      
+      // Validation passed securely from server response status codes
+      setIsAuthorized(true); 
       
     } catch (error) {
       console.error("Database connection failure:", error);
@@ -152,23 +157,19 @@ export default function StockDashboard() {
     }
   }, [getCleanAuthToken]);
 
-  // --- SECURITY INITIALIZATION CYCLE ---
+  // --- SINGLE CLEAN SECURITY & DATA LIFECYCLE ---
   useEffect(() => {
-    const token = getCleanAuthToken()
-    if (token) {
-      setIsAuthorized(true)
+    const token = getCleanAuthToken();
+    if (!token) {
+      setIsAuthorized(false);
+      setIsLoading(false);
     } else {
-      setIsAuthorized(false)
-      setIsLoading(false)
+      if (!hasFetched.current) {
+        hasFetched.current = true;
+        fetchAllData();
+      }
     }
-  }, [getCleanAuthToken])
-
-  // --- AUTOMATED MONITOR TRIGGER CYCLE ---
-  useEffect(() => {
-    if (isAuthorized === true) {
-      fetchAllData();
-    }
-  }, [isAuthorized, fetchAllData]);
+  }, [getCleanAuthToken, fetchAllData]);
 
   // --- MUTATION POST HANDLERS ---
   const handleAddProduct = async (e: React.FormEvent) => {
@@ -415,7 +416,7 @@ export default function StockDashboard() {
               <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
               <p className="text-sm animate-pulse">Synchronizing with Render application services...</p>
             </div>
-          ) : fetchError ? (
+          ) : fetchError && isAuthorized === true ? (
             <div className="flex flex-col items-center justify-center py-12 bg-red-500/5 rounded-xl border border-red-500/10 text-center">
               <AlertTriangle className="h-10 w-10 text-red-400 mb-2" />
               <p className="text-white font-semibold">Database Sync Error</p>

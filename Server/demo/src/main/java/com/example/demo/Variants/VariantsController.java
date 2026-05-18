@@ -2,12 +2,13 @@ package com.example.demo.Variants;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@CrossOrigin(origins = "*") 
-@RequestMapping("/api/variants") // Cleaned up REST base path
+@RequestMapping("/api/variants") 
+// ⚠️ REMOVED @CrossOrigin(origins = "*") to prevent CORS credential conflicts
 public class VariantsController {
 
     private final VariantsService variantsService;
@@ -16,6 +17,7 @@ public class VariantsController {
         this.variantsService = variantsService;
     }
 
+    @PreAuthorize("hasAuthority('STOCK') or hasRole('STOCK')")
     @PostMapping("/add")
     public ResponseEntity<?> addVariant(@RequestBody VariantCreateRequest request) {
         try {
@@ -28,15 +30,16 @@ public class VariantsController {
 
     /**
      * GET: Fetch all variations
-     * Endpoint: GET https://ar-app-back-end.onrender.com/api/variants
+     * FIXED Endpoint: GET https://ar-app-back-end.onrender.com/api/variants
+     * (Removed the "/get" sub-path to match your frontend fetch request perfectly)
      */
-    @GetMapping("/get")
+    @GetMapping("")
     public ResponseEntity<List<Variants>> getAllVariants() {
         List<Variants> variants = variantsService.getAllVariants();
         return ResponseEntity.ok(variants);
     }
 
-
+    @PreAuthorize("hasAuthority('STOCK') or hasRole('STOCK')")
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteVariant(@PathVariable Long id) {
         try {

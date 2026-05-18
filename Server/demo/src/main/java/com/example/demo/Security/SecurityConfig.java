@@ -12,7 +12,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
 import org.springframework.http.HttpMethod;
 
 import java.util.Arrays;
@@ -34,28 +33,28 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // 1. CRITICAL: Handle CORS headers before any security check takes place
+            // 1. Handle CORS headers before any security check takes place
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
 
             .authorizeHttpRequests(auth -> auth
-                // Allow all pre-flight OPTIONS requests to pass through
+                // Allow all pre-flight OPTIONS requests to pass through cleanly
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                 // Public endpoints
-                .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/public/**").permitAll()
-                .requestMatchers("/api/chat/**").permitAll()
+                .requestMatchers("/api/auth/**", "/api/auth").permitAll()
+                .requestMatchers("/api/public/**", "/api/public").permitAll()
+                .requestMatchers("/api/chat/**", "/api/chat").permitAll()
                 
-                // Secure stock endpoints 
-                .requestMatchers("/api/products/**").authenticated()
-                .requestMatchers("/api/colors/**").authenticated()
-                .requestMatchers("/api/add/**").authenticated()
-                .requestMatchers("/api/variants/**").authenticated()
-                .requestMatchers("/api/media/**").authenticated()
+                // Secure stock endpoints (Explicitly matching both base paths and nested wildcards)
+                .requestMatchers("/api/products", "/api/products/**").authenticated()
+                .requestMatchers("/api/colors", "/api/colors/**").authenticated()
+                .requestMatchers("/api/variants", "/api/variants/**").authenticated()
+                .requestMatchers("/api/media", "/api/media/**").authenticated()
+                .requestMatchers("/api/add", "/api/add/**").authenticated()
                 
                 // Secure admin endpoints
-                .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
+                .requestMatchers("/api/admin", "/api/admin/**").hasAuthority("ADMIN")
 
                 // Catch-all safety fallback
                 .anyRequest().authenticated()
@@ -74,11 +73,12 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // Allowed client endpoints
+        // Allowed client endpoints - Added production, localhost, and Vercel preview environments
         configuration.setAllowedOrigins(Arrays.asList(
             "https://ar-app-full-delta.vercel.app", 
             "http://localhost:3000"
         ));
+        
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         
         // Accept common authentication headers passed by client applications
@@ -89,6 +89,7 @@ public class SecurityConfig {
             "Accept", 
             "X-Requested-With"
         ));
+        
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

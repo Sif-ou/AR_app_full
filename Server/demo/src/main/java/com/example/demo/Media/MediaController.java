@@ -2,12 +2,13 @@ package com.example.demo.Media;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@CrossOrigin(origins = "*") 
 @RequestMapping("/api/media")
+// ⚠️ REMOVED @CrossOrigin(origins = "*") to allow global SecurityConfig to handle credentials safely
 public class MediaController {
 
     private final MediaService mediaService;
@@ -16,6 +17,7 @@ public class MediaController {
         this.mediaService = mediaService;
     }
 
+    @PreAuthorize("hasAuthority('STOCK') or hasRole('STOCK')")
     @PostMapping("/add")
     public ResponseEntity<?> addMedia(@RequestBody MediaCreateRequest request) {
         try {
@@ -28,18 +30,20 @@ public class MediaController {
 
     /**
      * GET: Fetch all static images and 3D files.
-     * Endpoint: GET http://localhost:8080/api/media
+     * FIXED: Resolved compilation syntax mashup and dropped the "/get" suffix 
+     * Endpoint now matches frontend precisely: GET https://ar-app-back-end.onrender.com/api/media
      */
-    @GetMapping@PostMapping("/get")
+    @GetMapping("")
     public ResponseEntity<List<Media>> getAllMedia() {
         List<Media> mediaList = mediaService.getAllMedia();
         return ResponseEntity.ok(mediaList);
     }
 
     /**
-     * DELETE: Delete a specific media row (breaks no constraints).
-     * Endpoint: DELETE http://localhost:8080/api/media/{id}
+     * DELETE: Delete a specific media row.
+     * Endpoint: DELETE https://ar-app-back-end.onrender.com/api/media/{id}
      */
+    @PreAuthorize("hasAuthority('STOCK') or hasRole('STOCK')")
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteMedia(@PathVariable Long id) {
         try {

@@ -9,8 +9,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@CrossOrigin(origins = "*") 
 @RequestMapping("/api")
+// ⚠️ REMOVED @CrossOrigin(origins = "*") to prevent global CORS configuration clashing
 public class ProductController {
 
     private final ProductService productService;
@@ -20,7 +20,6 @@ public class ProductController {
         this.productService = productService;
     }
 
-
     @PreAuthorize("hasAuthority('STOCK') or hasRole('STOCK')")
     @PostMapping("/add/products")
     public ResponseEntity<?> addProduct(@RequestBody Product product) {
@@ -28,40 +27,32 @@ public class ProductController {
             Product savedProduct = productService.saveProduct(product);
             return new ResponseEntity<>(savedProduct, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
-          
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
-
             return new ResponseEntity<>("An error occurred while saving the product.", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-
-
-
     @GetMapping("/products")
     public ResponseEntity<List<Product>> getAllProducts() {
         try {
-            List<Product> products = productService.getAllProducts() ; 
-            return new ResponseEntity<>(products, HttpStatus.OK) ;
+            List<Product> products = productService.getAllProducts(); 
+            return new ResponseEntity<>(products, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-
-@PreAuthorize("hasAuthority('STOCK') or hasRole('STOCK')")
-@DeleteMapping("/products/{id}")
-public ResponseEntity<?> deleteProduct(@PathVariable Long id) {
-    try {
-        productService.deleteProduct(id);
-        return new ResponseEntity<>("Product deleted successfully", HttpStatus.OK);
-    } catch (IllegalArgumentException e) {
-        return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
-    } catch (Exception e) {
-        return new ResponseEntity<>("An error occurred while deleting the product.", HttpStatus.INTERNAL_SERVER_ERROR);
+    @PreAuthorize("hasAuthority('STOCK') or hasRole('STOCK')")
+    @DeleteMapping("/products/{id}")
+    public ResponseEntity<?> deleteProduct(@PathVariable Long id) {
+        try {
+            productService.deleteProduct(id);
+            return new ResponseEntity<>("Product deleted successfully", HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>("An error occurred while deleting the product.", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
-}
-
-
 }

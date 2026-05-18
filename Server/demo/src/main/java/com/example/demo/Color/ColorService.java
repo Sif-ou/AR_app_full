@@ -2,6 +2,7 @@ package com.example.demo.Color;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import java.util.List;
 
 @Service
 public class ColorService {
@@ -32,5 +33,13 @@ public class ColorService {
         
         // 3. Save to database
         return colorRepository.save(color);
+    }
+
+    /**
+     * FETCH ALL COLORS
+     * Uses the built-in JpaRepository findAll() method to retrieve every row from your color table.
+     */
+    public List<Color> getAllColors() {
+        return colorRepository.findAll();
     }
 }
