@@ -96,29 +96,45 @@ export default function StockDashboard() {
   }, [])
 
   // --- MASTER FETCH FUNCTION ---
-  const fetchAllData = async () => {
-    try {
-      setIsLoading(true)
-      const [prodRes, colorRes, varRes, mediaRes] = await Promise.all([
-        fetch(`${BASE_URL}/products`),
-        fetch(`${BASE_URL}/colors`).catch(() => ({ ok: true, json: () => [] })), // Assuming standard REST for GET colors
-        fetch(`${BASE_URL}/variants/get`),
-        fetch(`${BASE_URL}/media/get`)
-      ])
+const fetchAllData = async () => {
+  try {
+    setIsLoading(true);
+    
+    // 1. Grab your authenticated user's token from storage
+    const token = localStorage.getItem("token"); // Verify if your login system uses "token", "jwt", etc.
+    
+    // 2. Build the secure authorization headers
+    const secureHeaders = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}` // This matches your backend's JwtAuthenticationFilter expectations
+    };
 
-      if (!prodRes.ok) throw new Error('Failed to retrieve databases.')
+    // 3. Pass the secure headers to all concurrent promises
+    const [prodRes, colorRes, varRes, mediaRes] = await Promise.all([
+      fetch(`${BASE_URL}/products`, { method: 'GET', headers: secureHeaders }),
+      fetch(`${BASE_URL}/colors`, { method: 'GET', headers: secureHeaders }), 
+      fetch(`${BASE_URL}/variants/get`, { method: 'GET', headers: secureHeaders }),
+      fetch(`${BASE_URL}/media/get`, { method: 'GET', headers: secureHeaders })
+    ]);
 
-      setInventory(await prodRes.json())
-      setColors(await colorRes.json())
-      setVariants(await varRes.json())
-      setMedia(await mediaRes.json())
-      setFetchError(null)
-    } catch (err: any) {
-      setFetchError(err.message || 'Something went wrong fetching data.')
-    } finally {
-      setIsLoading(false)
+    if (prodRes.status === 403 || varRes.status === 403) {
+      throw new Error('Access Denied (403): Your token is missing, expired, or you lack STOCK permissions.');
     }
+
+    if (!prodRes.ok) throw new Error('Failed to synchronize with database tables.');
+
+    setInventory(await prodRes.json());
+    setColors(await colorRes.json());
+    setVariants(await varRes.json());
+    setMedia(await mediaRes.json());
+    setFetchError(null);
+  } catch (err: any) {
+    setFetchError(err.message || 'Something went wrong while fetching tracking data.');
+  } finally {
+    setIsLoading(false);
   }
+};
+
 
   useEffect(() => {
     if (isAuthorized) fetchAllData()
@@ -126,87 +142,106 @@ export default function StockDashboard() {
 
 
   // --- POST HANDLERS ---
-  const handleAddProduct = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-    try {
-      const res = await fetch(`${BASE_URL}/add/products`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(productForm)
-      })
-      if (res.ok) {
-        setActiveModal(null)
-        fetchAllData()
-      } else alert(await res.text())
-    } catch (err) { console.error(err) }
-    setIsSubmitting(false)
-  }
+const handleAddProduct = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setIsSubmitting(true);
+  try {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${BASE_URL}/add/products`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(productForm)
+    });
+    if (res.ok) {
+      setActiveModal(null);
+      fetchAllData();
+    } else alert(await res.text());
+  } catch (err) { console.error(err); }
+  setIsSubmitting(false);
+};
 
-  const handleAddColor = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-    try {
-      const res = await fetch(`${BASE_URL}/add/colors`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(colorForm)
-      })
-      if (res.ok) {
-        setActiveModal(null)
-        fetchAllData()
-      } else alert(await res.text())
-    } catch (err) { console.error(err) }
-    setIsSubmitting(false)
-  }
 
-  const handleAddVariant = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-    try {
-      const payload = {
-        productId: Number(variantForm.productId),
-        colorId: Number(variantForm.colorId),
-        name: variantForm.name,
-        sku: variantForm.sku,
-        percentage: Number(variantForm.percentage),
-        quantity: Number(variantForm.quantity),
-        description: variantForm.description
-      }
-      const res = await fetch(`${BASE_URL}/variants/add`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      })
-      if (res.ok) {
-        setActiveModal(null)
-        fetchAllData()
-      } else alert(await res.text())
-    } catch (err) { console.error(err) }
-    setIsSubmitting(false)
-  }
+const handleAddColor = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setIsSubmitting(true);
+  try {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${BASE_URL}/add/colors`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(colorForm)
+    });
+    if (res.ok) {
+      setActiveModal(null);
+      fetchAllData();
+    } else alert(await res.text());
+  } catch (err) { console.error(err); }
+  setIsSubmitting(false);
+};
 
-  const handleAddMedia = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-    try {
-      const payload = {
-        variantId: Number(mediaForm.variantId),
-        staticImage: mediaForm.staticImage,
-        model3d: mediaForm.model3d
-      }
-      const res = await fetch(`${BASE_URL}/media/add`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      })
-      if (res.ok) {
-        setActiveModal(null)
-        fetchAllData()
-      } else alert(await res.text())
-    } catch (err) { console.error(err) }
-    setIsSubmitting(false)
-  }
+
+const handleAddVariant = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setIsSubmitting(true);
+  try {
+    const token = localStorage.getItem("token");
+    const payload = {
+      productId: Number(variantForm.productId),
+      colorId: Number(variantForm.colorId),
+      name: variantForm.name,
+      sku: variantForm.sku,
+      percentage: Number(variantForm.percentage),
+      quantity: Number(variantForm.quantity),
+      description: variantForm.description
+    };
+    const res = await fetch(`${BASE_URL}/variants/add`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) {
+      setActiveModal(null);
+      fetchAllData();
+    } else alert(await res.text());
+  } catch (err) { console.error(err); }
+  setIsSubmitting(false);
+};
+
+
+const handleAddMedia = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setIsSubmitting(true);
+  try {
+    const token = localStorage.getItem("token");
+    const payload = {
+      variantId: Number(mediaForm.variantId),
+      staticImage: mediaForm.staticImage,
+      model3d: mediaForm.model3d
+    };
+    const res = await fetch(`${BASE_URL}/media/add`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) {
+      setActiveModal(null);
+      fetchAllData();
+    } else alert(await res.text());
+  } catch (err) { console.error(err); }
+  setIsSubmitting(false);
+};
 
   const handleSignOut = () => {
     localStorage.clear()     
