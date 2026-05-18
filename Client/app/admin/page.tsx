@@ -190,10 +190,32 @@ export default function AdminDashboard() {
     }
   };
 
-  const deleteAccount = (id: number) => {
+  const deleteAccount = async (id: number) => {
     if (confirm('Are you sure you want to completely revoke access and delete this entity?')) {
-      // Logic for deleting from database can go here. For now, filter locally:
-      setAccounts(prev => prev.filter(acc => acc.id !== id))
+      try {
+        const token = localStorage.getItem('token');
+        
+        const response = await fetch(`https://ar-app-back-end.onrender.com/api/admin/account/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to execute system deletion request: ${response.status}`);
+        }
+
+        const data = await response.json();
+        alert(data.message || "Account permanently purged from database successfully.");
+        
+        // Filter out from local UI state instantly
+        setAccounts(prev => prev.filter(acc => acc.id !== id));
+      } catch (error) {
+        console.error("Administrative entity removal error:", error);
+        alert("Action could not be executed. Verify administrative privileges.");
+      }
     }
   }
 
@@ -444,7 +466,10 @@ export default function AdminDashboard() {
           <Button 
             variant="outline" 
             onClick={() => {
-              localStorage.clear();
+              localStorage.removeItem('token');
+              localStorage.removeItem('userRole');
+              localStorage.removeItem('username');
+              localStorage.removeItem('userEmail');
               router.push('/');
             }}
             className="w-full border-slate-800 bg-slate-900/40 hover:bg-rose-950/20 hover:text-rose-400 hover:border-rose-900/30 text-slate-400 justify-start gap-2"
@@ -457,6 +482,17 @@ export default function AdminDashboard() {
 
       {/* Main Panel Frame Viewport */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
+        <header className="h-16 border-b border-slate-800/80 bg-slate-900/50 backdrop-blur px-6 flex items-center justify-between sticky top-0 z-40">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" className="lg:hidden text-slate-400 hover:text-white" onClick={() => setSidebarOpen(true)}>
+              <Menu className="h-5 w-5" />
+            </Button>
+            <h1 className="text-lg font-bold text-white capitalize tracking-wide hidden sm:block">
+              {activeTab === 'overview' ? 'Operational Hub Overview' : 'System Registry Access Control'}
+            </h1>
+          </div>
+        </header>
+
         <header className="h-16 border-b border-slate-800/80 bg-slate-900/50 backdrop-blur px-6 flex items-center justify-between sticky top-0 z-40">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" className="lg:hidden text-slate-400 hover:text-white" onClick={() => setSidebarOpen(true)}>
