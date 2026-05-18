@@ -10,32 +10,58 @@ import {
   Package,
   Plus,
   Search,
-  SlidersHorizontal,
   AlertTriangle,
   CheckCircle2,
   Menu,
   X,
   LogOut,
   Layers,
-  History,
-  TrendingUp,
   Lock,
   Loader2,
-  Maximize2
+  Maximize2,
+  Palette,
+  Combine,
+  Image as ImageIcon
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-// TS interface representing your Spring Boot Entity structure
+// --- SPRING BOOT ENTITY INTERFACES ---
 interface Product {
   id: number;
   name: string;
   quantity: number;
   category: string;
   description: string;
-  heigh: number;
+  heigh: number; // Matched spelling from your backend
   width: number;
   depth: number;
 }
+
+interface Color {
+  id: number;
+  name: string;
+  hexCode: string;
+}
+
+interface Variant {
+  id: number;
+  product_id?: Product; // Depending on backend fetch structure
+  color_id?: Color;
+  name: string;
+  sku: string;
+  percentage: number;
+  quantity: number;
+  description: string;
+}
+
+interface Media {
+  id: number;
+  variant: Variant;
+  static_image: string;
+  model_3d: string;
+}
+
+const BASE_URL = 'https://ar-app-back-end.onrender.com/api'
 
 export default function StockDashboard() {
   const router = useRouter()
@@ -43,60 +69,155 @@ export default function StockDashboard() {
   const [activeTab, setActiveTab] = useState('inventory')
   const [searchQuery, setSearchQuery] = useState('')
   
-  // Dynamic API state definitions
+  // --- DYNAMIC API STATE ---
   const [inventory, setInventory] = useState<Product[]>([])
+  const [colors, setColors] = useState<Color[]>([])
+  const [variants, setVariants] = useState<Variant[]>([])
+  const [media, setMedia] = useState<Media[]>([])
+  
   const [isLoading, setIsLoading] = useState(true)
   const [fetchError, setFetchError] = useState<string | null>(null)
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null)
 
+  // --- MODAL & FORM STATES ---
+  const [activeModal, setActiveModal] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Form Data States
+  const [productForm, setProductForm] = useState({ name: '', quantity: 0, category: '', description: '', heigh: 0, width: 0, depth: 0 })
+  const [colorForm, setColorForm] = useState({ name: '', hexCode: '#000000' })
+  const [variantForm, setVariantForm] = useState({ productId: '', colorId: '', name: '', sku: '', percentage: 0, quantity: 0, description: '' })
+  const [mediaForm, setMediaForm] = useState({ variantId: '', staticImage: '', model3d: '' })
+
   // --- ROLE AND SECURITY VERIFICATION ---
   useEffect(() => {
-    const mockUser = {
-      isAuthenticated: true, 
-      roles: ["STOCK"] 
-    }
-    const hasStockAccess = mockUser.isAuthenticated && mockUser.roles.includes("STOCK");
-    setIsAuthorized(hasStockAccess)
+    const mockUser = { isAuthenticated: true, roles: ["STOCK"] }
+    setIsAuthorized(mockUser.isAuthenticated && mockUser.roles.includes("STOCK"))
   }, [])
 
-  // --- FETCH PRODUCTS FROM RENDER BACKEND ---
-  useEffect(() => {
-    if (!isAuthorized) return;
+  // --- MASTER FETCH FUNCTION ---
+  const fetchAllData = async () => {
+    try {
+      setIsLoading(true)
+      const [prodRes, colorRes, varRes, mediaRes] = await Promise.all([
+        fetch(`${BASE_URL}/products`),
+        fetch(`${BASE_URL}/colors`).catch(() => ({ ok: true, json: () => [] })), // Assuming standard REST for GET colors
+        fetch(`${BASE_URL}/variants/get`),
+        fetch(`${BASE_URL}/media/get`)
+      ])
 
-    const fetchProducts = async () => {
-      try {
-        setIsLoading(true)
-        const response = await fetch('https://ar-app-back-end.onrender.com/api/products')
-        
-        if (!response.ok) {
-          throw new Error('Failed to retrieve inventory database updates.')
-        }
-        
-        const data = await response.json()
-        setInventory(data)
-        setFetchError(null)
-      } catch (err: any) {
-        setFetchError(err.message || 'Something went wrong fetching data.')
-      } finally {
-        setIsLoading(false)
-      }
+      if (!prodRes.ok) throw new Error('Failed to retrieve databases.')
+
+      setInventory(await prodRes.json())
+      setColors(await colorRes.json())
+      setVariants(await varRes.json())
+      setMedia(await mediaRes.json())
+      setFetchError(null)
+    } catch (err: any) {
+      setFetchError(err.message || 'Something went wrong fetching data.')
+    } finally {
+      setIsLoading(false)
     }
+  }
 
-    fetchProducts()
+  useEffect(() => {
+    if (isAuthorized) fetchAllData()
   }, [isAuthorized])
+
+
+  // --- POST HANDLERS ---
+  const handleAddProduct = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    try {
+      const res = await fetch(`${BASE_URL}/add/products`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(productForm)
+      })
+      if (res.ok) {
+        setActiveModal(null)
+        fetchAllData()
+      } else alert(await res.text())
+    } catch (err) { console.error(err) }
+    setIsSubmitting(false)
+  }
+
+  const handleAddColor = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    try {
+      const res = await fetch(`${BASE_URL}/add/colors`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(colorForm)
+      })
+      if (res.ok) {
+        setActiveModal(null)
+        fetchAllData()
+      } else alert(await res.text())
+    } catch (err) { console.error(err) }
+    setIsSubmitting(false)
+  }
+
+  const handleAddVariant = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    try {
+      const payload = {
+        productId: Number(variantForm.productId),
+        colorId: Number(variantForm.colorId),
+        name: variantForm.name,
+        sku: variantForm.sku,
+        percentage: Number(variantForm.percentage),
+        quantity: Number(variantForm.quantity),
+        description: variantForm.description
+      }
+      const res = await fetch(`${BASE_URL}/variants/add`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      if (res.ok) {
+        setActiveModal(null)
+        fetchAllData()
+      } else alert(await res.text())
+    } catch (err) { console.error(err) }
+    setIsSubmitting(false)
+  }
+
+  const handleAddMedia = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    try {
+      const payload = {
+        variantId: Number(mediaForm.variantId),
+        staticImage: mediaForm.staticImage,
+        model3d: mediaForm.model3d
+      }
+      const res = await fetch(`${BASE_URL}/media/add`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      if (res.ok) {
+        setActiveModal(null)
+        fetchAllData()
+      } else alert(await res.text())
+    } catch (err) { console.error(err) }
+    setIsSubmitting(false)
+  }
 
   const handleSignOut = () => {
     localStorage.clear()     
     router.replace('/')      
   }
 
-  if (isAuthorized === null) {
-    return <div className="min-h-screen bg-[#121212]" />
-  }
-
+  // --- SECURITY RENDERING ---
+  if (isAuthorized === null) return <div className="min-h-screen bg-[#121212]" />
   if (!isAuthorized) {
     return (
-      <div className="min-h-screen bg-[#121212] flex flex-col items-center justify-center p-6 font-sans antialiased">
+      <div className="min-h-screen bg-[#121212] flex flex-col items-center justify-center p-6">
         <Card className="bg-zinc-900 border-none ring-1 ring-white/10 p-8 max-w-sm text-center shadow-2xl">
           <div className="inline-flex p-4 bg-red-500/10 text-red-400 border border-red-500/20 rounded-full mb-4">
             <Lock className="h-8 w-8" />
@@ -106,10 +227,7 @@ export default function StockDashboard() {
             You lack inventory control clearance. This layout requires an active session with 
             <code className="text-blue-400 bg-black px-1.5 py-0.5 rounded ml-1 text-xs font-mono">STOCK</code> security permissions.
           </CardDescription>
-          <Button 
-            onClick={() => router.push('/login')} 
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors"
-          >
+          <Button onClick={() => router.push('/login')} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium">
             Go to Login
           </Button>
         </Card>
@@ -117,13 +235,8 @@ export default function StockDashboard() {
     )
   }
 
-  // Filter backend products dynamically via frontend search bar
-  const filteredInventory = inventory.filter(item => 
-    item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.category.toLowerCase().includes(searchQuery.toLowerCase())
-  )
-
-  // Helper utility to calculate UI badge parameters based on SQL quantity limits
+  // --- FILTER UTILS ---
+  const filteredInventory = inventory.filter(item => item.name.toLowerCase().includes(searchQuery.toLowerCase()) || item.category.toLowerCase().includes(searchQuery.toLowerCase()))
   const getStockStatus = (qty: number) => {
     if (qty === 0) return { label: 'Out of Stock', color: 'text-red-500' };
     if (qty <= 5) return { label: 'Low Stock', color: 'text-amber-500' };
@@ -132,7 +245,8 @@ export default function StockDashboard() {
 
   return (
     <div className="min-h-screen bg-[#121212] flex overflow-x-hidden text-slate-200">
-      {/* Sidebar Navigation */}
+      
+      {/* --- SIDEBAR --- */}
       <aside className={cn(
         "fixed inset-y-0 left-0 z-[52] w-64 bg-zinc-950 border-r border-white/5 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:z-auto",
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -142,16 +256,17 @@ export default function StockDashboard() {
             <span className="font-bold text-xl tracking-tight flex items-center gap-2 text-white">
               <Layers className="text-blue-500 h-5 w-5" /> AR<span className="text-blue-500">Stock</span>
             </span>
-            <Button variant="ghost" size="icon" className="lg:hidden text-white hover:bg-white/5" onClick={() => setSidebarOpen(false)}>
+            <Button variant="ghost" size="icon" className="lg:hidden text-white" onClick={() => setSidebarOpen(false)}>
               <X className="h-6 w-6" />
             </Button>
           </div>
 
           <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
             {[
-              { id: 'inventory', label: 'Live Inventory', icon: Package },
-              { id: 'logs', label: 'Stock Logs', icon: History },
-              { id: 'analytics', label: 'Supply Analytics', icon: TrendingUp },
+              { id: 'inventory', label: 'Products', icon: Package },
+              { id: 'colors', label: 'Colors', icon: Palette },
+              { id: 'variants', label: 'Variants', icon: Combine },
+              { id: 'media', label: 'Media Assets', icon: ImageIcon },
             ].map(item => (
               <button
                 key={item.id}
@@ -166,28 +281,13 @@ export default function StockDashboard() {
               </button>
             ))}
           </nav>
-
-          <div className="p-4 border-t border-white/5 bg-zinc-900/40">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-full bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-400 font-bold flex-shrink-0">S</div>
-                <div className="truncate">
-                  <p className="text-sm font-medium text-white truncate">Stock Manager</p>
-                  <p className="text-[11px] text-zinc-500 font-mono">ID-8849</p>
-                </div>
-              </div>
-              <button onClick={handleSignOut} className="p-2 rounded-lg text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-all focus:outline-none">
-                <LogOut className="h-5 w-5" />
-              </button>
-            </div>
-          </div>
         </div>
       </aside>
 
-      {/* Main Panel Content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      {/* --- MAIN PANEL --- */}
+      <div className="flex-1 flex flex-col min-w-0 relative">
         <header className="bg-zinc-950 p-4 flex items-center justify-between border-b border-white/5 lg:hidden">
-          <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)} className="text-white hover:bg-white/5">
+          <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)} className="text-white">
             <Menu className="h-6 w-6" />
           </Button>
           <span className="font-bold text-md tracking-tight flex items-center gap-2 text-white">
@@ -197,109 +297,210 @@ export default function StockDashboard() {
         </header>
 
         <main className="p-4 sm:p-6 space-y-6">
-          {activeTab === 'inventory' && (
+          
+          {/* HEADER & SEARCH BAR */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-white tracking-tight capitalize">{activeTab} Management</h1>
+              <p className="text-sm text-zinc-400">Monitor and update your Render database records.</p>
+            </div>
+            <Button 
+              onClick={() => setActiveModal(activeTab)}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-medium flex items-center gap-2 self-start sm:self-auto"
+            >
+              <Plus className="h-4 w-4" /> Add {activeTab.slice(0, -1)}
+            </Button>
+          </div>
+
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-20 gap-3 text-zinc-500">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+              <p className="text-sm animate-pulse">Synchronizing with Render application services...</p>
+            </div>
+          ) : fetchError ? (
+            <div className="flex flex-col items-center justify-center py-12 bg-red-500/5 rounded-xl border border-red-500/10 text-center">
+              <AlertTriangle className="h-10 w-10 text-red-400 mb-2" />
+              <p className="text-white font-semibold">Database Sync Error</p>
+              <p className="text-xs text-zinc-400 max-w-sm">{fetchError}</p>
+            </div>
+          ) : (
             <>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <h1 className="text-2xl font-bold text-white tracking-tight">Inventory Stock</h1>
-                  <p className="text-sm text-zinc-400">Monitor quantities, dimensions, and categories linked to your live Render database.</p>
-                </div>
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white font-medium flex items-center gap-2 self-start sm:self-auto shadow-lg shadow-blue-600/10">
-                  <Plus className="h-4 w-4" /> Add Stock Item
-                </Button>
-              </div>
-
-              {/* Utility Search Controls */}
-              <div className="flex gap-3 max-w-md items-center">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
-                  <Input 
-                    placeholder="Search by item title or category..." 
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9 bg-zinc-900 border-white/10 text-white placeholder-zinc-500 focus-visible:ring-blue-500 focus-visible:ring-offset-0"
-                  />
-                </div>
-                <Button variant="outline" className="border-white/10 bg-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-800">
-                  <SlidersHorizontal className="h-4 w-4" />
-                </Button>
-              </div>
-
-              {/* API Loading / Error / Grid Layout Handling */}
-              {isLoading ? (
-                <div className="flex flex-col items-center justify-center py-20 gap-3 text-zinc-500">
-                  <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-                  <p className="text-sm animate-pulse">Synchronizing with Render application services...</p>
-                </div>
-              ) : fetchError ? (
-                <div className="flex flex-col items-center justify-center py-12 bg-red-500/5 rounded-xl border border-red-500/10 p-6 text-center">
-                  <AlertTriangle className="h-10 w-10 text-red-400 mb-2" />
-                  <p className="text-white font-semibold mb-1">Database Sync Error</p>
-                  <p className="text-xs text-zinc-400 max-w-sm">{fetchError}</p>
-                </div>
-              ) : filteredInventory.length === 0 ? (
-                <div className="text-center py-12 bg-zinc-900/30 rounded-xl border border-white/5">
-                  <p className="text-zinc-500 text-sm">No live items matched your search text options.</p>
-                </div>
-              ) : (
-                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {/* --- PRODUCTS TAB --- */}
+              {activeTab === 'inventory' && (
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
                   {filteredInventory.map(item => {
                     const status = getStockStatus(item.quantity);
                     return (
-                      <Card key={item.id} className="bg-zinc-900 border-none ring-1 ring-white/5 overflow-hidden transition-all hover:ring-white/10 shadow-xl flex flex-col justify-between">
-                        <CardContent className="p-5 space-y-4 flex-1 flex flex-col justify-between">
-                          
-                          {/* Categorization Headers */}
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between gap-2">
-                              <span className="text-xs font-mono font-medium text-zinc-500">ID: #{item.id}</span>
-                              <Badge className="bg-zinc-800 text-zinc-400 hover:bg-zinc-800 border-none text-[10px] uppercase font-bold">{item.category}</Badge>
-                            </div>
-                            <h3 className="font-bold text-base text-white line-clamp-1">{item.name}</h3>
-                            <p className="text-xs text-zinc-400 line-clamp-2 min-h-[2rem] leading-relaxed">{item.description || "No item description configured."}</p>
+                      <Card key={item.id} className="bg-zinc-900 border-none ring-1 ring-white/5 shadow-xl flex flex-col">
+                        <CardContent className="p-5 space-y-4 flex-1 flex flex-col">
+                          <div className="flex justify-between items-start">
+                            <Badge className="bg-zinc-800 text-zinc-400">{item.category}</Badge>
+                            <span className="text-xs text-zinc-500 font-mono">#{item.id}</span>
                           </div>
-
-                          {/* Dimensions & Physical Metrics Block */}
-                          <div className="bg-zinc-950/50 rounded-lg p-2.5 border border-white/5 flex items-center justify-between text-[11px] font-mono text-zinc-400">
-                            <div className="flex items-center gap-1"><Maximize2 className="h-3 w-3 text-blue-500" /> Dim:</div>
-                            <div>{item.heigh || 0}H × {item.width || 0}W × {item.depth || 0}D cm</div>
+                          <h3 className="font-bold text-white text-lg">{item.name}</h3>
+                          <p className="text-xs text-zinc-400 flex-1">{item.description}</p>
+                          <div className="bg-zinc-950 rounded p-2 text-xs font-mono text-zinc-400">
+                            Dim: {item.heigh}H × {item.width}W × {item.depth}D cm
                           </div>
-
-                          {/* Live Inventory Status Metrics */}
-                          <div className="border-t border-white/5 pt-3 mt-1">
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <p className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Metrics Status</p>
-                                <span className={cn("text-xs font-medium", status.color)}>{status.label}</span>
-                              </div>
-                              <div className="text-right">
-                                <p className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider mb-0.5">Quantity</p>
-                                <span className={cn("text-sm font-bold flex items-center justify-end gap-1", status.color)}>
-                                  {item.quantity === 0 ? <AlertTriangle className="h-3.5 w-3.5" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
-                                  {item.quantity} units
-                                </span>
-                              </div>
-                            </div>
+                          <div className="flex justify-between items-center pt-2 border-t border-white/5">
+                            <span className={cn("text-xs font-bold", status.color)}>{status.label}</span>
+                            <span className="text-sm font-bold text-white">{item.quantity} units</span>
                           </div>
-
                         </CardContent>
                       </Card>
-                    );
+                    )
                   })}
+                </div>
+              )}
+
+              {/* --- COLORS TAB --- */}
+              {activeTab === 'colors' && (
+                <div className="grid gap-4 grid-cols-2 sm:grid-cols-4 lg:grid-cols-6">
+                  {colors.map(color => (
+                    <Card key={color.id} className="bg-zinc-900 border-none ring-1 ring-white/5">
+                      <CardContent className="p-4 flex flex-col items-center gap-3">
+                        <div className="w-12 h-12 rounded-full border-2 border-white/10 shadow-lg" style={{ backgroundColor: color.hexCode }} />
+                        <div className="text-center">
+                          <p className="font-bold text-white text-sm">{color.name}</p>
+                          <p className="text-xs text-zinc-500 font-mono">{color.hexCode}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+
+              {/* --- VARIANTS TAB --- */}
+              {activeTab === 'variants' && (
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
+                  {variants.map(variant => (
+                    <Card key={variant.id} className="bg-zinc-900 border-none ring-1 ring-white/5 shadow-xl">
+                      <CardContent className="p-5 space-y-3">
+                        <div className="flex justify-between">
+                          <Badge className="bg-blue-500/10 text-blue-400">SKU: {variant.sku}</Badge>
+                          <span className="text-xs text-zinc-500">ID: #{variant.id}</span>
+                        </div>
+                        <h3 className="font-bold text-white">{variant.name}</h3>
+                        <p className="text-xs text-zinc-400">{variant.description}</p>
+                        <div className="grid grid-cols-2 gap-2 mt-4">
+                          <div className="bg-zinc-950 p-2 rounded text-xs text-zinc-300">
+                            <span className="block text-zinc-500">Stock</span> {variant.quantity} units
+                          </div>
+                          <div className="bg-zinc-950 p-2 rounded text-xs text-zinc-300">
+                            <span className="block text-zinc-500">Scale</span> {variant.percentage}%
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+
+              {/* --- MEDIA TAB --- */}
+              {activeTab === 'media' && (
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
+                  {media.map(item => (
+                    <Card key={item.id} className="bg-zinc-900 border-none ring-1 ring-white/5">
+                      <CardContent className="p-0">
+                        <img src={item.static_image} alt="Media Asset" className="w-full h-48 object-cover rounded-t-xl" />
+                        <div className="p-4 space-y-2">
+                          <p className="text-sm font-bold text-white truncate">Linked to Variant ID: #{item.variant?.id}</p>
+                          <p className="text-xs text-zinc-400 font-mono truncate">Model: {item.model_3d || 'None'}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
               )}
             </>
           )}
-
-          {activeTab !== 'inventory' && (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-               <AlertTriangle className="h-12 w-12 text-zinc-700 mb-4" />
-               <h2 className="text-lg font-bold text-white capitalize">{activeTab.replace('-', ' ')} View</h2>
-               <p className="text-zinc-500 text-sm max-w-xs mx-auto">Connecting data channels... This structural panel is currently being updated with active tracking entries.</p>
-            </div>
-          )}
         </main>
       </div>
+
+      {/* --- OVERLAY MODALS --- */}
+      {activeModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
+          <Card className="bg-zinc-950 border border-white/10 w-full max-w-lg shadow-2xl relative">
+            <Button variant="ghost" size="icon" onClick={() => setActiveModal(null)} className="absolute right-4 top-4 text-zinc-400 hover:text-white">
+              <X className="h-5 w-5" />
+            </Button>
+            
+            <CardContent className="p-6">
+              <h2 className="text-xl font-bold text-white mb-6 capitalize">Add New {activeModal.slice(0, -1)}</h2>
+              
+              {/* Add Product Form */}
+              {activeModal === 'inventory' && (
+                <form onSubmit={handleAddProduct} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1"><label className="text-xs text-zinc-400">Name</label><Input required className="bg-zinc-900 border-white/10 text-white" value={productForm.name} onChange={e => setProductForm({...productForm, name: e.target.value})} /></div>
+                    <div className="space-y-1"><label className="text-xs text-zinc-400">Category</label><Input required className="bg-zinc-900 border-white/10 text-white" value={productForm.category} onChange={e => setProductForm({...productForm, category: e.target.value})} /></div>
+                    <div className="space-y-1"><label className="text-xs text-zinc-400">Quantity</label><Input type="number" required className="bg-zinc-900 border-white/10 text-white" value={productForm.quantity} onChange={e => setProductForm({...productForm, quantity: Number(e.target.value)})} /></div>
+                    <div className="space-y-1"><label className="text-xs text-zinc-400">Height</label><Input type="number" className="bg-zinc-900 border-white/10 text-white" value={productForm.heigh} onChange={e => setProductForm({...productForm, heigh: Number(e.target.value)})} /></div>
+                    <div className="space-y-1"><label className="text-xs text-zinc-400">Width</label><Input type="number" className="bg-zinc-900 border-white/10 text-white" value={productForm.width} onChange={e => setProductForm({...productForm, width: Number(e.target.value)})} /></div>
+                    <div className="space-y-1"><label className="text-xs text-zinc-400">Depth</label><Input type="number" className="bg-zinc-900 border-white/10 text-white" value={productForm.depth} onChange={e => setProductForm({...productForm, depth: Number(e.target.value)})} /></div>
+                  </div>
+                  <div className="space-y-1"><label className="text-xs text-zinc-400">Description</label><Input className="bg-zinc-900 border-white/10 text-white" value={productForm.description} onChange={e => setProductForm({...productForm, description: e.target.value})} /></div>
+                  <Button type="submit" disabled={isSubmitting} className="w-full bg-blue-600 text-white mt-4">{isSubmitting ? 'Saving...' : 'Save Product'}</Button>
+                </form>
+              )}
+
+              {/* Add Color Form */}
+              {activeModal === 'colors' && (
+                <form onSubmit={handleAddColor} className="space-y-4">
+                  <div className="space-y-1"><label className="text-xs text-zinc-400">Color Name</label><Input required className="bg-zinc-900 border-white/10 text-white" value={colorForm.name} onChange={e => setColorForm({...colorForm, name: e.target.value})} /></div>
+                  <div className="space-y-1"><label className="text-xs text-zinc-400">Hex Code</label><Input required type="color" className="w-full h-12 bg-zinc-900 border-white/10 p-1" value={colorForm.hexCode} onChange={e => setColorForm({...colorForm, hexCode: e.target.value})} /></div>
+                  <Button type="submit" disabled={isSubmitting} className="w-full bg-blue-600 text-white mt-4">{isSubmitting ? 'Saving...' : 'Save Color'}</Button>
+                </form>
+              )}
+
+              {/* Add Variant Form */}
+              {activeModal === 'variants' && (
+                <form onSubmit={handleAddVariant} className="space-y-4">
+                  <div className="space-y-1">
+                    <label className="text-xs text-zinc-400">Select Product</label>
+                    <select required className="w-full bg-zinc-900 border border-white/10 text-white p-2 rounded-md" value={variantForm.productId} onChange={e => setVariantForm({...variantForm, productId: e.target.value})}>
+                      <option value="">-- Choose Product --</option>
+                      {inventory.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs text-zinc-400">Select Color</label>
+                    <select required className="w-full bg-zinc-900 border border-white/10 text-white p-2 rounded-md" value={variantForm.colorId} onChange={e => setVariantForm({...variantForm, colorId: e.target.value})}>
+                      <option value="">-- Choose Color --</option>
+                      {colors.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1"><label className="text-xs text-zinc-400">Variant Name</label><Input required className="bg-zinc-900 border-white/10 text-white" value={variantForm.name} onChange={e => setVariantForm({...variantForm, name: e.target.value})} /></div>
+                    <div className="space-y-1"><label className="text-xs text-zinc-400">SKU</label><Input required className="bg-zinc-900 border-white/10 text-white" value={variantForm.sku} onChange={e => setVariantForm({...variantForm, sku: e.target.value})} /></div>
+                    <div className="space-y-1"><label className="text-xs text-zinc-400">Scale/Percentage</label><Input type="number" required className="bg-zinc-900 border-white/10 text-white" value={variantForm.percentage} onChange={e => setVariantForm({...variantForm, percentage: Number(e.target.value)})} /></div>
+                    <div className="space-y-1"><label className="text-xs text-zinc-400">Quantity</label><Input type="number" required className="bg-zinc-900 border-white/10 text-white" value={variantForm.quantity} onChange={e => setVariantForm({...variantForm, quantity: Number(e.target.value)})} /></div>
+                  </div>
+                  <div className="space-y-1"><label className="text-xs text-zinc-400">Description</label><Input className="bg-zinc-900 border-white/10 text-white" value={variantForm.description} onChange={e => setVariantForm({...variantForm, description: e.target.value})} /></div>
+                  <Button type="submit" disabled={isSubmitting} className="w-full bg-blue-600 text-white mt-4">{isSubmitting ? 'Saving...' : 'Save Variant'}</Button>
+                </form>
+              )}
+
+              {/* Add Media Form */}
+              {activeModal === 'media' && (
+                <form onSubmit={handleAddMedia} className="space-y-4">
+                  <div className="space-y-1">
+                    <label className="text-xs text-zinc-400">Select Variant</label>
+                    <select required className="w-full bg-zinc-900 border border-white/10 text-white p-2 rounded-md" value={mediaForm.variantId} onChange={e => setMediaForm({...mediaForm, variantId: e.target.value})}>
+                      <option value="">-- Choose Variant --</option>
+                      {variants.map(v => <option key={v.id} value={v.id}>{v.name} (SKU: {v.sku})</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-1"><label className="text-xs text-zinc-400">Image URL</label><Input required className="bg-zinc-900 border-white/10 text-white" value={mediaForm.staticImage} onChange={e => setMediaForm({...mediaForm, staticImage: e.target.value})} placeholder="https://..." /></div>
+                  <div className="space-y-1"><label className="text-xs text-zinc-400">3D Model URL</label><Input className="bg-zinc-900 border-white/10 text-white" value={mediaForm.model3d} onChange={e => setMediaForm({...mediaForm, model3d: e.target.value})} placeholder="https://..." /></div>
+                  <Button type="submit" disabled={isSubmitting} className="w-full bg-blue-600 text-white mt-4">{isSubmitting ? 'Saving...' : 'Save Media'}</Button>
+                </form>
+              )}
+
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   )
 }
