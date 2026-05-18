@@ -32,7 +32,7 @@ interface Product {
   quantity: number;
   category: string;
   description: string;
-  heigh: number; // Matched spelling from your backend
+  heigh: number; // Matched spelling from backend configuration
   width: number;
   depth: number;
 }
@@ -45,7 +45,7 @@ interface Color {
 
 interface Variant {
   id: number;
-  product_id?: Product; // Depending on backend fetch structure
+  product_id?: Product;
   color_id?: Color;
   name: string;
   sku: string;
@@ -91,167 +91,162 @@ export default function StockDashboard() {
 
   // --- ROLE AND SECURITY VERIFICATION ---
   useEffect(() => {
-    const mockUser = { isAuthenticated: true, roles: ["STOCK"] }
-    setIsAuthorized(mockUser.isAuthenticated && mockUser.roles.includes("STOCK"))
+    // Check if an actual token exists to prevent an anonymous Bearer null block
+    const token = localStorage.getItem("token")
+    if (token) {
+      setIsAuthorized(true)
+    } else {
+      setIsAuthorized(false)
+    }
   }, [])
 
   // --- MASTER FETCH FUNCTION ---
-const fetchAllData = async () => {
-  try {
-    setIsLoading(true);
-    
-    // 1. Grab your authenticated user's token from storage
-    const token = localStorage.getItem("token"); // Verify if your login system uses "token", "jwt", etc.
-    
-    // 2. Build the secure authorization headers
-    const secureHeaders = {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}` // This matches your backend's JwtAuthenticationFilter expectations
-    };
+  const fetchAllData = async () => {
+    try {
+      setIsLoading(true)
+      const token = localStorage.getItem("token")
+      
+      const secureHeaders = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
 
-    // 3. Pass the secure headers to all concurrent promises
-    const [prodRes, colorRes, varRes, mediaRes] = await Promise.all([
-      fetch(`${BASE_URL}/products`, { method: 'GET', headers: secureHeaders }),
-      fetch(`${BASE_URL}/colors`, { method: 'GET', headers: secureHeaders }), 
-      fetch(`${BASE_URL}/variants/get`, { method: 'GET', headers: secureHeaders }),
-      fetch(`${BASE_URL}/media/get`, { method: 'GET', headers: secureHeaders })
-    ]);
+      const [prodRes, colorRes, varRes, mediaRes] = await Promise.all([
+        fetch(`${BASE_URL}/products`, { method: 'GET', headers: secureHeaders }),
+        fetch(`${BASE_URL}/colors`, { method: 'GET', headers: secureHeaders }), 
+        fetch(`${BASE_URL}/variants/get`, { method: 'GET', headers: secureHeaders }),
+        fetch(`${BASE_URL}/media/get`, { method: 'GET', headers: secureHeaders })
+      ])
 
-    if (prodRes.status === 403 || varRes.status === 403) {
-      throw new Error('Access Denied (403): Your token is missing, expired, or you lack STOCK permissions.');
+      if (prodRes.status === 403 || varRes.status === 403) {
+        throw new Error('Access Denied (403): Missing or expired stock credentials.')
+      }
+
+      if (!prodRes.ok) throw new Error('Failed to synchronize with backend tables.')
+
+      setInventory(await prodRes.json())
+      setColors(await colorRes.json())
+      setVariants(await varRes.json())
+      setMedia(await mediaRes.json())
+      setFetchError(null)
+    } catch (err: any) {
+      setFetchError(err.message || 'Something went wrong while fetching tracking data.')
+    } finally {
+      setIsLoading(false)
     }
-
-    if (!prodRes.ok) throw new Error('Failed to synchronize with database tables.');
-
-    setInventory(await prodRes.json());
-    setColors(await colorRes.json());
-    setVariants(await varRes.json());
-    setMedia(await mediaRes.json());
-    setFetchError(null);
-  } catch (err: any) {
-    setFetchError(err.message || 'Something went wrong while fetching tracking data.');
-  } finally {
-    setIsLoading(false);
   }
-};
-
 
   useEffect(() => {
     if (isAuthorized) fetchAllData()
   }, [isAuthorized])
 
+  // --- MUTATION POST HANDLERS ---
+  const handleAddProduct = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    try {
+      const token = localStorage.getItem("token")
+      const res = await fetch(`${BASE_URL}/add/products`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(productForm)
+      })
+      if (res.ok) {
+        setActiveModal(null)
+        setProductForm({ name: '', quantity: 0, category: '', description: '', heigh: 0, width: 0, depth: 0 })
+        fetchAllData()
+      } else alert(await res.text())
+    } catch (err) { console.error(err) }
+    setIsSubmitting(false)
+  }
 
-  // --- POST HANDLERS ---
-const handleAddProduct = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setIsSubmitting(true);
-  try {
-    const token = localStorage.getItem("token");
-    const res = await fetch(`${BASE_URL}/add/products`, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(productForm)
-    });
-    if (res.ok) {
-      setActiveModal(null);
-      fetchAllData();
-    } else alert(await res.text());
-  } catch (err) { console.error(err); }
-  setIsSubmitting(false);
-};
+  const handleAddColor = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    try {
+      const token = localStorage.getItem("token")
+      const res = await fetch(`${BASE_URL}/add/colors`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(colorForm)
+      })
+      if (res.ok) {
+        setActiveModal(null)
+        setColorForm({ name: '', hexCode: '#000000' })
+        fetchAllData()
+      } else alert(await res.text())
+    } catch (err) { console.error(err) }
+    setIsSubmitting(false)
+  }
 
+  const handleAddVariant = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    try {
+      const token = localStorage.getItem("token")
+      const payload = {
+        productId: Number(variantForm.productId),
+        colorId: Number(variantForm.colorId),
+        name: variantForm.name,
+        sku: variantForm.sku,
+        percentage: Number(variantForm.percentage),
+        quantity: Number(variantForm.quantity),
+        description: variantForm.description
+      }
+      const res = await fetch(`${BASE_URL}/variants/add`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      })
+      if (res.ok) {
+        setActiveModal(null)
+        setVariantForm({ productId: '', colorId: '', name: '', sku: '', percentage: 0, quantity: 0, description: '' })
+        fetchAllData()
+      } else alert(await res.text())
+    } catch (err) { console.error(err) }
+    setIsSubmitting(false)
+  }
 
-const handleSignOut = () => {
-  // Clear out the auth token and any user permissions data from cache
-  localStorage.removeItem("token") 
-  
-  // Route the window back home
-  router.push('/')
-}
+  const handleAddMedia = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    try {
+      const token = localStorage.getItem("token")
+      const payload = {
+        variantId: Number(mediaForm.variantId),
+        staticImage: mediaForm.staticImage,
+        model3d: mediaForm.model3d
+      }
+      const res = await fetch(`${BASE_URL}/media/add`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      })
+      if (res.ok) {
+        setActiveModal(null)
+        setMediaForm({ variantId: '', staticImage: '', model3d: '' })
+        fetchAllData()
+      } else alert(await res.text())
+    } catch (err) { console.error(err) }
+    setIsSubmitting(false)
+  }
 
-const handleAddColor = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setIsSubmitting(true);
-  try {
-    const token = localStorage.getItem("token");
-    const res = await fetch(`${BASE_URL}/add/colors`, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(colorForm)
-    });
-    if (res.ok) {
-      setActiveModal(null);
-      fetchAllData();
-    } else alert(await res.text());
-  } catch (err) { console.error(err); }
-  setIsSubmitting(false);
-};
-
-
-const handleAddVariant = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setIsSubmitting(true);
-  try {
-    const token = localStorage.getItem("token");
-    const payload = {
-      productId: Number(variantForm.productId),
-      colorId: Number(variantForm.colorId),
-      name: variantForm.name,
-      sku: variantForm.sku,
-      percentage: Number(variantForm.percentage),
-      quantity: Number(variantForm.quantity),
-      description: variantForm.description
-    };
-    const res = await fetch(`${BASE_URL}/variants/add`, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(payload)
-    });
-    if (res.ok) {
-      setActiveModal(null);
-      fetchAllData();
-    } else alert(await res.text());
-  } catch (err) { console.error(err); }
-  setIsSubmitting(false);
-};
-
-
-const handleAddMedia = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setIsSubmitting(true);
-  try {
-    const token = localStorage.getItem("token");
-    const payload = {
-      variantId: Number(mediaForm.variantId),
-      staticImage: mediaForm.staticImage,
-      model3d: mediaForm.model3d
-    };
-    const res = await fetch(`${BASE_URL}/media/add`, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(payload)
-    });
-    if (res.ok) {
-      setActiveModal(null);
-      fetchAllData();
-    } else alert(await res.text());
-  } catch (err) { console.error(err); }
-  setIsSubmitting(false);
-};
-
-
+  const handleSignOut = () => {
+    localStorage.removeItem("token") 
+    router.push('/')
+  }
 
   // --- SECURITY RENDERING ---
   if (isAuthorized === null) return <div className="min-h-screen bg-[#121212]" />
@@ -276,7 +271,11 @@ const handleAddMedia = async (e: React.FormEvent) => {
   }
 
   // --- FILTER UTILS ---
-  const filteredInventory = inventory.filter(item => item.name.toLowerCase().includes(searchQuery.toLowerCase()) || item.category.toLowerCase().includes(searchQuery.toLowerCase()))
+  const filteredInventory = inventory.filter(item => 
+    item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    item.category.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
   const getStockStatus = (qty: number) => {
     if (qty === 0) return { label: 'Out of Stock', color: 'text-red-500' };
     if (qty <= 5) return { label: 'Low Stock', color: 'text-amber-500' };
@@ -292,6 +291,7 @@ const handleAddMedia = async (e: React.FormEvent) => {
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="flex flex-col h-full">
+          {/* Sidebar Top Title */}
           <div className="p-6 border-b border-white/5 flex items-center justify-between">
             <span className="font-bold text-xl tracking-tight flex items-center gap-2 text-white">
               <Layers className="text-blue-500 h-5 w-5" /> AR<span className="text-blue-500">Stock</span>
@@ -301,56 +301,7 @@ const handleAddMedia = async (e: React.FormEvent) => {
             </Button>
           </div>
 
-<aside className={cn(
-  "fixed inset-y-0 left-0 z-[52] w-64 bg-zinc-950 border-r border-white/5 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:z-auto",
-  sidebarOpen ? "translate-x-0" : "-translate-x-full"
-)}>
-  <div className="flex flex-col h-full">
-    {/* Sidebar Top Title Wrapper */}
-    <div className="p-6 border-b border-white/5 flex items-center justify-between">
-      <span className="font-bold text-xl tracking-tight flex items-center gap-2 text-white">
-        <Layers className="text-blue-500 h-5 w-5" /> AR<span className="text-blue-500">Stock</span>
-      </span>
-      <Button variant="ghost" size="icon" className="lg:hidden text-white" onClick={() => setSidebarOpen(false)}>
-        <X className="h-6 w-6" />
-      </Button>
-    </div>
-
-    {/* Center Navigation Links Area */}
-    <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-      {[
-        { id: 'inventory', label: 'Products', icon: Package },
-        { id: 'colors', label: 'Colors', icon: Palette },
-        { id: 'variants', label: 'Variants', icon: Combine },
-        { id: 'media', label: 'Media Assets', icon: ImageIcon },
-      ].map(item => (
-        <button
-          key={item.id}
-          onClick={() => { setActiveTab(item.id); setSidebarOpen(false); }}
-          className={cn(
-            "w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-left font-medium",
-            activeTab === item.id ? "bg-blue-600 text-white shadow-lg shadow-blue-600/10" : "text-zinc-400 hover:text-white hover:bg-white/5"
-          )}
-        >
-          <item.icon className="h-5 w-5 flex-shrink-0" />
-          <span className="truncate">{item.label}</span>
-        </button>
-      ))}
-    </nav>
-
-    {/* --- NEW SIGN OUT ACTION BAR --- */}
-    <div className="p-4 border-t border-white/5 bg-zinc-950/50">
-      <button
-        onClick={handleSignOut}
-        className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all text-left group"
-      >
-        <LogOut className="h-5 w-5 flex-shrink-0 transition-transform group-hover:-translate-x-0.5" />
-        <span>Sign Out</span>
-      </button>
-    </div>
-  </div>
-</aside>
-
+          {/* Center Navigation Links Area */}
           <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
             {[
               { id: 'inventory', label: 'Products', icon: Package },
@@ -371,6 +322,17 @@ const handleAddMedia = async (e: React.FormEvent) => {
               </button>
             ))}
           </nav>
+
+          {/* Sign Out Action Footer Bar */}
+          <div className="p-4 border-t border-white/5 bg-zinc-950/50">
+            <button
+              onClick={handleSignOut}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all text-left group"
+            >
+              <LogOut className="h-5 w-5 flex-shrink-0 transition-transform group-hover:-translate-x-0.5" />
+              <span>Sign Out</span>
+            </button>
+          </div>
         </div>
       </aside>
 
@@ -387,19 +349,29 @@ const handleAddMedia = async (e: React.FormEvent) => {
         </header>
 
         <main className="p-4 sm:p-6 space-y-6">
-          
           {/* HEADER & SEARCH BAR */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold text-white tracking-tight capitalize">{activeTab} Management</h1>
               <p className="text-sm text-zinc-400">Monitor and update your Render database records.</p>
             </div>
-            <Button 
-              onClick={() => setActiveModal(activeTab)}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-medium flex items-center gap-2 self-start sm:self-auto"
-            >
-              <Plus className="h-4 w-4" /> Add {activeTab.slice(0, -1)}
-            </Button>
+            <div className="flex items-center gap-3 self-start sm:self-auto w-full sm:w-auto">
+              <div className="relative flex-1 sm:w-64">
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-500" />
+                <Input 
+                  placeholder={`Search ${activeTab}...`} 
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="pl-9 bg-zinc-900/50 border-white/10 text-white placeholder-zinc-500"
+                />
+              </div>
+              <Button 
+                onClick={() => setActiveModal(activeTab)}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-medium flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" /> Add {activeTab.slice(0, -1)}
+              </Button>
+            </div>
           </div>
 
           {isLoading ? (
@@ -586,15 +558,10 @@ const handleAddMedia = async (e: React.FormEvent) => {
                   <Button type="submit" disabled={isSubmitting} className="w-full bg-blue-600 text-white mt-4">{isSubmitting ? 'Saving...' : 'Save Media'}</Button>
                 </form>
               )}
-
             </CardContent>
           </Card>
         </div>
       )}
     </div>
-
-
-
-
   )
 }
