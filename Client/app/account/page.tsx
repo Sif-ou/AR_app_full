@@ -65,7 +65,17 @@ const [registeredPassword, setRegisteredPassword] = useState('');
   const handleRoleRedirect = (role: string) => {
     if (role === 'ADMIN') {
       router.push('/admin')
-    } else {
+    } 
+    else if ( role == 'STOCK' ) {
+      router.push('/stock')
+    }
+    else if ( role == 'DELIVERY' ) {
+      router.push('/delivery')
+    }
+    else if ( role == 'MARKETING MANAGER' ) {
+      router.push('/maketing')
+    }
+    else {
       router.push('/')
     }
   }
@@ -78,6 +88,18 @@ const [registeredPassword, setRegisteredPassword] = useState('');
 
     if (savedRole === 'ADMIN') {
       router.push('/admin')
+      return;
+    }
+    else if (savedRole === 'STOCK') {
+      router.push('/stock')
+      return;
+    }
+    else if (savedRole === 'DELIVERY') {
+      router.push('/delivery')
+      return;
+    }
+        else if (savedRole === 'MARKETING MANAGER') {
+      router.push('/maketing')
       return;
     }
 
@@ -313,6 +335,18 @@ const handleVerifyCode = async () => {
                               router.push('/admin');
                               return; 
                             }
+    else if (data.role === 'STOCK') {
+      router.push('/stock')
+      return;
+    }
+    else if (data.role === 'DELIVERY') {
+      router.push('/delivery')
+      return;
+    }
+        else if (data.role === 'MARKETING MANAGER') {
+      router.push('/maketing')
+      return;
+    }
 
                             setLoggedInUser({
                               name: data.username,
