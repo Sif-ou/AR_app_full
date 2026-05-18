@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardTitle, CardDescription } from '@/components/ui/card'
@@ -88,18 +88,69 @@ export default function StockDashboard() {
   const [mediaForm, setMediaForm] = useState({ variantId: '', staticImage: '', model3d: '' })
 
   // --- SAFE TOKEN SANITIZER HELPER ---
-  const getCleanAuthToken = (): string | null => {
+  const getCleanAuthToken = useCallback(() => {
+    if (typeof window === 'undefined') return null;
     let token = localStorage.getItem("token")
     if (!token) return null
     
-    // Completely strips duplicate token patterns cleanly
     if (token.startsWith('Bearer ')) {
       token = token.slice(7).trim()
     }
     return token
-  }
+  }, [])
 
-  // --- ROLE AND SECURITY VERIFICATION ---
+  // --- COMPONENT LEVEL FETCH CALLS ---
+  const fetchAllData = useCallback(async () => {
+    const token = getCleanAuthToken();
+    if (!token) {
+      setFetchError("No valid authentication token found.");
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    setFetchError(null);
+
+    try {
+      // Fire parallel status requests across all REST resources
+      const [resProducts, resColors, resVariants, resMedia] = await Promise.all([
+        fetch(`${BASE_URL}/products`, { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch(`${BASE_URL}/colors`, { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch(`${BASE_URL}/variants`, { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch(`${BASE_URL}/media`, { headers: { 'Authorization': `Bearer ${token}` } }),
+      ]);
+
+      if (resProducts.status === 403 || resColors.status === 403) {
+        setFetchError("Access Denied (403): Your account lacks STOCK authority permissions.");
+        setIsAuthorized(false);
+        setIsLoading(false);
+        return;
+      }
+
+      // Check endpoints status codes safely before reading JSON
+      if (!resProducts.ok || !resColors.ok || !resVariants.ok || !resMedia.ok) {
+        throw new Error("One or more server endpoints failed to respond correctly.");
+      }
+
+      const productsData = await resProducts.json();
+      const colorsData = await resColors.json();
+      const variantsData = await resVariants.json();
+      const mediaData = await resMedia.json();
+
+      setInventory(Array.isArray(productsData) ? productsData : []);
+      setColors(Array.isArray(colorsData) ? colorsData : []);
+      setVariants(Array.isArray(variantsData) ? variantsData : []);
+      setMedia(Array.isArray(mediaData) ? mediaData : []);
+      
+    } catch (error) {
+      console.error("Database connection failure:", error);
+      setFetchError("Network connection timeout during system replication setup.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [getCleanAuthToken]);
+
+  // --- SECURITY INITIALIZATION CYCLE ---
   useEffect(() => {
     const token = getCleanAuthToken()
     if (token) {
@@ -107,56 +158,16 @@ export default function StockDashboard() {
     } else {
       setIsAuthorized(false)
     }
-  }, [])
+  }, [getCleanAuthToken])
 
-  // --- MASTER FETCH FUNCTION ---
-  const fetchAllData = async () => {
-    try {
-      setIsLoading(true)
-      const token = getCleanAuthToken()
-      
-      if (!token) {
-        throw new Error("No authorization token found. Please re-login.")
-      }
-      
-      const secureHeaders = {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}` 
-      }
-
-      const [prodRes, colorRes, varRes, mediaRes] = await Promise.all([
-        fetch(`${BASE_URL}/products`, { method: 'GET', headers: secureHeaders }),
-        fetch(`${BASE_URL}/colors`, { method: 'GET', headers: secureHeaders }), 
-        fetch(`${BASE_URL}/variants/get`, { method: 'GET', headers: secureHeaders }),
-        fetch(`${BASE_URL}/media/get`, { method: 'GET', headers: secureHeaders })
-      ])
-
-      // Intercept 403 or 401 response walls BEFORE calling .json()
-      if (prodRes.status === 403 || colorRes.status === 403 || varRes.status === 403 || mediaRes.status === 403) {
-        throw new Error('Access Denied (403): Your token is invalid or missing the required STOCK role permissions.')
-      }
-
-      if (!prodRes.ok || !colorRes.ok || !varRes.ok || !mediaRes.ok) {
-        throw new Error(`Synchronization Failed: Backend returned an error status code.`)
-      }
-
-      setInventory(await prodRes.json())
-      setColors(await colorRes.json())
-      setVariants(await varRes.json())
-      setMedia(await mediaRes.json())
-      setFetchError(null)
-    } catch (err: any) {
-      setFetchError(err.message || 'Something went wrong while fetching tracking data.')
-    } bits: {
-      setIsLoading(false)
-    }
-  }
-
+  // --- AUTOMATED MONITOR TRIGGER CYCLE ---
   useEffect(() => {
-    if (isAuthorized) fetchAllData()
-  }, [isAuthorized])
+    if (isAuthorized) {
+      fetchAllData();
+    }
+  }, [isAuthorized, fetchAllData]);
 
-  // --- MUTATION POST HANDLERS WITH SANITIZED HEADERS ---
+  // --- MUTATION POST HANDLERS ---
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
@@ -294,8 +305,8 @@ export default function StockDashboard() {
   }
 
   const filteredInventory = inventory.filter(item => 
-    item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    item.category.toLowerCase().includes(searchQuery.toLowerCase())
+    item.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    item.category?.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   const getStockStatus = (qty: number) => {
