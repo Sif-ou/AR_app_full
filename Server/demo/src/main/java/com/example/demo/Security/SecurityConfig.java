@@ -54,10 +54,10 @@ public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter, UserDetailsService 
                 .requestMatchers("/api/auth/resend-code").permitAll()
                 .requestMatchers("/api/public/**").permitAll()
                 .requestMatchers("/api/chat/**").permitAll()
-                .requestMatchers("/api/add/colors").permitAll()
-                .requestMatchers("/api/add/products").permitAll()
-                .requestMatchers("/api/add/variants").permitAll()
-                .requestMatchers("/api/add/media").permitAll()
+                .requestMatchers("/api/add/colors").hasAuthority("STOCK")
+                .requestMatchers("/api/add/products").hasAuthority("STOCK")
+                .requestMatchers("/api/add/variants").hasAuthority("STOCK")
+                .requestMatchers("/api/add/media").hasAuthority("STOCK")
                 .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
 
                 // Everything else requires authentication

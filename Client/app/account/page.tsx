@@ -239,6 +239,8 @@ const handleVerifyCode = async () => {
         localStorage.setItem('username', data.username); 
         localStorage.setItem('userEmail', data.email);
 
+        
+
         setLoggedInUser({
           name: data.username,
           email: data.email
