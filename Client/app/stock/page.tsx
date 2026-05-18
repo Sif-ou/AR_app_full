@@ -243,13 +243,26 @@ export default function StockDashboard() {
     setIsSubmitting(false)
   }
 
-  const handleSignOut = () => {
-    localStorage.removeItem("token") 
-    router.push('/')
-  }
+const handleSignOut = () => {
+  // Clear everything from storage to ensure no stale tokens persist
+  localStorage.clear() 
+  
+  // Explicitly revoke authorization state immediately
+  setIsAuthorized(false)
+  
+  // Force clean route change to your account page
+  router.push('/account')
+}
 
   // --- SECURITY RENDERING ---
-  if (isAuthorized === null) return <div className="min-h-screen bg-[#121212]" />
+// Change your structural safety check to cleanly wait for hydration / auth checks
+if (isAuthorized === null) {
+  return (
+    <div className="min-h-screen bg-[#121212] flex items-center justify-center">
+      <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+    </div>
+  )
+}
   if (!isAuthorized) {
     return (
       <div className="min-h-screen bg-[#121212] flex flex-col items-center justify-center p-6">
