@@ -11,14 +11,12 @@ import {
   Plus,
   Search,
   AlertTriangle,
-  CheckCircle2,
   Menu,
   X,
   LogOut,
   Layers,
   Lock,
   Loader2,
-  Maximize2,
   Palette,
   Combine,
   Image as ImageIcon
@@ -32,7 +30,7 @@ interface Product {
   quantity: number;
   category: string;
   description: string;
-  heigh: number; // Matched spelling from backend configuration
+  heigh: number; 
   width: number;
   depth: number;
 }
@@ -89,10 +87,21 @@ export default function StockDashboard() {
   const [variantForm, setVariantForm] = useState({ productId: '', colorId: '', name: '', sku: '', percentage: 0, quantity: 0, description: '' })
   const [mediaForm, setMediaForm] = useState({ variantId: '', staticImage: '', model3d: '' })
 
+  // --- SAFE TOKEN SANITIZER HELPER ---
+  const getCleanAuthToken = (): string | null => {
+    let token = localStorage.getItem("token")
+    if (!token) return null
+    
+    // Completely strips duplicate token patterns cleanly
+    if (token.startsWith('Bearer ')) {
+      token = token.slice(7).trim()
+    }
+    return token
+  }
+
   // --- ROLE AND SECURITY VERIFICATION ---
   useEffect(() => {
-    // Check if an actual token exists to prevent an anonymous Bearer null block
-    const token = localStorage.getItem("token")
+    const token = getCleanAuthToken()
     if (token) {
       setIsAuthorized(true)
     } else {
@@ -101,25 +110,18 @@ export default function StockDashboard() {
   }, [])
 
   // --- MASTER FETCH FUNCTION ---
-  
-const fetchAllData = async () => {
+  const fetchAllData = async () => {
     try {
       setIsLoading(true)
-      let token = localStorage.getItem("token")
+      const token = getCleanAuthToken()
       
       if (!token) {
         throw new Error("No authorization token found. Please re-login.")
       }
-
-      // Sanitize the token string: If it already starts with 'Bearer ', 
-      // strip it out so we can control the format cleanly.
-      if (token.startsWith('Bearer ')) {
-        token = token.slice(7).trim()
-      }
       
       const secureHeaders = {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${token}` 
       }
 
       const [prodRes, colorRes, varRes, mediaRes] = await Promise.all([
@@ -138,7 +140,6 @@ const fetchAllData = async () => {
         throw new Error(`Synchronization Failed: Backend returned an error status code.`)
       }
 
-      // Safe to process now that status headers are confirmed valid
       setInventory(await prodRes.json())
       setColors(await colorRes.json())
       setVariants(await varRes.json())
@@ -146,7 +147,7 @@ const fetchAllData = async () => {
       setFetchError(null)
     } catch (err: any) {
       setFetchError(err.message || 'Something went wrong while fetching tracking data.')
-    } finally {
+    } bits: {
       setIsLoading(false)
     }
   }
@@ -155,12 +156,12 @@ const fetchAllData = async () => {
     if (isAuthorized) fetchAllData()
   }, [isAuthorized])
 
-  // --- MUTATION POST HANDLERS ---
+  // --- MUTATION POST HANDLERS WITH SANITIZED HEADERS ---
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
     try {
-      const token = localStorage.getItem("token")
+      const token = getCleanAuthToken()
       const res = await fetch(`${BASE_URL}/add/products`, {
         method: 'POST',
         headers: { 
@@ -182,7 +183,7 @@ const fetchAllData = async () => {
     e.preventDefault()
     setIsSubmitting(true)
     try {
-      const token = localStorage.getItem("token")
+      const token = getCleanAuthToken()
       const res = await fetch(`${BASE_URL}/add/colors`, {
         method: 'POST',
         headers: { 
@@ -204,7 +205,7 @@ const fetchAllData = async () => {
     e.preventDefault()
     setIsSubmitting(true)
     try {
-      const token = localStorage.getItem("token")
+      const token = getCleanAuthToken()
       const payload = {
         productId: Number(variantForm.productId),
         colorId: Number(variantForm.colorId),
@@ -235,7 +236,7 @@ const fetchAllData = async () => {
     e.preventDefault()
     setIsSubmitting(true)
     try {
-      const token = localStorage.getItem("token")
+      const token = getCleanAuthToken()
       const payload = {
         variantId: Number(mediaForm.variantId),
         staticImage: mediaForm.staticImage,
@@ -258,26 +259,20 @@ const fetchAllData = async () => {
     setIsSubmitting(false)
   }
 
-const handleSignOut = () => {
-  // Clear everything from storage to ensure no stale tokens persist
-  localStorage.clear() 
-  
-  // Explicitly revoke authorization state immediately
-  setIsAuthorized(false)
-  
-  // Force clean route change to your account page
-  router.push('/account')
-}
+  const handleSignOut = () => {
+    localStorage.clear() 
+    setIsAuthorized(false)
+    router.push('/account')
+  }
 
-  // --- SECURITY RENDERING ---
-// Change your structural safety check to cleanly wait for hydration / auth checks
-if (isAuthorized === null) {
-  return (
-    <div className="min-h-screen bg-[#121212] flex items-center justify-center">
-      <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-    </div>
-  )
-}
+  if (isAuthorized === null) {
+    return (
+      <div className="min-h-screen bg-[#121212] flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+      </div>
+    )
+  }
+
   if (!isAuthorized) {
     return (
       <div className="min-h-screen bg-[#121212] flex flex-col items-center justify-center p-6">
@@ -298,7 +293,6 @@ if (isAuthorized === null) {
     )
   }
 
-  // --- FILTER UTILS ---
   const filteredInventory = inventory.filter(item => 
     item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
     item.category.toLowerCase().includes(searchQuery.toLowerCase())
@@ -312,14 +306,12 @@ if (isAuthorized === null) {
 
   return (
     <div className="min-h-screen bg-[#121212] flex overflow-x-hidden text-slate-200">
-      
       {/* --- SIDEBAR --- */}
       <aside className={cn(
         "fixed inset-y-0 left-0 z-[52] w-64 bg-zinc-950 border-r border-white/5 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:z-auto",
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="flex flex-col h-full">
-          {/* Sidebar Top Title */}
           <div className="p-6 border-b border-white/5 flex items-center justify-between">
             <span className="font-bold text-xl tracking-tight flex items-center gap-2 text-white">
               <Layers className="text-blue-500 h-5 w-5" /> AR<span className="text-blue-500">Stock</span>
@@ -329,7 +321,6 @@ if (isAuthorized === null) {
             </Button>
           </div>
 
-          {/* Center Navigation Links Area */}
           <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
             {[
               { id: 'inventory', label: 'Products', icon: Package },
@@ -351,7 +342,6 @@ if (isAuthorized === null) {
             ))}
           </nav>
 
-          {/* Sign Out Action Footer Bar */}
           <div className="p-4 border-t border-white/5 bg-zinc-950/50">
             <button
               onClick={handleSignOut}
@@ -377,7 +367,6 @@ if (isAuthorized === null) {
         </header>
 
         <main className="p-4 sm:p-6 space-y-6">
-          {/* HEADER & SEARCH BAR */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold text-white tracking-tight capitalize">{activeTab} Management</h1>
@@ -415,7 +404,6 @@ if (isAuthorized === null) {
             </div>
           ) : (
             <>
-              {/* --- PRODUCTS TAB --- */}
               {activeTab === 'inventory' && (
                 <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
                   {filteredInventory.map(item => {
@@ -443,7 +431,6 @@ if (isAuthorized === null) {
                 </div>
               )}
 
-              {/* --- COLORS TAB --- */}
               {activeTab === 'colors' && (
                 <div className="grid gap-4 grid-cols-2 sm:grid-cols-4 lg:grid-cols-6">
                   {colors.map(color => (
@@ -460,7 +447,6 @@ if (isAuthorized === null) {
                 </div>
               )}
 
-              {/* --- VARIANTS TAB --- */}
               {activeTab === 'variants' && (
                 <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
                   {variants.map(variant => (
@@ -486,7 +472,6 @@ if (isAuthorized === null) {
                 </div>
               )}
 
-              {/* --- MEDIA TAB --- */}
               {activeTab === 'media' && (
                 <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
                   {media.map(item => (
@@ -518,7 +503,6 @@ if (isAuthorized === null) {
             <CardContent className="p-6">
               <h2 className="text-xl font-bold text-white mb-6 capitalize">Add New {activeModal.slice(0, -1)}</h2>
               
-              {/* Add Product Form */}
               {activeModal === 'inventory' && (
                 <form onSubmit={handleAddProduct} className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
@@ -534,7 +518,6 @@ if (isAuthorized === null) {
                 </form>
               )}
 
-              {/* Add Color Form */}
               {activeModal === 'colors' && (
                 <form onSubmit={handleAddColor} className="space-y-4">
                   <div className="space-y-1"><label className="text-xs text-zinc-400">Color Name</label><Input required className="bg-zinc-900 border-white/10 text-white" value={colorForm.name} onChange={e => setColorForm({...colorForm, name: e.target.value})} /></div>
@@ -543,7 +526,6 @@ if (isAuthorized === null) {
                 </form>
               )}
 
-              {/* Add Variant Form */}
               {activeModal === 'variants' && (
                 <form onSubmit={handleAddVariant} className="space-y-4">
                   <div className="space-y-1">
@@ -571,7 +553,6 @@ if (isAuthorized === null) {
                 </form>
               )}
 
-              {/* Add Media Form */}
               {activeModal === 'media' && (
                 <form onSubmit={handleAddMedia} className="space-y-4">
                   <div className="space-y-1">
