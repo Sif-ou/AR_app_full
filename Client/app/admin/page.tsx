@@ -219,7 +219,7 @@ export default function AdminDashboard() {
     const userRole = localStorage.getItem('userRole')
 
     if (!token || userRole !== 'ADMIN') {
-      setIsAuthorized(false) 
+      setIsAuthorized(false)
     } else {
       const savedName = localStorage.getItem('username')
       const savedEmail = localStorage.getItem('userEmail')
@@ -320,71 +320,98 @@ export default function AdminDashboard() {
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-800/40 font-medium text-slate-300">
-          {targetAccounts.map(account => (
-            <tr key={account.id} className="hover:bg-slate-800/20 transition-colors">
-              <td className="p-4 px-5">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded bg-slate-800 border border-slate-700/60 flex items-center justify-center text-slate-300 font-bold font-mono text-xs">
-                    {account.username ? account.username.split('_').map(n => n[0]).join('').toUpperCase() : 'U'}
+          {targetAccounts.map(account => {
+            // Self protection check logic mapping via local profile variable constraints
+            const isSelf = account.email?.toLowerCase() === adminEmail.toLowerCase()
+
+            return (
+              <tr key={account.id} className={cn("transition-colors", isSelf ? "bg-slate-800/10 hover:bg-slate-800/20" : "hover:bg-slate-800/20")}>
+                <td className="p-4 px-5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded bg-slate-800 border border-slate-700/60 flex items-center justify-center text-slate-300 font-bold font-mono text-xs">
+                      {account.username ? account.username.split('_').map(n => n[0]).join('').toUpperCase() : 'U'}
+                    </div>
+                    <div>
+                      <span className="text-white font-semibold block text-sm">
+                        {account.username} {isSelf && <span className="text-[10px] text-indigo-400 font-mono font-bold bg-indigo-500/10 px-1.5 py-0.5 rounded ml-1.5">YOU</span>}
+                      </span>
+                      <span className="text-[11px] text-slate-400 font-mono flex items-center gap-1 mt-0.5">
+                        <Mail className="w-3 h-3 text-slate-500" /> {account.email}
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-white font-semibold block text-sm">{account.username}</span>
-                    <span className="text-[11px] text-slate-400 font-mono flex items-center gap-1 mt-0.5">
-                      <Mail className="w-3 h-3 text-slate-500" /> {account.email}
+                </td>
+
+                <td className="p-4 px-5">
+                  <div className="flex items-center gap-1.5 text-slate-200 text-sm">
+                    <Shield className="w-4 h-4 text-indigo-400 shrink-0" />
+                    <span className="text-xs font-mono bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700/40">{account.roleName}</span>
+                  </div>
+                </td>
+
+                <td className="p-4 px-5 font-mono text-xs text-slate-400">
+                  {account.phoneNumber || 'N/A'}
+                </td>
+
+                <td className="p-4 px-5 text-center">
+                  {account.active ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-bold font-mono rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      <CheckCircle2 className="w-3 h-3" /> ACTIVE
                     </span>
-                  </div>
-                </div>
-              </td>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-bold font-mono rounded bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                      <XCircle className="w-3 h-3" /> SUSPENDED
+                    </span>
+                  )}
+                </td>
 
-              <td className="p-4 px-5">
-                <div className="flex items-center gap-1.5 text-slate-200 text-sm">
-                  <Shield className="w-4 h-4 text-indigo-400 shrink-0" />
-                  <span className="text-xs font-mono bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700/40">{account.roleName}</span>
-                </div>
-              </td>
-
-              <td className="p-4 px-5 font-mono text-xs text-slate-400">
-                {account.phoneNumber || 'N/A'}
-              </td>
-
-              <td className="p-4 px-5 text-center">
-                {account.active ? (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-bold font-mono rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                    <CheckCircle2 className="w-3 h-3" /> ACTIVE
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-bold font-mono rounded bg-rose-500/10 text-rose-400 border border-rose-500/20">
-                    <XCircle className="w-3 h-3" /> SUSPENDED
-                  </span>
-                )}
-              </td>
-
-              <td className="p-4 px-5 text-center">
-                <div className="flex items-center justify-center gap-2">
-                  <button
-                    onClick={() => toggleAccountStatus(account.id, account.active)}
-                    className={cn(
-                      "px-3 py-1 rounded text-xs font-semibold border transition-colors",
-                      account.active 
-                        ? "bg-slate-800 border-slate-700 hover:bg-rose-950/30 hover:border-rose-950/60 text-slate-300"
-                        : "bg-indigo-600 border-transparent hover:bg-indigo-500 text-white"
+                <td className="p-4 px-5 text-center">
+                  <div className="flex items-center justify-center gap-2">
+                    {isSelf ? (
+                      <>
+                        <button
+                          disabled
+                          className="px-3 py-1 rounded text-xs font-semibold border bg-slate-800/40 border-slate-800/80 text-slate-500 cursor-not-allowed select-none"
+                        >
+                          Locked
+                        </button>
+                        <Button 
+                          disabled 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 text-slate-700 cursor-not-allowed"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => toggleAccountStatus(account.id, account.active)}
+                          className={cn(
+                            "px-3 py-1 rounded text-xs font-semibold border transition-colors",
+                            account.active 
+                              ? "bg-slate-800 border-slate-700 hover:bg-rose-950/30 hover:border-rose-950/60 text-slate-300"
+                              : "bg-indigo-600 border-transparent hover:bg-indigo-500 text-white"
+                          )}
+                        >
+                          {account.active ? 'Suspend' : 'Reactivate'}
+                        </button>
+                        <Button 
+                          onClick={() => deleteAccount(account.id)} 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </>
                     )}
-                  >
-                    {account.active ? 'Suspend' : 'Reactivate'}
-                  </button>
-
-                  <Button 
-                    onClick={() => deleteAccount(account.id)} 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-8 w-8 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </td>
-            </tr>
-          ))}
+                  </div>
+                </td>
+              </tr>
+            )
+          })}
           {targetAccounts.length === 0 && (
             <tr>
               <td colSpan={5} className="p-8 text-center text-slate-500 text-sm">
