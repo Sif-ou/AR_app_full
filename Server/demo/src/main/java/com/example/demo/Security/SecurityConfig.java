@@ -47,12 +47,11 @@ public class SecurityConfig {
                 .requestMatchers("/api/chat/**").permitAll()
                 
                 // Secure stock endpoints (Consolidated & Fixed Missing Read Mappings)
-                // NOTE: If your JWT claims use "ROLE_STOCK", change .hasAuthority("STOCK") to .hasRole("STOCK")
-                .requestMatchers("/api/products", "/api/add/products").hasAuthority("STOCK")
-                .requestMatchers("/api/colors", "/api/add/colors").hasAuthority("STOCK")
-                .requestMatchers("/api/variants/**").hasAuthority("STOCK")
-                .requestMatchers("/api/media/**").hasAuthority("STOCK")
-                
+                .requestMatchers("/api/products/**").authenticated()
+                .requestMatchers("/api/colors/**").authenticated()
+                .requestMatchers("/api/add/**").authenticated()
+                .requestMatchers("/api/variants/**").authenticated()
+                .requestMatchers("/api/media/**").authenticated()
                 // Secure admin endpoints
                 .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
 
