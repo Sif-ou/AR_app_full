@@ -104,6 +104,7 @@ export default function StockDashboard() {
     const token = getCleanAuthToken();
     if (!token) {
       setFetchError("No valid authentication token found.");
+      setIsAuthorized(false);
       setIsLoading(false);
       return;
     }
@@ -120,9 +121,11 @@ export default function StockDashboard() {
         fetch(`${BASE_URL}/media`, { headers: { 'Authorization': `Bearer ${token}` } }),
       ]);
 
-      if (resProducts.status === 403 || resColors.status === 403) {
-        setFetchError("Access Denied (403): Your account lacks STOCK authority permissions.");
+      // Handle explicit security failures dynamically
+      if (resProducts.status === 403 || resColors.status === 403 || resVariants.status === 403 || resMedia.status === 403) {
+        setFetchError("Access Denied (403): Your token is expired or lacks STOCK authority permissions.");
         setIsAuthorized(false);
+        localStorage.removeItem("token"); // Clear bad token to avoid looping
         setIsLoading(false);
         return;
       }
@@ -144,8 +147,8 @@ export default function StockDashboard() {
       
     } catch (error) {
       console.error("Database connection failure:", error);
-      setFetchError("Network connection timeout during system replication setup.");
-    } finally {
+      setFetchError("Network connection timeout or CORS mismatch during system replication setup.");
+    } bits: {
       setIsLoading(false);
     }
   }, [getCleanAuthToken]);
@@ -293,7 +296,7 @@ export default function StockDashboard() {
           </div>
           <CardTitle className="text-xl font-bold text-white mb-2">Access Denied</CardTitle>
           <CardDescription className="text-zinc-400 text-sm mb-6">
-            You lack inventory control clearance. This layout requires an active session with 
+            You lack inventory control clearance or your session expired. This layout requires an active session with 
             <code className="text-blue-400 bg-black px-1.5 py-0.5 rounded ml-1 text-xs font-mono">STOCK</code> security permissions.
           </CardDescription>
           <Button onClick={() => router.push('/account')} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium">
