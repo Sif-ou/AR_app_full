@@ -12,6 +12,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 import org.springframework.http.HttpMethod;
 
 import java.util.Arrays;
@@ -33,12 +34,12 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // Injecting the custom CORS configuration source directly into security filters
+            // 1. CRITICAL: Handle CORS headers before any security check takes place
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
 
             .authorizeHttpRequests(auth -> auth
-                // Allow all pre-flight OPTIONS requests to pass without authentication
+                // Allow all pre-flight OPTIONS requests to pass through
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                 // Public endpoints
@@ -46,12 +47,13 @@ public class SecurityConfig {
                 .requestMatchers("/api/public/**").permitAll()
                 .requestMatchers("/api/chat/**").permitAll()
                 
-                // Secure stock endpoints (Consolidated & Fixed Missing Read Mappings)
+                // Secure stock endpoints 
                 .requestMatchers("/api/products/**").authenticated()
                 .requestMatchers("/api/colors/**").authenticated()
                 .requestMatchers("/api/add/**").authenticated()
                 .requestMatchers("/api/variants/**").authenticated()
                 .requestMatchers("/api/media/**").authenticated()
+                
                 // Secure admin endpoints
                 .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
 
@@ -62,6 +64,7 @@ public class SecurityConfig {
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             .authenticationProvider(authenticationProvider)
+            // 2. Inject JWT processing filter
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -71,13 +74,21 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // Allow your deployment and local environment origins
+        // Allowed client endpoints
         configuration.setAllowedOrigins(Arrays.asList(
             "https://ar-app-full-delta.vercel.app", 
             "http://localhost:3000"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Cache-Control"));
+        
+        // Accept common authentication headers passed by client applications
+        configuration.setAllowedHeaders(Arrays.asList(
+            "Authorization", 
+            "Content-Type", 
+            "Cache-Control", 
+            "Accept", 
+            "X-Requested-With"
+        ));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
