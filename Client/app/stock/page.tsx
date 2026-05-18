@@ -262,7 +262,7 @@ export default function StockDashboard() {
             You lack inventory control clearance. This layout requires an active session with 
             <code className="text-blue-400 bg-black px-1.5 py-0.5 rounded ml-1 text-xs font-mono">STOCK</code> security permissions.
           </CardDescription>
-          <Button onClick={() => router.push('/login')} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium">
+          <Button onClick={() => router.push('/account')} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium">
             Go to Login
           </Button>
         </Card>
