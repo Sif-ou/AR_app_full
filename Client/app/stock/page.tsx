@@ -46,7 +46,7 @@ export default function StockDashboard() {
     
     if (!storedUser) {
       setIsAuthorized(false)
-      router.replace('/login') // No user? Kick them out instantly.
+      router.replace('/account') // No user? Kick them out instantly.
       return
     }
 
