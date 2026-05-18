@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useMemo, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
@@ -16,8 +16,13 @@ import { SlidersHorizontal, Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 
-// Static lookup fallback for UI filter choices layout
+// Static lookup fallback for UI filter layout selections
 import { categories } from '@/lib/data' 
+
+// =========================================================================
+// ⚠️ ACTION REQUIRED: Replace this with your actual live Render deployment URL
+// =========================================================================
+const RENDER_BACKEND_URL = 'https://your-spring-boot-app.onrender.com' 
 
 type SortOption = 'featured' | 'price-low' | 'price-high' | 'rating' | 'newest'
 
@@ -37,16 +42,48 @@ export default function ProductsPage() {
 function ProductsContent() {
   const searchParams = useSearchParams()
 
-  // State slices
-  const [products, setProducts] = useState<any[]>([])
+  // State Management (Typed as any[] to safely map backend objects directly to ProductCard props)
+  const [dbProducts, setDbProducts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const [priceRange, setPriceRange] = useState([0, 5000])
   const [sortBy, setSortBy] = useState<SortOption>('featured')
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
 
-  // Sync category parameter if coming from external navigation links
+  // 1. Fetch live records from your Spring Boot Render Backend on Mount
+  useEffect(() => {
+    const fetchAllProducts = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        const response = await fetch(`${RENDER_BACKEND_URL}/api/products`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        })
+        
+        if (!response.ok) {
+          throw new Error(`Server tracking issue: Status ${response.status}`)
+        }
+        
+        const data = await response.json()
+        setDbProducts(data)
+      } catch (err: any) {
+        console.error("Failed to fetch products from Render:", err)
+        setError(err.message || "Failed to load products.")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchAllProducts()
+  }, [])
+
+  // Sync category URL params if arriving via specific category navigation links
   useEffect(() => {
     const category = searchParams.get('category')
     if (category && categories.find(c => c.id === category)) {
@@ -54,41 +91,38 @@ function ProductsContent() {
     }
   }, [searchParams])
 
-  // Core Data Fetching Engine
-  useEffect(() => {
-    const fetchFilteredData = async () => {
-      setLoading(true)
-      try {
-        const query = new URLSearchParams({
-          search: searchQuery,
-          minPrice: priceRange[0].toString(),
-          maxPrice: priceRange[1].toString(),
-          sortBy: sortBy
-        })
+  // 2. Compute Filters and Sorting locally on the database payload
+  const filteredProducts = useMemo(() => {
+    return dbProducts
+      .filter(product => {
+        // Fallback checks safely handle cases where fields might be undefined/null in PostgreSQL
+        const productName = product.name ? String(product.name) : ''
+        const productDesc = product.description ? String(product.description) : ''
+        const productCategory = product.category ? String(product.category) : ''
+        const productPrice = typeof product.price === 'number' ? product.price : 0
 
-        if (selectedCategories.length > 0) {
-          query.append('categories', selectedCategories.join(','))
-        }
+        const matchesSearch = 
+          productName.toLowerCase().includes(searchQuery.toLowerCase()) || 
+          productDesc.toLowerCase().includes(searchQuery.toLowerCase())
+        
+        const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(productCategory)
+        const matchesPrice = productPrice >= priceRange[0] && productPrice <= priceRange[1]
+        
+        return matchesSearch && matchesCategory && matchesPrice
+      })
+      .sort((a, b) => {
+        const priceA = typeof a.price === 'number' ? a.price : 0
+        const priceB = typeof b.price === 'number' ? b.price : 0
+        const ratingA = typeof a.rating === 'number' ? a.rating : 0
+        const ratingB = typeof b.rating === 'number' ? b.rating : 0
 
-        const response = await fetch(`/api/products?${query.toString()}`)
-        if (response.ok) {
-          const data = await response.json()
-          setProducts(data)
-        }
-      } catch (err) {
-        console.error("Error connecting to data layer: ", err)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    // Simple debounce mechanism to stop database pounding during active type/sliders movements
-    const delayDebounceFn = setTimeout(() => {
-      fetchFilteredData()
-    }, 400)
-
-    return () => clearTimeout(delayDebounceFn)
-  }, [searchQuery, selectedCategories, priceRange, sortBy])
+        if (sortBy === 'price-low') return priceA - priceB
+        if (sortBy === 'price-high') return priceB - priceA
+        if (sortBy === 'rating') return ratingB - ratingA
+        if (sortBy === 'newest') return a.isNew ? -1 : 1
+        return 0
+      })
+  }, [dbProducts, searchQuery, selectedCategories, priceRange, sortBy])
 
   const clearFilters = () => {
     setSelectedCategories([])
@@ -109,7 +143,9 @@ function ProductsContent() {
             <div>
               <h1 className="text-3xl font-bold tracking-tight">Furniture Collection</h1>
               <p className="text-muted-foreground text-sm mt-1">
-                {loading ? 'Updating inventory status...' : `Showing ${products.length} live database records`}
+                {loading 
+                  ? 'Syncing with product inventory...' 
+                  : `Showing ${filteredProducts.length} of ${dbProducts.length} items`}
               </p>
             </div>
             
@@ -147,7 +183,7 @@ function ProductsContent() {
                   </div>
 
                   <div className="flex-1 overflow-y-auto px-6 py-8 space-y-10">
-                    {/* Category Selection Blocks */}
+                    {/* Categories UI Block */}
                     <div className="space-y-4">
                       <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/70">Categories</h3>
                       <div className="grid grid-cols-2 gap-2">
@@ -181,7 +217,7 @@ function ProductsContent() {
                       </div>
                     </div>
 
-                    {/* Price Slider Blocks */}
+                    {/* Price Slider Block */}
                     <div className="space-y-6">
                       <div className="flex items-center justify-between">
                         <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/70">Price Range</h3>
@@ -240,7 +276,14 @@ function ProductsContent() {
             </div>
           </div>
 
-          {/* Loader or Product Matrix Display */}
+          {/* Dynamic Error Status Banner */}
+          {error && (
+            <div className="p-4 mb-6 rounded-xl bg-destructive/10 text-destructive text-sm text-center border border-destructive/20">
+              {error} — Verify your Render instance is active and CORS constraints are open.
+            </div>
+          )}
+
+          {/* Core Interface Matrix: Skeleton View vs Active Product Grid */}
           {loading ? (
             <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 animate-pulse">
               {[...Array(8)].map((_, idx) => (
@@ -249,13 +292,14 @@ function ProductsContent() {
             </div>
           ) : (
             <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {products.map((product) => (
-                <ProductCard key={product.id} product={product} />
+              {filteredProducts.map((product) => (
+                // Explictly typing 'as any' bypasses property conflicts with your components prop definition
+                <ProductCard key={product.id} product={product as any} />
               ))}
             </div>
           )}
 
-          {!loading && products.length === 0 && (
+          {!loading && filteredProducts.length === 0 && (
             <div className="flex flex-col items-center justify-center py-24 text-center rounded-[2.5rem] border-2 border-dashed border-slate-200 bg-white/50">
               <div className="rounded-full bg-white p-8 mb-6 shadow-xl border border-slate-100">
                 <Search className="h-12 w-12 text-slate-300" />

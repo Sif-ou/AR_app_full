@@ -120,10 +120,12 @@ export default function StockDashboard() {
         fetch(`${BASE_URL}/media`, { headers: { 'Authorization': `Bearer ${token}` } }),
       ]);
 
+      // If ANY endpoint yields a 403, immediately clear state, token, and kill authorization
       if (resProducts.status === 403 || resColors.status === 403 || resVariants.status === 403 || resMedia.status === 403) {
+        localStorage.removeItem("token");
         setFetchError("Access Denied (403): Your token is expired or lacks permissions.");
-        setIsAuthorized(false);
-        localStorage.removeItem("token"); 
+        setIsAuthorized(false); // Crucial: forces interface update immediately
+        setIsLoading(false);
         return;
       }
 
@@ -140,6 +142,7 @@ export default function StockDashboard() {
       setColors(Array.isArray(colorsData) ? colorsData : []);
       setVariants(Array.isArray(variantsData) ? variantsData : []);
       setMedia(Array.isArray(mediaData) ? mediaData : []);
+      setIsAuthorized(true); // Confirmed valid endpoints
       
     } catch (error) {
       console.error("Database connection failure:", error);
@@ -156,12 +159,13 @@ export default function StockDashboard() {
       setIsAuthorized(true)
     } else {
       setIsAuthorized(false)
+      setIsLoading(false)
     }
   }, [getCleanAuthToken])
 
   // --- AUTOMATED MONITOR TRIGGER CYCLE ---
   useEffect(() => {
-    if (isAuthorized) {
+    if (isAuthorized === true) {
       fetchAllData();
     }
   }, [isAuthorized, fetchAllData]);
@@ -272,7 +276,7 @@ export default function StockDashboard() {
   const handleSignOut = () => {
     localStorage.clear() 
     setIsAuthorized(false)
-    router.push('/account') // Pointing to singular path
+    router.push('/account')
   }
 
   if (isAuthorized === null) {
@@ -283,7 +287,7 @@ export default function StockDashboard() {
     )
   }
 
-  if (!isAuthorized) {
+  if (isAuthorized === false) {
     return (
       <div className="min-h-screen bg-[#121212] flex flex-col items-center justify-center p-6">
         <Card className="bg-zinc-900 border-none ring-1 ring-white/10 p-8 max-w-sm text-center shadow-2xl">
@@ -292,11 +296,16 @@ export default function StockDashboard() {
           </div>
           <CardTitle className="text-xl font-bold text-white mb-2">Access Denied</CardTitle>
           <CardDescription className="text-zinc-400 text-sm mb-6">
-            You lack inventory control clearance or your session expired. This layout requires an active session with 
-            <code className="text-blue-400 bg-black px-1.5 py-0.5 rounded ml-1 text-xs font-mono">STOCK</code> security permissions.
+            {fetchError || "You lack inventory control clearance or your session expired. This dashboard requires valid configuration setup permissions."}
           </CardDescription>
-          <Button onClick={() => router.push('/account')} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium">
-            Go to Login
+          <Button 
+            onClick={() => {
+              localStorage.clear();
+              router.push('/account');
+            }} 
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium"
+          >
+            Go to Login Page
           </Button>
         </Card>
       </div>
