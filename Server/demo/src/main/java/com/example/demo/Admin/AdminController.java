@@ -1,5 +1,6 @@
 package com.example.demo.Admin;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -135,5 +136,26 @@ public ResponseEntity<?> getAllAccounts() {
                 .body(Map.of("message", "Data sanitization layer error: " + e.getMessage()));
     }
 }
+
+
+@DeleteMapping("/account/{id}")
+public ResponseEntity<?> deleteAccount(@PathVariable Long id) {
+    try {
+        // 1. Check if the user exists in your PostgreSQL table first
+        if (!userRepository.existsById(id)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", "User account with ID " + id + " does not exist."));
+        }
+        
+        // 2. Use the built-in JpaRepository method to delete the entity
+        userRepository.deleteById(id);
+        
+        return ResponseEntity.ok(Map.of("message", "Account permanently purged from database successfully."));
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("message", "Database transaction failure: " + e.getMessage()));
+    }
+}
+
 
 }
