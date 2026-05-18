@@ -12,9 +12,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.http.HttpMethod;
 
 import java.util.Arrays;
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -38,21 +38,25 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
 
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+                // Allow all pre-flight OPTIONS requests to pass without authentication
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                 // Public endpoints
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/public/**").permitAll()
                 .requestMatchers("/api/chat/**").permitAll()
                 
-                // Secure stock endpoints
-                .requestMatchers("/api/add/colors").hasAuthority("STOCK")
-                .requestMatchers("/api/add/products").hasAuthority("STOCK")
-                .requestMatchers("/api/products").hasAuthority("STOCK")
+                // Secure stock endpoints (Consolidated & Fixed Missing Read Mappings)
+                // NOTE: If your JWT claims use "ROLE_STOCK", change .hasAuthority("STOCK") to .hasRole("STOCK")
+                .requestMatchers("/api/products", "/api/add/products").hasAuthority("STOCK")
+                .requestMatchers("/api/colors", "/api/add/colors").hasAuthority("STOCK")
                 .requestMatchers("/api/variants/**").hasAuthority("STOCK")
                 .requestMatchers("/api/media/**").hasAuthority("STOCK")
+                
+                // Secure admin endpoints
                 .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
 
+                // Catch-all safety fallback
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session

@@ -101,10 +101,21 @@ export default function StockDashboard() {
   }, [])
 
   // --- MASTER FETCH FUNCTION ---
-  const fetchAllData = async () => {
+  
+const fetchAllData = async () => {
     try {
       setIsLoading(true)
-      const token = localStorage.getItem("token")
+      let token = localStorage.getItem("token")
+      
+      if (!token) {
+        throw new Error("No authorization token found. Please re-login.")
+      }
+
+      // Sanitize the token string: If it already starts with 'Bearer ', 
+      // strip it out so we can control the format cleanly.
+      if (token.startsWith('Bearer ')) {
+        token = token.slice(7).trim()
+      }
       
       const secureHeaders = {
         'Content-Type': 'application/json',
@@ -118,12 +129,16 @@ export default function StockDashboard() {
         fetch(`${BASE_URL}/media/get`, { method: 'GET', headers: secureHeaders })
       ])
 
-      if (prodRes.status === 403 || varRes.status === 403) {
-        throw new Error('Access Denied (403): Missing or expired stock credentials.')
+      // Intercept 403 or 401 response walls BEFORE calling .json()
+      if (prodRes.status === 403 || colorRes.status === 403 || varRes.status === 403 || mediaRes.status === 403) {
+        throw new Error('Access Denied (403): Your token is invalid or missing the required STOCK role permissions.')
       }
 
-      if (!prodRes.ok) throw new Error('Failed to synchronize with backend tables.')
+      if (!prodRes.ok || !colorRes.ok || !varRes.ok || !mediaRes.ok) {
+        throw new Error(`Synchronization Failed: Backend returned an error status code.`)
+      }
 
+      // Safe to process now that status headers are confirmed valid
       setInventory(await prodRes.json())
       setColors(await colorRes.json())
       setVariants(await varRes.json())
