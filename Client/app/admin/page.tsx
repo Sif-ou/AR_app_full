@@ -34,7 +34,17 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-// Mock data for dashboard
+// Explicitly define the database mapping layout to satisfy TypeScript
+interface Account {
+  id: number;
+  username: string;
+  email: string;
+  phoneNumber: number;
+  active: boolean;
+  roleName: string;
+}
+
+// Mock data for dashboard analytics
 const stats = [
   { title: 'Total Revenue', value: '$124,592', change: '+12.5%', trend: 'up', icon: DollarSign },
   { title: 'Orders', value: '1,429', change: '+8.2%', trend: 'up', icon: ShoppingCart },
@@ -50,132 +60,142 @@ const recentOrders = [
   { id: 'ORD-005', customer: 'Lisa Wang', products: 2, total: 898, status: 'pending' },
 ]
 
-const INITIAL_ACCOUNTS = [
-  { id: 'USR-001', name: 'Amine Rahmani', email: 'amine.r@arsmart.com', role: 'User', status: 'Active', joined: 'Oct 12, 2025' },
-  { id: 'USR-002', name: 'Sofia Benali', email: 'sofia.b@arsmart.com', role: 'Marketing Manager', status: 'Active', joined: 'Jan 05, 2026' },
-  { id: 'USR-003', name: 'Yacine Merah', email: 'yacine.m@arsmart.com', role: 'Stock Manager', status: 'Active', joined: 'Mar 18, 2026' },
-  { id: 'USR-004', name: 'Meriem Kaddour', email: 'm.kaddour@partner.com', role: 'User', status: 'Suspended', joined: 'Nov 22, 2025' },
-  { id: 'USR-005', name: 'Kamel Tounsi', email: 'kamel.t@arsmart.com', role: 'Delivery', status: 'Active', joined: 'May 02, 2026' },
-]
-
 export default function AdminDashboard() {
   const router = useRouter()
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [activeTab, setActiveTab] = useState('overview')
 
-  const [accounts, setAccounts] = useState(INITIAL_ACCOUNTS)
+  // Live Database Accounts States
+  const [accounts, setAccounts] = useState<Account[]>([])
   const [accountSearch, setAccountSearch] = useState('')
+  const [isLoadingAccounts, setIsLoadingAccounts] = useState<boolean>(true)
 
   // Modal State Form Control
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [newName, setNewName] = useState('')
   const [newEmail, setNewEmail] = useState('')
   const [newRole, setNewRole] = useState('User')
+  const [newPassword, setNewPassword] = useState('')
+  const [newPhone, setNewPhone] = useState('')
   
   const [adminName, setAdminName] = useState('Admin User')
   const [adminEmail, setAdminEmail] = useState('admin@Gmail.com')
 
+  // Fetch live profiles out of PostgreSQL database
+  const fetchAccounts = async () => {
+    try {
+      setIsLoadingAccounts(true);
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch('https://ar-app-back-end.onrender.com/api/admin/accounts', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
+      if (!response.ok) {
+        throw new Error(`Failed to fetch database profiles: ${response.status}`);
+      }
 
+      const data = await response.json();
+      setAccounts(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Database compilation retrieve failure:", error);
+    } finally {
+      setIsLoadingAccounts(false);
+    }
+  };
 
-
-
-
-
-
-
-
-const [newPassword, setNewPassword] = useState('')
-const [newPhone, setNewPhone] = useState('')
-
-// 2. Update your submission function to talk to the Spring Boot endpoint:
-const handleProvisionAccount = async (e: React.FormEvent) => {
-  e.preventDefault()
-  
-  if (!newName || !newEmail || !newPassword || !newPhone) {
-    alert("Please populate all administrative mapping fields.");
-    return;
-  }
-
-try {
-    const token = localStorage.getItem('token'); // Retrieve auth handle
+  // Submission handler talking to Spring Boot endpoints
+  const handleProvisionAccount = async (e: React.FormEvent) => {
+    e.preventDefault()
     
-    const response = await fetch('https://ar-app-back-end.onrender.com/api/admin/add/account', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}` 
-      },
-      body: JSON.stringify({
-        username: newName,
-        email: newEmail,
-        password: newPassword,
-        phoneNumber: Number(newPhone), 
-        role: newRole
-      })
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      alert(data.message || "An error occurred during account routing provisioning.");
+    if (!newName || !newEmail || !newPassword || !newPhone) {
+      alert("Please populate all administrative mapping fields.");
       return;
     }
 
-    // Success Hook: Update local UI table view state dynamically
-    const localizedMockAccount = {
-      id: `USR-${Math.floor(100 + Math.random() * 900)}`,
-      name: newName,
-      email: newEmail,
-      role: newRole,
-      status: 'Active',
-      joined: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
-    };
+    try {
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch('https://ar-app-back-end.onrender.com/api/admin/add/account', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify({
+          username: newName,
+          email: newEmail,
+          password: newPassword,
+          phoneNumber: Number(newPhone), 
+          role: newRole
+        })
+      });
 
-    setAccounts(prev => [localizedMockAccount, ...prev]);
-    alert(data.message);
-    
-    // Clear standard form inputs
-    setNewName('');
-    setNewEmail('');
-    setNewPassword('');
-    setNewPhone('');
-    setNewRole('User');
-    setIsModalOpen(false);
+      const data = await response.json();
 
-  } catch (error) {
-    console.error("Network communication failure:", error);
-    alert("Could not reach administrative server systems.");
-  }
+      if (!response.ok) {
+        alert(data.message || "An error occurred during account routing provisioning.");
+        return;
+      }
 
-/*
+      alert(data.message);
+      
+      // Reset State parameters & refresh database stream
+      setNewName('');
+      setNewEmail('');
+      setNewPassword('');
+      setNewPhone('');
+      setNewRole('User');
+      setIsModalOpen(false);
+      
+      fetchAccounts();
 
-  const handleProvisionAccount = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!newName || !newEmail) return
-
-    const newAccount = {
-      id: `USR-00${accounts.length + 1}`,
-      name: newName,
-      email: newEmail,
-      role: newRole,
-      status: 'Active',
-      joined: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
+    } catch (error) {
+      console.error("Network communication failure:", error);
+      alert("Could not reach administrative server systems.");
     }
-
-    setAccounts(prev => [newAccount, ...prev])
-    setNewName('')
-    setNewEmail('')
-    setNewRole('User')
-    setIsModalOpen(false)
   }
 
- */
+  // Toggle active / suspended account system states
+  const toggleAccountStatus = async (userId: number, currentStatus: boolean) => {
+    try {
+      const token = localStorage.getItem('token');
+      const nextStatus = !currentStatus; 
 
+      const response = await fetch(`https://ar-app-back-end.onrender.com/api/admin/status/${userId}?active=${nextStatus}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
-}
+      if (!response.ok) {
+        throw new Error(`Server status change failure: ${response.status}`);
+      }
 
+      const data = await response.json();
+      console.log("Status updated successfully:", data);
+
+      fetchAccounts();
+
+    } catch (error) {
+      console.error("Failed to toggle status:", error);
+      alert("Could not update account status.");
+    }
+  };
+
+  const deleteAccount = (id: number) => {
+    if (confirm('Are you sure you want to completely revoke access and delete this entity?')) {
+      // Logic for deleting from database can go here. For now, filter locally:
+      setAccounts(prev => prev.filter(acc => acc.id !== id))
+    }
+  }
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -189,6 +209,8 @@ try {
       if (savedName) setAdminName(savedName)
       if (savedEmail) setAdminEmail(savedEmail)
       
+      fetchAccounts();
+
       const timer = setTimeout(() => {
         setIsAuthorized(true)
       }, 1500)
@@ -259,42 +281,23 @@ try {
     }
   }
 
-  const toggleAccountStatus = (id: string) => {
-    setAccounts(prev => prev.map(acc => {
-      if (acc.id === id) {
-        return { ...acc, status: acc.status === 'Active' ? 'Suspended' : 'Active' }
-      }
-      return acc
-    }))
-  }
-
-  const deleteAccount = (id: string) => {
-    if (confirm('Are you sure you want to completely revoke access and delete this entity?')) {
-      setAccounts(prev => prev.filter(acc => acc.id !== id))
-    }
-  }
-
-
-
   const filteredAccounts = accounts.filter(acc => 
-    acc.name.toLowerCase().includes(accountSearch.toLowerCase()) || 
-    acc.email.toLowerCase().includes(accountSearch.toLowerCase()) ||
-    acc.role.toLowerCase().includes(accountSearch.toLowerCase())
+    (acc.username || '').toLowerCase().includes(accountSearch.toLowerCase()) || 
+    (acc.email || '').toLowerCase().includes(accountSearch.toLowerCase()) ||
+    (acc.roleName || '').toLowerCase().includes(accountSearch.toLowerCase())
   )
 
-  // Segregating into Clients (Users) and Workers
-  const clientAccounts = filteredAccounts.filter(acc => acc.role === 'User')
-  const workerAccounts = filteredAccounts.filter(acc => acc.role !== 'User')
+  const clientAccounts = filteredAccounts.filter(acc => acc.roleName === 'CLIENT')
+  const workerAccounts = filteredAccounts.filter(acc => acc.roleName !== 'CLIENT')
 
-  // Shared Table Render Component to avoid redundant code
-  const renderAccountTable = (targetAccounts: typeof accounts) => (
+  const renderAccountTable = (targetAccounts: Account[]) => (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[800px] text-left text-sm">
         <thead>
           <tr className="bg-slate-800/40 text-slate-400 text-xs font-semibold uppercase tracking-wider border-b border-slate-800">
             <th className="p-4 px-5">Administrative Entity</th>
             <th className="p-4 px-5">System Role Mapping</th>
-            <th className="p-4 px-5">Onboarding Date</th>
+            <th className="p-4 px-5">Phone Number</th>
             <th className="p-4 px-5 text-center">Status</th>
             <th className="p-4 px-5 text-center">Operational Controls</th>
           </tr>
@@ -305,10 +308,10 @@ try {
               <td className="p-4 px-5">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded bg-slate-800 border border-slate-700/60 flex items-center justify-center text-slate-300 font-bold font-mono text-xs">
-                    {account.name ? account.name.split(' ').map(n => n[0]).join('') : 'U'}
+                    {account.username ? account.username.split('_').map(n => n[0]).join('').toUpperCase() : 'U'}
                   </div>
                   <div>
-                    <span className="text-white font-semibold block text-sm">{account.name}</span>
+                    <span className="text-white font-semibold block text-sm">{account.username}</span>
                     <span className="text-[11px] text-slate-400 font-mono flex items-center gap-1 mt-0.5">
                       <Mail className="w-3 h-3 text-slate-500" /> {account.email}
                     </span>
@@ -319,16 +322,16 @@ try {
               <td className="p-4 px-5">
                 <div className="flex items-center gap-1.5 text-slate-200 text-sm">
                   <Shield className="w-4 h-4 text-indigo-400 shrink-0" />
-                  <span className="text-xs font-mono bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700/40">{account.role}</span>
+                  <span className="text-xs font-mono bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700/40">{account.roleName}</span>
                 </div>
               </td>
 
               <td className="p-4 px-5 font-mono text-xs text-slate-400">
-                {account.joined}
+                {account.phoneNumber || 'N/A'}
               </td>
 
               <td className="p-4 px-5 text-center">
-                {account.status === 'Active' ? (
+                {account.active ? (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-bold font-mono rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                     <CheckCircle2 className="w-3 h-3" /> ACTIVE
                   </span>
@@ -342,16 +345,17 @@ try {
               <td className="p-4 px-5 text-center">
                 <div className="flex items-center justify-center gap-2">
                   <button
-                    onClick={() => toggleAccountStatus(account.id)}
+                    onClick={() => toggleAccountStatus(account.id, account.active)}
                     className={cn(
                       "px-3 py-1 rounded text-xs font-semibold border transition-colors",
-                      account.status === 'Active'
-                        ? "bg-slate-800 border-slate-700 hover:bg-rose-950/30 hover:border-rose-950/60 hover:text-rose-400 text-slate-300"
+                      account.active 
+                        ? "bg-slate-800 border-slate-700 hover:bg-rose-950/30 hover:border-rose-950/60 text-slate-300"
                         : "bg-indigo-600 border-transparent hover:bg-indigo-500 text-white"
                     )}
                   >
-                    {account.status === 'Active' ? 'Suspend' : 'Reactivate'}
+                    {account.active ? 'Suspend' : 'Reactivate'}
                   </button>
+
                   <Button 
                     onClick={() => deleteAccount(account.id)} 
                     variant="ghost" 
@@ -385,24 +389,17 @@ try {
         />
       )}
 
-      {/* Sidebar */}
-      <aside
-        className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 border-r border-slate-800 text-slate-200 transform transition-transform duration-300 ease-in-out flex flex-col h-full",
-          "lg:static lg:translate-x-0",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        )}
-      >
-        <div className="flex items-center justify-between p-6 border-b border-slate-800">
-          <Link href="/" className="font-serif text-2xl font-bold tracking-wide text-white">
-            AR<span className="text-indigo-500">Smart</span>
+      {/* Sidebar Navigation Context */}
+      <aside className={cn(
+        "fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 border-r border-slate-800 flex flex-col transition-transform duration-300 lg:translate-x-0 lg:static lg:h-screen shrink-0",
+        sidebarOpen ? "translate-x-0" : "-translate-x-full"
+      )}>
+        <div className="p-6 border-b border-slate-800 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2 font-bold text-xl tracking-tight text-white">
+            <Shield className="h-6 w-6 text-indigo-500" />
+            <span>AR <span className="text-indigo-400">Smart</span></span>
           </Link>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="lg:hidden text-slate-400 hover:bg-slate-800 hover:text-white"
-            onClick={() => setSidebarOpen(false)}
-          >
+          <Button variant="ghost" size="icon" className="lg:hidden text-slate-400 hover:text-white" onClick={() => setSidebarOpen(false)}>
             <X className="h-5 w-5" />
           </Button>
         </div>
@@ -410,378 +407,296 @@ try {
         <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto">
           {[
             { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-            { id: 'manage accounts', label: 'Manage Accounts', icon: Users },
-          ].map(item => (
-            <button
-              key={item.id}
-              onClick={() => {
-                setActiveTab(item.id)
-                if (window.innerWidth < 1024) setSidebarOpen(false)
-              }}
-              className={cn(
-                "w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-left font-medium text-sm",
-                activeTab === item.id 
-                  ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/10" 
-                  : "text-slate-400 hover:bg-slate-800/60 hover:text-slate-200"
-              )}
-            >
-              <item.icon className="h-5 w-5 shrink-0" />
-              <span className="truncate">{item.label}</span>
-            </button>
-          ))}
+            { id: 'accounts', label: 'User Accounts', icon: Users },
+          ].map((item) => {
+            const Icon = item.icon
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setActiveTab(item.id)
+                  setSidebarOpen(false)
+                }}
+                className={cn(
+                  "w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors text-left",
+                  activeTab === item.id 
+                    ? "bg-indigo-600 text-white font-semibold shadow-lg shadow-indigo-600/10" 
+                    : "text-slate-400 hover:bg-slate-800/60 hover:text-slate-100"
+                )}
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+                <span>{item.label}</span>
+              </button>
+            )
+          })}
         </nav>
 
         <div className="p-4 border-t border-slate-800 bg-slate-950/40">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold shrink-0 text-sm">
-              A
+          <div className="flex items-center gap-3 p-2 rounded-lg mb-3">
+            <div className="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center font-bold font-mono text-sm border border-slate-700/50">
+              AD
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-sm text-white truncate">{adminName}</p>
-              <p className="text-xs text-slate-500 truncate">{adminEmail}</p>
+            <div className="overflow-hidden">
+              <h4 className="text-sm font-semibold text-white truncate">{adminName}</h4>
+              <p className="text-xs text-slate-500 truncate font-mono">{adminEmail}</p>
             </div>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="text-slate-500 hover:text-rose-400 shrink-0 h-8 w-8"
-              onClick={() => {
-                localStorage.removeItem('token');
-                localStorage.removeItem('username');
-                localStorage.removeItem('userEmail');
-                localStorage.removeItem('userRole');
-                router.push('/')
-              }}
-            >
-              <LogOut className="h-4 w-4" />
-            </Button>
           </div>
+          <Button 
+            variant="outline" 
+            onClick={() => {
+              localStorage.clear();
+              router.push('/');
+            }}
+            className="w-full border-slate-800 bg-slate-900/40 hover:bg-rose-950/20 hover:text-rose-400 hover:border-rose-900/30 text-slate-400 justify-start gap-2"
+          >
+            <LogOut className="h-4 w-4 text-slate-500 hover:text-rose-400" />
+            <span>Sign Out</span>
+          </Button>
         </div>
       </aside>
 
-      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-        <header className="bg-slate-900/40 border-b border-slate-800 sticky top-0 z-40 shrink-0 backdrop-blur-md">
-          <div className="flex items-center justify-between px-4 sm:px-6 py-4">
-            <div className="flex items-center gap-4 flex-1">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="lg:hidden shrink-0 text-slate-400 hover:bg-slate-800"
-                onClick={() => setSidebarOpen(true)}
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
-              <div className="relative w-full max-w-xs hidden sm:block">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                <Input placeholder="Global search index..." className="w-full pl-9 h-9 bg-slate-950 border-slate-800 text-slate-200 placeholder-slate-500 focus-visible:ring-indigo-600" />
-              </div>
-            </div>
-            <div className="flex items-center gap-2 sm:gap-4 ml-4">
-              <Link href="/" target="_self" className="sm:target-blank">
-                <Button variant="outline" size="sm" className="bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white">
-                  <Eye className="h-4 w-4 mr-0 sm:mr-2 text-indigo-400" />
-                  <span className="hidden sm:inline">View Live Store</span>
-                </Button>
-              </Link>
-            </div>
+      {/* Main Panel Frame Viewport */}
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
+        <header className="h-16 border-b border-slate-800/80 bg-slate-900/50 backdrop-blur px-6 flex items-center justify-between sticky top-0 z-40">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" className="lg:hidden text-slate-400 hover:text-white" onClick={() => setSidebarOpen(true)}>
+              <Menu className="h-5 w-5" />
+            </Button>
+            <h1 className="text-lg font-bold text-white capitalize tracking-wide hidden sm:block">
+              {activeTab === 'overview' ? 'Operational Hub Overview' : 'System Registry Access Control'}
+            </h1>
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-[#0F172A]">
-          <div className="max-w-[1600px] mx-auto space-y-6">
-            {activeTab === 'overview' && (
-              <>
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div>
-                    <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">System Architecture Overview</h1>
-                    <p className="text-sm text-slate-400">Aggregated tracking records for retail analytics and active engine logs.</p>
-                  </div>
-                  <Select defaultValue="7d">
-                    <SelectTrigger className="w-full sm:w-40 h-9 bg-slate-900 border-slate-800 text-slate-200">
-                      <SelectValue />
+        <main className="flex-1 p-6 space-y-6 max-w-[1600px] w-full mx-auto">
+          {activeTab === 'overview' && (
+            <div className="space-y-6 animate-in fade-in duration-300">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {stats.map((stat, i) => {
+                  const Icon = stat.icon
+                  return (
+                    <Card key={i} className="bg-slate-900 border-slate-800/80 shadow-md">
+                      <CardContent className="p-6 flex items-center justify-between">
+                        <div className="space-y-1">
+                          <p className="text-xs font-semibold tracking-wider text-slate-400 uppercase">{stat.title}</p>
+                          <h3 className="text-2xl font-bold text-white font-mono">{stat.value}</h3>
+                        </div>
+                        <div className="p-3 bg-slate-800/60 rounded border border-slate-700/40 text-indigo-400">
+                          <Icon className="h-5 w-5" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )
+                })}
+              </div>
+
+              <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                <Card className="xl:col-span-2 bg-slate-900 border-slate-800/80 shadow-xl">
+                  <CardHeader className="border-b border-slate-800/60 bg-slate-950/20 p-5 flex flex-row items-center justify-between">
+                    <div>
+                      <CardTitle className="text-base font-bold text-white">Recent System Transactions</CardTitle>
+                      <CardDescription className="text-xs text-slate-400 mt-0.5">Live e-commerce product flow data logs.</CardDescription>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-sm">
+                        <thead>
+                          <tr className="bg-slate-800/30 text-slate-400 text-xs font-semibold uppercase tracking-wider border-b border-slate-800">
+                            <th className="p-4 px-5">Order ID</th>
+                            <th className="p-4 px-5">Customer Handle</th>
+                            <th className="p-4 px-5 text-center">Volume</th>
+                            <th className="p-4 px-5 text-right">Aggregate</th>
+                            <th className="p-4 px-5 text-center">Routing Status</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800/30 font-medium text-slate-300">
+                          {recentOrders.map((order) => (
+                            <tr key={order.id} className="hover:bg-slate-800/10 transition-colors">
+                              <td className="p-4 px-5 font-mono text-xs font-bold text-indigo-400">{order.id}</td>
+                              <td className="p-4 px-5 text-white font-semibold text-sm">{order.customer}</td>
+                              <td className="p-4 px-5 text-center font-mono text-xs">{order.products} items</td>
+                              <td className="p-4 px-5 text-right font-mono text-white text-sm">{formatPrice(order.total)}</td>
+                              <td className="p-4 px-5 text-center">
+                                <Badge variant="outline" className={cn("px-2 py-0.5 text-[10px] font-bold font-mono tracking-wide uppercase rounded border", getOrderStatusColor(order.status))}>
+                                  {order.status}
+                                </Badge>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-slate-900 border-slate-800/80 shadow-xl">
+                  <CardHeader className="border-b border-slate-800/60 bg-slate-950/20 p-5">
+                    <CardTitle className="text-base font-bold text-white">Catalog Summary Metrics</CardTitle>
+                    <CardDescription className="text-xs text-slate-400 mt-0.5">Asset distributions inside the repository mapping.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-5 space-y-4 font-medium">
+                    <div className="flex items-center justify-between p-3 rounded bg-slate-900 border border-slate-800 hover:border-slate-700/60 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400"><ShoppingCart className="w-4 h-4" /></div>
+                        <div>
+                          <span className="text-sm font-semibold text-white block">Active Catalog Items</span>
+                          <span className="text-[11px] text-slate-500 font-mono">Live retail items</span>
+                        </div>
+                      </div>
+                      <span className="text-lg font-bold font-mono text-white">{products.length}</span>
+                    </div>
+
+                    <div className="flex items-center justify-between p-3 rounded bg-slate-900 border border-slate-800 hover:border-slate-700/60 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400"><LayoutDashboard className="w-4 h-4" /></div>
+                        <div>
+                          <span className="text-sm font-semibold text-white block">Categorical Sort Vectors</span>
+                          <span className="text-[11px] text-slate-500 font-mono">Database distinct keys</span>
+                        </div>
+                      </div>
+                      <span className="text-lg font-bold font-mono text-white">{categories.length}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'accounts' && (
+            <div className="space-y-6 animate-in fade-in duration-300">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-slate-900 p-4 rounded-xl border border-slate-800/80 shadow-md">
+                <div className="relative flex-1 max-w-md">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                  <Input 
+                    placeholder="Search accounts via identifiers, endpoints, parameters..." 
+                    className="pl-10 bg-slate-950 border-slate-800 focus-visible:ring-indigo-600 text-slate-200 text-sm h-10 rounded-lg placeholder:text-slate-600"
+                    value={accountSearch}
+                    onChange={(e) => setAccountSearch(e.target.value)}
+                  />
+                </div>
+                <Button onClick={() => setIsModalOpen(true)} className="bg-indigo-600 hover:bg-indigo-500 font-semibold shadow-lg shadow-indigo-600/10 text-sm h-10 gap-2 px-4 shrink-0">
+                  <UserPlus className="w-4 h-4" /> Provision Account
+                </Button>
+              </div>
+
+              {isLoadingAccounts ? (
+                <div className="p-12 text-center text-slate-500 text-sm animate-pulse">
+                  Streaming secure real-time accounts architecture...
+                </div>
+              ) : (
+                <Card className="bg-slate-900 border-slate-800/80 shadow-2xl overflow-hidden">
+                  <Tabs defaultValue="all" className="w-full">
+                    <div className="px-5 pt-4 bg-slate-950/20 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <TabsList className="bg-slate-950 border border-slate-800/60 p-1 rounded-lg self-start mb-3 sm:mb-0">
+                        <TabsTrigger value="all" className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white text-xs px-4 py-1.5 font-semibold">System Registry ({filteredAccounts.length})</TabsTrigger>
+                        <TabsTrigger value="clients" className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white text-xs px-4 py-1.5 font-semibold">Clients ({clientAccounts.length})</TabsTrigger>
+                        <TabsTrigger value="workers" className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white text-xs px-4 py-1.5 font-semibold">Staff & Operations ({workerAccounts.length})</TabsTrigger>
+                      </TabsList>
+                    </div>
+
+                    <TabsContent value="all" className="m-0 border-0 outline-none">{renderAccountTable(filteredAccounts)}</TabsContent>
+                    <TabsContent value="clients" className="m-0 border-0 outline-none">{renderAccountTable(clientAccounts)}</TabsContent>
+                    <TabsContent value="workers" className="m-0 border-0 outline-none">{renderAccountTable(workerAccounts)}</TabsContent>
+                  </Tabs>
+                </Card>
+              )}
+            </div>
+          )}
+        </main>
+      </div>
+
+      {/* Account Provisioning Modal Overlay Form */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setIsModalOpen(false)} />
+          <Card className="w-full max-w-lg bg-slate-900 border-slate-800 shadow-2xl relative z-10 animate-in zoom-in-95 duration-200 overflow-hidden">
+            <CardHeader className="border-b border-slate-800 bg-slate-950/40 p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-base font-bold text-white flex items-center gap-2">
+                    <UserPlus className="w-5 h-5 text-indigo-400" /> Provision Operational Account
+                  </CardTitle>
+                  <CardDescription className="text-xs text-slate-400 mt-0.5">Commit new cryptographic identities to PostgreSQL context.</CardDescription>
+                </div>
+                <Button variant="ghost" size="icon" className="text-slate-500 hover:text-white h-8 w-8 rounded-md" onClick={() => setIsModalOpen(false)}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <form onSubmit={handleProvisionAccount}>
+              <CardContent className="p-5 space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-400 tracking-wider uppercase">Profile Username</label>
+                  <Input 
+                    required
+                    placeholder="e.g., mohamed_delivery" 
+                    className="bg-slate-950 border-slate-800 text-slate-200 placeholder:text-slate-700 focus-visible:ring-indigo-600 text-sm h-10"
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-400 tracking-wider uppercase">Electronic Mail Routing Interface</label>
+                  <Input 
+                    required
+                    type="email"
+                    placeholder="e.g., delivery@arsmart.com" 
+                    className="bg-slate-950 border-slate-800 text-slate-200 placeholder:text-slate-700 focus-visible:ring-indigo-600 text-sm h-10"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-400 tracking-wider uppercase">System Security Cryptographic Credentials</label>
+                  <Input 
+                    required
+                    type="password"
+                    placeholder="••••••••" 
+                    className="bg-slate-950 border-slate-800 text-slate-200 placeholder:text-slate-700 focus-visible:ring-indigo-600 text-sm h-10"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-400 tracking-wider uppercase">Contact Parameter String (Integer Schema)</label>
+                  <Input 
+                    required
+                    type="tel"
+                    placeholder="e.g., 2137701234" 
+                    className="bg-slate-950 border-slate-800 text-slate-200 placeholder:text-slate-700 focus-visible:ring-indigo-600 text-sm h-10"
+                    value={newPhone}
+                    onChange={(e) => setNewPhone(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-400 tracking-wider uppercase">System Role Authorization Scope</label>
+                  <Select value={newRole} onValueChange={setNewRole}>
+                    <SelectTrigger className="bg-slate-950 border-slate-800 text-slate-200 focus:ring-indigo-600 text-sm h-10">
+                      <SelectValue placeholder="Assign Role Structure" />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
-                      <SelectItem value="24h">Last 24 hours</SelectItem>
-                      <SelectItem value="7d">Last 7 days</SelectItem>
-                      <SelectItem value="30d">Last 30 days</SelectItem>
+                    <SelectContent className="bg-slate-950 border-slate-800 text-slate-300">
+                      <SelectItem value="CLIENT" className="focus:bg-indigo-600 focus:text-white text-sm">CLIENT (User)</SelectItem>
+                      <SelectItem value="ADMIN" className="focus:bg-indigo-600 focus:text-white text-sm">ADMIN (Full Authority)</SelectItem>
+                      <SelectItem value="DELIVERY" className="focus:bg-indigo-600 focus:text-white text-sm">DELIVERY (Logistics Operations)</SelectItem>
+                      <SelectItem value="STOCK" className="focus:bg-indigo-600 focus:text-white text-sm">STOCK (Warehouse & Inventory)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {stats.map(stat => {
-                    const IconComponent = stat.icon;
-                    return (
-                      <Card key={stat.title} className="bg-slate-900/60 border-slate-800 shadow-sm backdrop-blur-sm">
-                        <CardContent className="p-5 flex flex-col justify-between h-full">
-                          <div className="flex items-center justify-between">
-                            <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center shrink-0 border border-slate-700/50">
-                              <IconComponent className="h-5 w-5 text-indigo-400" />
-                            </div>
-                            <div className={cn(
-                              "flex items-center gap-0.5 text-xs font-bold font-mono px-1.5 py-0.5 rounded",
-                              stat.trend === 'up' ? 'text-emerald-400 bg-emerald-500/10' : 'text-rose-400 bg-rose-500/10'
-                            )}>
-                              {stat.change}
-                            </div>
-                          </div>
-                          <div className="mt-4">
-                            <p className="text-2xl font-bold tracking-tight text-white truncate">{stat.value}</p>
-                            <p className="text-xs font-semibold text-slate-400 tracking-wide uppercase mt-0.5 truncate">{stat.title}</p>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )
-                  })}
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  <Card className="lg:col-span-2 bg-slate-900/60 border-slate-800 shadow-sm backdrop-blur-sm">
-                    <CardHeader className="p-5">
-                      <CardTitle className="text-base font-semibold text-white">Revenue Inflow Timeline</CardTitle>
-                      <CardDescription className="text-xs text-slate-400">Monthly conversion margins mapped over active billing cycles.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-5 pt-0">
-                      <div className="h-48 sm:h-60 flex items-end justify-between gap-2 pt-4">
-                        {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'].map((month, i) => (
-                          <div key={month} className="flex-1 flex flex-col items-center gap-2 group">
-                            <div className="w-full bg-slate-800 rounded-t relative overflow-hidden h-full flex flex-col justify-end">
-                              <div 
-                                className="w-full bg-indigo-500 hover:bg-indigo-400 transition-all cursor-pointer rounded-t"
-                                style={{ height: `${45 + (i * 9)}%` }}
-                              />
-                            </div>
-                            <span className="text-[11px] text-slate-400 font-medium font-mono">{month}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="bg-slate-900/60 border-slate-800 shadow-sm backdrop-blur-sm">
-                    <CardHeader className="p-5">
-                      <CardTitle className="text-base font-semibold text-white">Top Augmented Products</CardTitle>
-                      <CardDescription className="text-xs text-slate-400">Most engaged models inside spatial interfaces.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-5 pt-0">
-                      <div className="space-y-4">
-                        {products && products.filter(p => p.isBestseller).slice(0, 4).map((product, i) => (
-                          <div key={product.id} className="flex items-center gap-3 p-1.5 rounded-lg hover:bg-slate-800/30 transition-colors">
-                            <span className="text-xs font-mono font-bold text-slate-600 w-4">{i + 1}</span>
-                            <div className="w-10 h-10 rounded bg-slate-800 overflow-hidden border border-slate-700/60 shrink-0">
-                              <img src={product.images?.[0] || "/placeholder.png"} alt={product.name} className="w-full h-full object-cover" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-semibold text-slate-200 truncate">{product.name}</p>
-                              <p className="text-xs text-slate-400 font-mono">{product.reviews || 0} spatial interactions</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                <Card className="bg-slate-900/60 border-slate-800 shadow-sm overflow-hidden backdrop-blur-sm">
-                  <div className="p-5 border-b border-slate-800 flex justify-between items-center">
-                    <div>
-                      <CardTitle className="text-base font-semibold text-white">Recent Store Operations</CardTitle>
-                      <CardDescription className="text-xs text-slate-400">Live feed monitoring client execution payloads.</CardDescription>
-                    </div>
-                  </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full min-w-[700px] text-left text-sm">
-                      <thead>
-                        <tr className="bg-slate-800/40 text-slate-400 text-xs font-semibold uppercase tracking-wider border-b border-slate-800">
-                          <th className="p-4 px-5">Order ID</th>
-                          <th className="p-4 px-5">Customer Profile</th>
-                          <th className="p-4 px-5">Units</th>
-                          <th className="p-4 px-5 text-right">Total Net</th>
-                          <th className="p-4 px-5 text-center">Fulfillment Status</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-800/40 font-medium text-slate-300">
-                        {recentOrders.map(order => (
-                          <tr key={order.id} className="hover:bg-slate-800/20 transition-colors">
-                            <td className="p-4 px-5 font-mono text-xs text-slate-400 font-bold">{order.id}</td>
-                            <td className="p-4 px-5 text-white font-semibold">{order.customer}</td>
-                            <td className="p-4 px-5 font-mono text-xs text-slate-400">{order.products} elements</td>
-                            <td className="p-4 px-5 text-right font-mono text-white font-bold">{formatPrice(order.total)}</td>
-                            <td className="p-4 px-5 text-center">
-                              <Badge className={cn("text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 border bg-transparent", getOrderStatusColor(order.status))}>
-                                {order.status}
-                              </Badge>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </Card>
-              </>
-            )}
-
-            {activeTab === 'manage accounts' && (
-              <div className="space-y-6 animate-in fade-in duration-200">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div>
-                    <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">System Access Control</h1>
-                    <p className="text-sm text-slate-400">Configure client profiles, worker assignments, and localized visibility parameters.</p>
-                  </div>
-                  <Button 
-                    onClick={() => setIsModalOpen(true)} 
-                    className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold flex items-center gap-2 text-sm shadow-md"
-                  >
-                    <UserPlus className="w-4 h-4" /> Provision Account
+                <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800/60 mt-2">
+                  <Button type="button" variant="ghost" onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-white hover:bg-slate-800/60 h-10 font-semibold text-sm px-4">
+                    Abort
+                  </Button>
+                  <Button type="submit" className="bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-600/10 h-10 font-bold text-sm px-5">
+                    Provision Entry
                   </Button>
                 </div>
-
-                <Tabs defaultValue="users" className="w-full space-y-6">
-                  <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center bg-slate-900/40 p-2 rounded-xl border border-slate-800">
-                    <TabsList className="bg-slate-950 border border-slate-800/80">
-                      <TabsTrigger value="users" className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white font-medium text-sm px-4">
-                        Users ({clientAccounts.length})
-                      </TabsTrigger>
-                      <TabsTrigger value="workers" className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white font-medium text-sm px-4">
-                        Workers ({workerAccounts.length})
-                      </TabsTrigger>
-                    </TabsList>
-
-                    <div className="relative w-full sm:w-80">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                      <Input 
-                        placeholder="Search profiles by identifier keywords..." 
-                        value={accountSearch}
-                        onChange={(e) => setAccountSearch(e.target.value)}
-                        className="w-full pl-9 h-9 bg-slate-950 border-slate-800 text-slate-200 focus-visible:ring-indigo-600" 
-                      />
-                    </div>
-                  </div>
-
-                  <TabsContent value="users" className="m-0">
-                    <Card className="bg-slate-900/60 border-slate-800 shadow-sm overflow-hidden backdrop-blur-sm">
-                      <div className="p-5 border-b border-slate-800">
-                        <CardTitle className="text-base font-semibold text-white">Website Clients</CardTitle>
-                        <CardDescription className="text-xs text-slate-400">Registered platform accounts executing general customer workflows.</CardDescription>
-                      </div>
-                      {renderAccountTable(clientAccounts)}
-                    </Card>
-                  </TabsContent>
-
-                  <TabsContent value="workers" className="m-0">
-                    <Card className="bg-slate-900/60 border-slate-800 shadow-sm overflow-hidden backdrop-blur-sm">
-                      <div className="p-5 border-b border-slate-800">
-                        <CardTitle className="text-base font-semibold text-white">Website Workers</CardTitle>
-                        <CardDescription className="text-xs text-slate-400">Internal enterprise staff maintaining operations, logistics, and campaigns.</CardDescription>
-                      </div>
-                      {renderAccountTable(workerAccounts)}
-                    </Card>
-                  </TabsContent>
-                </Tabs>
-              </div>
-            )}
-
-          </div>
-        </main>
-      </div>
-
-      {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-150">
-          <Card className="w-full max-w-md bg-slate-900 border-slate-800 text-slate-100 shadow-2xl relative animate-in zoom-in-95 duration-150">
-            <button 
-              onClick={() => setIsModalOpen(false)} 
-              className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors"
-            >
-              <X className="h-5 w-5" />
-            </button>
-            <CardHeader>
-              <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
-                <UserPlus className="text-indigo-400 w-5 h-5" /> Provision Profile Mapping
-              </CardTitle>
-              <CardDescription className="text-slate-400 text-xs">
-                Deploy system handles directly into the active registration registers.
-              </CardDescription>
-            </CardHeader>
-            <form onSubmit={handleProvisionAccount}>
-              <CardContent className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-300 tracking-wide uppercase">Full Identity Name</label>
-                  <Input 
-                    required
-                    name="username"
-                    placeholder="User Name"
-                    value={newName}
-                    onChange={(e) => setNewName(e.target.value)}
-                    className="bg-slate-950 border-slate-800 text-slate-200 focus-visible:ring-indigo-600"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-300 tracking-wide uppercase">Contact Routing Email</label>
-                  <Input 
-                    required
-                    name="email"
-                    type="email"
-                    placeholder="user@gmail.com"
-                    value={newEmail}
-                    onChange={(e) => setNewEmail(e.target.value)}
-                    className="bg-slate-950 border-slate-800 text-slate-200 focus-visible:ring-indigo-600"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-300 tracking-wide uppercase">Security Authorization Key (Password)</label>
-                  <Input 
-                    required
-                    name="password"
-                    type="password"
-                    placeholder="••••••••••••"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="bg-slate-950 border-slate-800 text-slate-200 focus-visible:ring-indigo-600"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-300 tracking-wide uppercase">Communications Pipeline (Phone Number)</label>
-                  <Input 
-                    required
-                    name="phoneNumber"
-                    type="tel"
-                    placeholder="+213 XXXXXXXXX"
-                    value={newPhone}
-                    onChange={(e) => setNewPhone(e.target.value)}
-                    className="bg-slate-950 border-slate-800 text-slate-200 focus-visible:ring-indigo-600"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-300 tracking-wide uppercase">System Security Role</label>
-                  <select 
-                    name="role"
-                    value={newRole}
-                    onChange={(e) => setNewRole(e.target.value)}
-                    className="w-full h-10 px-3 rounded-md bg-slate-950 border border-slate-800 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 appearance-none"
-                  >
-                    <option value="USER">User (Client)</option>
-                    <option value="MARKETING MANAGER">Marketing Manager</option>
-                    <option value="STOCK">Stock Manager</option>
-                    <option value="DELIVERY">Delivery Personnel</option>
-                    <option value="ADMIN">System Administrator</option>
-                  </select>
-                </div>
               </CardContent>
-              <div className="p-6 pt-0 flex justify-end gap-3">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setIsModalOpen(false)}
-                  className="border-slate-800 bg-transparent text-slate-300 hover:bg-slate-800 hover:text-white"
-                >
-                  Abort
-                </Button>
-                <Button 
-                  type="submit"
-                  className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold"
-                >
-                  Commit Entry
-                </Button>
-              </div>
             </form>
           </Card>
         </div>

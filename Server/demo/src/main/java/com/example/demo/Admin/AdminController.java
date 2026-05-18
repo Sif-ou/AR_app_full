@@ -10,6 +10,7 @@ import com.example.demo.User.UserRepository;
 import com.example.demo.Role.Role;
 import com.example.demo.Role.RoleRepository;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -101,6 +102,38 @@ public ResponseEntity<?> toggleUserStatus(
         "message", "User account '" + user.getUsername() + "' has been successfully " + statusText,
         "active", user.isActive()
     ));
+}
+
+
+
+@GetMapping("/accounts")
+public ResponseEntity<?> getAllAccounts() {
+    try {
+        // 1. Grab all raw entities from your PostgreSQL database
+        List<User> allUsers = userRepository.findAll();
+        
+        // 2. Flatten and filter out sensitive data fields dynamically
+        List<Map<String, Object>> sanitizedAccounts = allUsers.stream()
+            .map(user -> {
+                Map<String, Object> accountMap = new java.util.HashMap<>();
+                accountMap.put("id", user.getId());
+                accountMap.put("username", user.getUsername());
+                accountMap.put("email", user.getEmail());
+                accountMap.put("phoneNumber", user.getPhoneNum()); // Map database Integer field
+                accountMap.put("active", user.isActive());
+                
+                // Keep the role down to a simple, un-nested text string for the React table
+                accountMap.put("roleName", user.getRole() != null ? user.getRole().getRoleName() : "No Role");
+                return accountMap;
+            })
+            .toList();
+        
+        // 3. Return the sanitized list safely
+        return ResponseEntity.ok(sanitizedAccounts);
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("message", "Data sanitization layer error: " + e.getMessage()));
+    }
 }
 
 }
