@@ -113,7 +113,7 @@ export default function StockDashboard() {
     setFetchError(null);
 
     try {
-      // Fire parallel status requests across all REST resources
+      // Fire parallel requests across all REST resources
       const [resProducts, resColors, resVariants, resMedia] = await Promise.all([
         fetch(`${BASE_URL}/products`, { headers: { 'Authorization': `Bearer ${token}` } }),
         fetch(`${BASE_URL}/colors`, { headers: { 'Authorization': `Bearer ${token}` } }),
@@ -123,10 +123,9 @@ export default function StockDashboard() {
 
       // Handle explicit security failures dynamically
       if (resProducts.status === 403 || resColors.status === 403 || resVariants.status === 403 || resMedia.status === 403) {
-        setFetchError("Access Denied (403): Your token is expired or lacks STOCK authority permissions.");
+        setFetchError("Access Denied (403): Your token is expired or lacks permissions.");
         setIsAuthorized(false);
-        localStorage.removeItem("token"); // Clear bad token to avoid looping
-        setIsLoading(false);
+        localStorage.removeItem("token"); 
         return;
       }
 
@@ -147,8 +146,8 @@ export default function StockDashboard() {
       
     } catch (error) {
       console.error("Database connection failure:", error);
-      setFetchError("Network connection timeout or CORS mismatch during system replication setup.");
-    } bits: {
+      setFetchError("Network connection failure or CORS mismatch. If your Render backend is sleeping, please wait a minute and refresh.");
+    } finally {
       setIsLoading(false);
     }
   }, [getCleanAuthToken]);
@@ -276,7 +275,7 @@ export default function StockDashboard() {
   const handleSignOut = () => {
     localStorage.clear() 
     setIsAuthorized(false)
-    router.push('/account')
+    router.push('/accounts') // Changed to plural match your route
   }
 
   if (isAuthorized === null) {
@@ -299,7 +298,7 @@ export default function StockDashboard() {
             You lack inventory control clearance or your session expired. This layout requires an active session with 
             <code className="text-blue-400 bg-black px-1.5 py-0.5 rounded ml-1 text-xs font-mono">STOCK</code> security permissions.
           </CardDescription>
-          <Button onClick={() => router.push('/account')} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium">
+          <Button onClick={() => router.push('/accounts')} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium">
             Go to Login
           </Button>
         </Card>
