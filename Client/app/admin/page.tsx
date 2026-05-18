@@ -178,25 +178,6 @@ const handleProvisionAccount = async (e: React.FormEvent) => {
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   useEffect(() => {
     const token = localStorage.getItem('token')
     const userRole = localStorage.getItem('userRole')
@@ -325,7 +306,7 @@ const handleProvisionAccount = async (e: React.FormEvent) => {
               <td className="p-4 px-5">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded bg-slate-800 border border-slate-700/60 flex items-center justify-center text-slate-300 font-bold font-mono text-xs">
-                    {account.name.split(' ').map(n => n[0]).join('')}
+                    {account.name ? account.name.split(' ').map(n => n[0]).join('') : 'U'}
                   </div>
                   <div>
                     <span className="text-white font-semibold block text-sm">{account.name}</span>
@@ -339,7 +320,7 @@ const handleProvisionAccount = async (e: React.FormEvent) => {
               <td className="p-4 px-5">
                 <div className="flex items-center gap-1.5 text-slate-200 text-sm">
                   <Shield className="w-4 h-4 text-indigo-400 shrink-0" />
-                  <span>{account.role}</span>
+                  <span className="text-xs font-mono bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700/40">{account.role}</span>
                 </div>
               </td>
 
@@ -497,11 +478,11 @@ const handleProvisionAccount = async (e: React.FormEvent) => {
             </div>
             <div className="flex items-center gap-2 sm:gap-4 ml-4">
               <Link href="/" target="_self" className="sm:target-blank">
-  <Button variant="outline" size="sm" className="bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white">
-    <Eye className="h-4 w-4 mr-0 sm:mr-2 text-indigo-400" />
-    <span className="hidden sm:inline">View Live Store</span>
-  </Button>
-</Link>
+                <Button variant="outline" size="sm" className="bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white">
+                  <Eye className="h-4 w-4 mr-0 sm:mr-2 text-indigo-400" />
+                  <span className="hidden sm:inline">View Live Store</span>
+                </Button>
+              </Link>
             </div>
           </div>
         </header>
@@ -727,6 +708,7 @@ const handleProvisionAccount = async (e: React.FormEvent) => {
                   <label className="text-xs font-semibold text-slate-300 tracking-wide uppercase">Full Identity Name</label>
                   <Input 
                     required
+                    name="username"
                     placeholder="User Name"
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
@@ -737,24 +719,51 @@ const handleProvisionAccount = async (e: React.FormEvent) => {
                   <label className="text-xs font-semibold text-slate-300 tracking-wide uppercase">Contact Routing Email</label>
                   <Input 
                     required
+                    name="email"
                     type="email"
-                    placeholder="user@Gmail.com"
+                    placeholder="user@gmail.com"
                     value={newEmail}
                     onChange={(e) => setNewEmail(e.target.value)}
                     className="bg-slate-950 border-slate-800 text-slate-200 focus-visible:ring-indigo-600"
                   />
                 </div>
                 <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-300 tracking-wide uppercase">Security Authorization Key (Password)</label>
+                  <Input 
+                    required
+                    name="password"
+                    type="password"
+                    placeholder="••••••••••••"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="bg-slate-950 border-slate-800 text-slate-200 focus-visible:ring-indigo-600"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-300 tracking-wide uppercase">Communications Pipeline (Phone Number)</label>
+                  <Input 
+                    required
+                    name="phoneNumber"
+                    type="tel"
+                    placeholder="+213 XXXXXXXXX"
+                    value={newPhone}
+                    onChange={(e) => setNewPhone(e.target.value)}
+                    className="bg-slate-950 border-slate-800 text-slate-200 focus-visible:ring-indigo-600"
+                  />
+                </div>
+                <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-slate-300 tracking-wide uppercase">System Security Role</label>
                   <select 
+                    name="role"
                     value={newRole}
                     onChange={(e) => setNewRole(e.target.value)}
-                    className="w-full h-10 px-3 rounded-md bg-slate-950 border border-slate-800 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                    className="w-full h-10 px-3 rounded-md bg-slate-950 border border-slate-800 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 appearance-none"
                   >
-                    <option value="User">User (Client)</option>
-                    <option value="Marketing Manager">Marketing Manager</option>
-                    <option value="Stock Manager">Stock Manager</option>
-                    <option value="Delivery">Delivery</option>
+                    <option value="USER">User (Client)</option>
+                    <option value="MARKETING MANAGER">Marketing Manager</option>
+                    <option value="STOCK">Stock Manager</option>
+                    <option value="DELIVERY">Delivery Personnel</option>
+                    <option value="ADMIN">System Administrator</option>
                   </select>
                 </div>
               </CardContent>

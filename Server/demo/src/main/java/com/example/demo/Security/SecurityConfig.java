@@ -51,6 +51,7 @@ public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter, UserDetailsService 
                 .requestMatchers("/api/auth/register").permitAll()
                 .requestMatchers("/api/auth/login").permitAll()
                 .requestMatchers("/api/auth/verify-code").permitAll()
+                .requestMatchers("/api/auth/resend-code").permitAll()
                 .requestMatchers("/api/public/**").permitAll()
                 .requestMatchers("/api/chat/**").permitAll()
                 .requestMatchers("/api/add/colors").permitAll()
