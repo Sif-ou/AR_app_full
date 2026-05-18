@@ -20,7 +20,12 @@ export default function AccountPage() {
 const [isVerifying, setIsVerifying] = useState(false);
   const [showConfirmationMessage, setShowConfirmationMessage] = useState(false);
   const router = useRouter()
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+  if (typeof window !== 'undefined') {
+    return !!localStorage.getItem('token');
+  }
+  return false;
+});
   const [activeTab, setActiveTab] = useState('login')
   const [activeSection, setActiveSection] = useState('profile') 
 const [registeredEmail, setRegisteredEmail] = useState('');
@@ -71,26 +76,27 @@ const [registeredPassword, setRegisteredPassword] = useState('');
   }
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    const savedName = localStorage.getItem('username')
-    const savedEmail = localStorage.getItem('userEmail')
-    const savedRole = localStorage.getItem('userRole')
+  const token = localStorage.getItem('token')
+  const savedName = localStorage.getItem('username')
+  const savedEmail = localStorage.getItem('userEmail')
+  const savedRole = localStorage.getItem('userRole')
+
+  if (token) {
+    setLoggedInUser({
+      name: savedName || 'User Account',
+      email: savedEmail || ''
+    });
 
     if (savedRole === 'ADMIN') {
-      router.push('/admin')
+      router.push('/admin');
       return;
     }
+  } else {
+    setIsLoggedIn(false);
+  }
 
-    if (token) {
-      setIsLoggedIn(true)
-      setLoggedInUser({
-        name: savedName || 'User Account',
-        email: savedEmail || ''
-      })
-    }
-
-    setIsCheckingRole(false) 
-  }, [])
+  setIsCheckingRole(false);
+}, [router]);
 
   const handleRemoveWishlist = (itemToRemove: string) => {
     setUserState((prev) => ({
