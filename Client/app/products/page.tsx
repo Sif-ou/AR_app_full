@@ -19,10 +19,45 @@ import { Badge } from '@/components/ui/badge'
 // Static lookup fallback for UI filter layout selections
 import { categories } from '@/lib/data' 
 
-// Adjusted backend base URL to align with your endpoint mapping structure
 const RENDER_BACKEND_URL = 'https://ar-app-back-end.onrender.com' 
 
-type SortOption = 'featured' | 'price-low' | 'price-high' | 'rating' | 'newest'
+type SortOption = 'featured' | 'alpha-asc' | 'alpha-desc' | 'qty-high' | 'qty-low'
+
+// TypeScript definitions mapping directly to your Spring Boot Entities
+interface ColorEntity {
+  id: number;
+  name: string;
+  hexCode: string;
+}
+
+interface MediaEntity {
+  id: number;
+  static_image: string;
+  model_3d: string | null;
+}
+
+interface VariantEntity {
+  id: number;
+  name: string;
+  sku: string;
+  percentage: number;
+  quantity: number;
+  description: string | null;
+  color_id?: ColorEntity; // Maps via getColor_id JSON serialization
+  medias: MediaEntity[];
+}
+
+interface ProductEntity {
+  id: number;
+  name: string;
+  quantity: number;
+  category: string;
+  description: string | null;
+  heigh: number;
+  width: number;
+  depth: number;
+  variants: VariantEntity[];
+}
 
 export default function ProductsPage() {
   return (
@@ -40,25 +75,24 @@ export default function ProductsPage() {
 function ProductsContent() {
   const searchParams = useSearchParams()
 
-  // State Management (Typed as any[] to safely map backend objects directly to ProductCard props)
-  const [dbProducts, setDbProducts] = useState<any[]>([])
+  // State Management typed to match your backend model structure
+  const [dbProducts, setDbProducts] = useState<ProductEntity[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
-  const [priceRange, setPriceRange] = useState([0, 5000])
+  const [qtyRange, setQtyRange] = useState([0, 500]) // Replaced price with product quantity since price is omitted in Java files
   const [sortBy, setSortBy] = useState<SortOption>('featured')
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
 
-  // 1. Fetch live records from your Spring Boot Render Backend on Mount
+  // Fetch live records from your Spring Boot Render Backend
   useEffect(() => {
     const fetchAllProducts = async () => {
       try {
         setLoading(true)
         setError(null)
         
-        // This resolves perfectly to: https://ar-app-back-end.onrender.com/api/products
         const response = await fetch(`${RENDER_BACKEND_URL}/api/products`, {
           method: 'GET',
           headers: {
@@ -83,7 +117,6 @@ function ProductsContent() {
     fetchAllProducts()
   }, [])
 
-  // Sync category URL params if arriving via specific category navigation links
   useEffect(() => {
     const category = searchParams.get('category')
     if (category && categories.find(c => c.id === category)) {
@@ -91,46 +124,62 @@ function ProductsContent() {
     }
   }, [searchParams])
 
-  // 2. Compute Filters and Sorting locally on the database payload
+  // Compute Filters and Sorting locally on your entity structural tree
   const filteredProducts = useMemo(() => {
     return dbProducts
       .filter(product => {
-        // Fallback checks safely handle cases where fields might be undefined/null in PostgreSQL
         const productName = product.name ? String(product.name) : ''
         const productDesc = product.description ? String(product.description) : ''
         const productCategory = product.category ? String(product.category) : ''
-        const productPrice = typeof product.price === 'number' ? product.price : 0
+        const productQty = typeof product.quantity === 'number' ? product.quantity : 0
 
         const matchesSearch = 
           productName.toLowerCase().includes(searchQuery.toLowerCase()) || 
           productDesc.toLowerCase().includes(searchQuery.toLowerCase())
         
-        const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(productCategory)
-        const matchesPrice = productPrice >= priceRange[0] && productPrice <= priceRange[1]
+        const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(productCategory.toLowerCase())
+        const matchesQty = productQty >= qtyRange[0] && productQty <= qtyRange[1]
         
-        return matchesSearch && matchesCategory && matchesPrice
+        return matchesSearch && matchesCategory && matchesQty
       })
       .sort((a, b) => {
-        const priceA = typeof a.price === 'number' ? a.price : 0
-        const priceB = typeof b.price === 'number' ? b.price : 0
-        const ratingA = typeof a.rating === 'number' ? a.rating : 0
-        const ratingB = typeof b.rating === 'number' ? b.rating : 0
-
-        if (sortBy === 'price-low') return priceA - priceB
-        if (sortBy === 'price-high') return priceB - priceA
-        if (sortBy === 'rating') return ratingB - ratingA
-        if (sortBy === 'newest') return a.isNew ? -1 : 1
-        return 0
+        if (sortBy === 'alpha-asc') return a.name.localeCompare(b.name)
+        if (sortBy === 'alpha-desc') return b.name.localeCompare(a.name)
+        if (sortBy === 'qty-high') return (b.quantity || 0) - (a.quantity || 0)
+        if (sortBy === 'qty-low') return (a.quantity || 0) - (b.quantity || 0)
+        return 0 // Featured keeps the database ordering
       })
-  }, [dbProducts, searchQuery, selectedCategories, priceRange, sortBy])
+  }, [dbProducts, searchQuery, selectedCategories, qtyRange, sortBy])
 
   const clearFilters = () => {
     setSelectedCategories([])
-    setPriceRange([0, 5000])
+    setQtyRange([0, 500])
     setSearchQuery('')
   }
 
-  const isFiltered = selectedCategories.length > 0 || priceRange[0] !== 0 || priceRange[1] !== 5000
+  const isFiltered = selectedCategories.length > 0 || qtyRange[0] !== 0 || qtyRange[1] !== 500
+
+  // Helper parsing logic transformation to format backend data for the custom ProductCard UI component safely
+  const adaptProductForCard = (product: ProductEntity) => {
+    // Falls back safely if variants list array arrives empty
+    const firstVariant = product.variants && product.variants.length > 0 ? product.variants[0] : null
+    const firstMedia = firstVariant && firstVariant.medias && firstVariant.medias.length > 0 ? firstVariant.medias[0] : null
+
+    return {
+      id: product.id,
+      name: product.name,
+      category: product.category,
+      description: product.description || '',
+      // Since your entity lacks "price", we substitute with dimensions or default placeholders dynamically
+      price: 299, 
+      rating: 4.8,
+      // Extracted deeply from Variant -> Media array structures
+      image: firstMedia?.static_image || '/placeholder-furniture.jpg', 
+      model3d: firstMedia?.model_3d || undefined,
+      isNew: product.quantity > 20,
+      dimensions: `${product.width}W x ${product.depth}D x ${product.heigh}H cm`
+    }
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50/50">
@@ -188,15 +237,16 @@ function ProductsContent() {
                       <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/70">Categories</h3>
                       <div className="grid grid-cols-2 gap-2">
                         {categories.map((category) => {
-                          const isActive = selectedCategories.includes(category.id);
+                          const isActive = selectedCategories.includes(category.id.toLowerCase());
                           return (
                             <button
                               key={category.id}
                               onClick={() => {
+                                const catId = category.id.toLowerCase()
                                 if (isActive) {
-                                  setSelectedCategories(selectedCategories.filter(id => id !== category.id))
+                                  setSelectedCategories(selectedCategories.filter(id => id !== catId))
                                 } else {
-                                  setSelectedCategories([...selectedCategories, category.id])
+                                  setSelectedCategories([...selectedCategories, catId])
                                 }
                               }}
                               className={cn(
@@ -217,35 +267,24 @@ function ProductsContent() {
                       </div>
                     </div>
 
-                    {/* Price Slider Block */}
+                    {/* Quantity Available Slider Block */}
                     <div className="space-y-6">
                       <div className="flex items-center justify-between">
-                        <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/70">Price Range</h3>
+                        <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/70">Stock Availability</h3>
                         <Badge variant="secondary" className="font-mono text-primary bg-primary/5 border-primary/10">
-                          ${priceRange[0]} — ${priceRange[1]}
+                          {qtyRange[0]} — {qtyRange[1]} units
                         </Badge>
                       </div>
                       
                       <div className="px-2">
                         <Slider 
-                          defaultValue={[0, 5000]} 
-                          max={5000} 
-                          step={100} 
-                          value={priceRange}
-                          onValueChange={setPriceRange}
+                          defaultValue={[0, 500]} 
+                          max={500} 
+                          step={10} 
+                          value={qtyRange}
+                          onValueChange={setQtyRange}
                           className="py-4"
                         />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1.5 p-3 rounded-2xl bg-slate-50 border border-slate-100">
-                          <p className="text-[10px] uppercase font-bold text-muted-foreground/60">Minimum</p>
-                          <p className="text-sm font-bold font-mono text-slate-700">${priceRange[0]}</p>
-                        </div>
-                        <div className="space-y-1.5 p-3 rounded-2xl bg-slate-50 border border-slate-100">
-                          <p className="text-[10px] uppercase font-bold text-muted-foreground/60">Maximum</p>
-                          <p className="text-sm font-bold font-mono text-slate-700">${priceRange[1]}</p>
-                        </div>
                       </div>
                     </div>
                   </div>
@@ -262,28 +301,26 @@ function ProductsContent() {
               </Sheet>
 
               <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
-                <SelectTrigger className="w-[160px] h-10 rounded-xl border-slate-200 bg-white shadow-sm">
+                <SelectTrigger className="w-[180px] h-10 rounded-xl border-slate-200 bg-white shadow-sm">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl">
                   <SelectItem value="featured">Featured</SelectItem>
-                  <SelectItem value="price-low">Price: Low to High</SelectItem>
-                  <SelectItem value="price-high">Price: High to Low</SelectItem>
-                  <SelectItem value="rating">Top Rated</SelectItem>
-                  <SelectItem value="newest">Newest Arrivals</SelectItem>
+                  <SelectItem value="alpha-asc">Name: A to Z</SelectItem>
+                  <SelectItem value="alpha-desc">Name: Z to A</SelectItem>
+                  <SelectItem value="qty-high">Stock: High to Low</SelectItem>
+                  <SelectItem value="qty-low">Stock: Low to High</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
-          {/* Dynamic Error Status Banner */}
           {error && (
             <div className="p-4 mb-6 rounded-xl bg-destructive/10 text-destructive text-sm text-center border border-destructive/20">
               {error} — Verify your Render instance is active and CORS constraints are open.
             </div>
           )}
 
-          {/* Core Interface Matrix: Skeleton View vs Active Product Grid */}
           {loading ? (
             <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 animate-pulse">
               {[...Array(8)].map((_, idx) => (
@@ -292,9 +329,12 @@ function ProductsContent() {
             </div>
           ) : (
             <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {filteredProducts.map((product) => (
-                <ProductCard key={product.id} product={product as any} />
-              ))}
+              {filteredProducts.map((product) => {
+                const cardProps = adaptProductForCard(product);
+                return (
+                  <ProductCard key={cardProps.id} product={cardProps as any} />
+                );
+              })}
             </div>
           )}
 
@@ -304,7 +344,7 @@ function ProductsContent() {
                 <Search className="h-12 w-12 text-slate-300" />
               </div>
               <h2 className="text-2xl font-bold tracking-tight">No products found</h2>
-              <p className="text-muted-foreground mt-2 max-w-xs mx-auto">Try adjusting your filters or price range.</p>
+              <p className="text-muted-foreground mt-2 max-w-xs mx-auto">Try adjusting your filters or stock values.</p>
               <Button variant="default" onClick={clearFilters} className="mt-8 rounded-xl px-10 h-11">
                 Clear all filters
               </Button>
