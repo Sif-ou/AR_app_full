@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Package, 
   AlertTriangle, 
@@ -13,7 +13,8 @@ import {
   Search,
   CheckCircle,
   Truck,
-  X
+  X,
+  LogOut
 } from 'lucide-react';
 
 // --- TypeScript Interfaces ---
@@ -50,10 +51,14 @@ const INITIAL_STOCK: StockItem[] = [
 const CATEGORIES = ["Living Room", "Dining", "Office", "Bedroom", "Lighting"];
 
 export default function StockDashboard() {
-  // --- ROLE GATEWAY ---
-  // Replace this placeholder string with your actual active session role hook/state 
-  // e.g., const userRole = session?.user?.role 
-  const userRole: string = 'STOCK'; 
+  // --- ROLE & AUTH STATE MANAGEMENT ---
+  // Initializes the state checking local storage (or defaults to 'STOCK' if none exists yet)
+  const [userRole, setUserRole] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('role') || 'STOCK';
+    }
+    return 'STOCK';
+  });
 
   const [inventory, setInventory] = useState<StockItem[]>(INITIAL_STOCK);
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -72,6 +77,15 @@ export default function StockDashboard() {
     supplier: ''
   });
 
+  // --- SIGN OUT LOGIC ---
+  const handleSignOut = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('role');
+      localStorage.removeItem('token'); // Clears standard auth token if tracking one
+    }
+    setUserRole(null); // Instantly triggers lock-out UI state
+  };
+
   // Strict enforcement: Block any user whose role is NOT explicitly 'STOCK'
   if (userRole !== 'STOCK') {
     return (
@@ -79,9 +93,12 @@ export default function StockDashboard() {
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 max-w-sm text-center shadow-xl">
           <AlertTriangle className="w-12 h-12 text-rose-500 mx-auto mb-4" />
           <h2 className="text-lg font-bold text-white mb-2">Access Restrained</h2>
-          <p className="text-sm text-slate-400">
-            This module is restricted to user accounts containing authorized 'STOCK' management clearances.
+          <p className="text-sm text-slate-400 mb-4">
+            This module is restricted. Your session has ended or you lack authorized 'STOCK' management clearances.
           </p>
+          <div className="text-xs text-slate-500 bg-slate-950 p-2 rounded font-mono border border-slate-800">
+            Status: Unauthorized / Signed Out
+          </div>
         </div>
       </div>
     );
@@ -102,7 +119,6 @@ export default function StockDashboard() {
     e.preventDefault();
     if (!newStock.sku || !newStock.name || !newStock.supplier) return;
 
-    // Determine initial status automatically based on logic thresholds
     let calculatedStatus: 'In Stock' | 'Low Stock' | 'Out of Stock' = 'In Stock';
     if (newStock.currentStock === 0) {
       calculatedStatus = 'Out of Stock';
@@ -124,7 +140,6 @@ export default function StockDashboard() {
 
     setInventory(prev => [completedItem, ...prev]);
     
-    // Reset fields and close modal
     setNewStock({
       sku: '',
       name: '',
@@ -197,6 +212,15 @@ export default function StockDashboard() {
           >
             <Plus className="w-4 h-4" />
             Receive Stock
+          </button>
+
+          {/* --- SIGN OUT BUTTON --- */}
+          <button 
+            onClick={handleSignOut}
+            className="flex items-center gap-2 bg-slate-800 hover:bg-rose-950/40 text-slate-300 hover:text-rose-400 border border-slate-700 hover:border-rose-900/50 px-4 py-2 rounded-lg text-sm font-medium transition-all"
+          >
+            <LogOut className="w-4 h-4" />
+            Sign Out
           </button>
         </div>
       </header>
@@ -289,10 +313,10 @@ export default function StockDashboard() {
                 <div>
                   <label className="block text-xs font-semibold uppercase text-slate-400 mb-1.5">Manufacturer / Supplier *</label>
                   <input 
-                    type="text" required placeholder="e.g. محل الابطال."
+                    type="text" required placeholder="e.g. TimberCraft Logistics"
                     value={newStock.supplier} onChange={e => setNewStock({...newStock, supplier: e.target.value})}
                     className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-slate-700"
-                />
+                  />
                 </div>
               </div>
 
@@ -349,8 +373,6 @@ export default function StockDashboard() {
 
       {/* --- WAREHOUSE METRICS & CAPACITY BLOCK --- */}
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        
-        {/* Fulfillment Activities Log */}
         <div className="lg:col-span-2 bg-slate-900/60 border border-slate-800 rounded-xl p-5 backdrop-blur-sm">
           <div className="flex items-center justify-between mb-4">
             <div>
@@ -386,7 +408,6 @@ export default function StockDashboard() {
           </div>
         </div>
 
-        {/* Warehouse Floor Volumetric Capacity Gauge */}
         <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5 backdrop-blur-sm flex flex-col justify-between">
           <div>
             <h3 className="text-base font-semibold text-white">Volumetric Staging Capacity</h3>
@@ -445,13 +466,11 @@ export default function StockDashboard() {
 
                 return (
                   <tr key={item.sku} className="hover:bg-slate-800/20 transition-colors group">
-                    {/* Part Identity Details */}
                     <td className="py-3.5 px-5">
                       <span className="text-white block font-semibold text-sm">{item.name}</span>
                       <span className="text-[11px] text-slate-400 font-mono tracking-wide">{item.sku} • {item.category}</span>
                     </td>
                     
-                    {/* Status Rules */}
                     <td className="py-3.5 px-5">
                       {item.status === 'In Stock' && (
                         <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
@@ -470,7 +489,6 @@ export default function StockDashboard() {
                       )}
                     </td>
                     
-                    {/* Visual Capacity Stack bar */}
                     <td className="py-3.5 px-5 text-right">
                       <span className="block font-mono text-white text-sm">{item.currentStock} units</span>
                       <div className="w-24 bg-slate-800 h-1 rounded-full overflow-hidden inline-block mt-1">
