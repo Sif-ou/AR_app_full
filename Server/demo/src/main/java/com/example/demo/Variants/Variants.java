@@ -1,8 +1,13 @@
 package com.example.demo.Variants;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.example.demo.Color.Color;
+import com.example.demo.Media.Media;
 import com.example.demo.Product.Product;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -10,6 +15,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -43,6 +49,11 @@ public class Variants {
 
     @Column(nullable = true)
     private String description ;
+
+
+@OneToMany(mappedBy = "variant", cascade = CascadeType.ALL, orphanRemoval = true)
+private List<Media> medias = new ArrayList<>();
+
 
 
     public Variants(Long id, Product product, Color color, String name, String sku , int percentage , int quantity) {

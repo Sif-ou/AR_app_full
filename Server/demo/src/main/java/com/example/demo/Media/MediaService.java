@@ -2,6 +2,9 @@ package com.example.demo.Media;
 
 import com.example.demo.Variants.Variants;
 import com.example.demo.Variants.VariantsRepository;
+
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
 @Service
@@ -37,4 +40,23 @@ public class MediaService {
         // 4. Save to Database
         return mediaRepository.save(media);
     }
+
+
+/**
+     * GET: Pulls all images and 3D models out of the database.
+     */
+    public List<Media> getAllMedia() {
+        return mediaRepository.findAll();
+    }
+
+    /**
+     * DELETE: Isolated removal of a media row. No child constraints to handle!
+     */
+    public void deleteMedia(Long id) {
+        if (!mediaRepository.existsById(id)) {
+            throw new IllegalArgumentException("Media asset with ID " + id + " does not exist.");
+        }
+        mediaRepository.deleteById(id);
+    }
+
 }

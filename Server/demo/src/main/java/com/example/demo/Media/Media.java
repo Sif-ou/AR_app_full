@@ -1,5 +1,4 @@
 package com.example.demo.Media;
-
 import com.example.demo.Variants.Variants;
 
 import jakarta.persistence.Column;
@@ -9,6 +8,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+
 import jakarta.persistence.Table;
 
 @Entity
@@ -28,6 +28,7 @@ public class Media {
     private String static_image ;
 
     private String model_3d ;
+
 
     public Media(Long id, Variants variant, String static_image, String model_3d) {
         this.id = id;

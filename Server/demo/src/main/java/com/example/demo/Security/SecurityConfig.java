@@ -56,8 +56,9 @@ public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter, UserDetailsService 
                 .requestMatchers("/api/chat/**").permitAll()
                 .requestMatchers("/api/add/colors").hasAuthority("STOCK")
                 .requestMatchers("/api/add/products").hasAuthority("STOCK")
-                .requestMatchers("/api/add/variants").hasAuthority("STOCK")
-                .requestMatchers("/api/add/media").hasAuthority("STOCK")
+                .requestMatchers("/api/products").hasAuthority("STOCK")
+                .requestMatchers("/api/variants/**").hasAuthority("STOCK")
+                .requestMatchers("/api/media/**").hasAuthority("STOCK")
                 .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
 
                 // Everything else requires authentication

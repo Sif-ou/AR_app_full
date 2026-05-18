@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card, CardContent, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import {
@@ -19,17 +19,23 @@ import {
   Layers,
   History,
   TrendingUp,
-  Lock
+  Lock,
+  Loader2,
+  Maximize2
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-// Mock Data for Stock Management
-const mockInventory = [
-  { id: 'STK-001', name: 'Nordic Oak Dining Table', category: 'Tables', SKU: 'DK-NODT-01', stock: 12, status: 'in-stock', price: '$450' },
-  { id: 'STK-002', name: 'Ergonomic Mesh Office Chair', category: 'Chairs', SKU: 'DK-EMOC-04', stock: 3, status: 'low-stock', price: '$180' },
-  { id: 'STK-003', name: 'Minimalist Fabric Sofa 3-Seater', category: 'Sofas', SKU: 'DK-MFS3-09', stock: 0, status: 'out-of-stock', price: '$899' },
-  { id: 'STK-004', name: 'Industrial Metal Floor Lamp', category: 'Lighting', SKU: 'DK-IMFL-12', stock: 25, status: 'in-stock', price: '$75' },
-]
+// TS interface representing your Spring Boot Entity structure
+interface Product {
+  id: number;
+  name: string;
+  quantity: number;
+  category: string;
+  description: string;
+  heigh: number;
+  width: number;
+  depth: number;
+}
 
 export default function StockDashboard() {
   const router = useRouter()
@@ -37,39 +43,57 @@ export default function StockDashboard() {
   const [activeTab, setActiveTab] = useState('inventory')
   const [searchQuery, setSearchQuery] = useState('')
   
-  // State to determine if authorization evaluation is completed
+  // Dynamic API state definitions
+  const [inventory, setInventory] = useState<Product[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [fetchError, setFetchError] = useState<string | null>(null)
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null)
 
   // --- ROLE AND SECURITY VERIFICATION ---
   useEffect(() => {
-    // Replace this mock logic with your persistent user management hook or state if needed
-    // e.g., const user = JSON.parse(localStorage.getItem('user'))
     const mockUser = {
       isAuthenticated: true, 
-      roles: ["STOCK"] // If you remove "STOCK", it hits the access guard instantly.
+      roles: ["STOCK"] 
     }
-
     const hasStockAccess = mockUser.isAuthenticated && mockUser.roles.includes("STOCK");
-    
-    if (!hasStockAccess) {
-      setIsAuthorized(false)
-    } else {
-      setIsAuthorized(true)
-    }
+    setIsAuthorized(hasStockAccess)
   }, [])
 
-  // --- SIGN OUT HANDLER ---
+  // --- FETCH PRODUCTS FROM RENDER BACKEND ---
+  useEffect(() => {
+    if (!isAuthorized) return;
+
+    const fetchProducts = async () => {
+      try {
+        setIsLoading(true)
+        const response = await fetch('https://ar-app-back-end.onrender.com/api/products')
+        
+        if (!response.ok) {
+          throw new Error('Failed to retrieve inventory database updates.')
+        }
+        
+        const data = await response.json()
+        setInventory(data)
+        setFetchError(null)
+      } catch (err: any) {
+        setFetchError(err.message || 'Something went wrong fetching data.')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchProducts()
+  }, [isAuthorized])
+
   const handleSignOut = () => {
-    localStorage.clear()     // Wipes all local session states
-    router.replace('/')      // Redirects away instantly and prevents moving back via browser history
+    localStorage.clear()     
+    router.replace('/')      
   }
 
-  // Prevent flash or layout shifts while checking roles
   if (isAuthorized === null) {
     return <div className="min-h-screen bg-[#121212]" />
   }
 
-  // --- ACCESS GUARD RENDER ---
   if (!isAuthorized) {
     return (
       <div className="min-h-screen bg-[#121212] flex flex-col items-center justify-center p-6 font-sans antialiased">
@@ -79,7 +103,7 @@ export default function StockDashboard() {
           </div>
           <CardTitle className="text-xl font-bold text-white mb-2">Access Denied</CardTitle>
           <CardDescription className="text-zinc-400 text-sm mb-6">
-            You are not authenticated or your account lacks inventory control clearance. This layout requires an active session with 
+            You lack inventory control clearance. This layout requires an active session with 
             <code className="text-blue-400 bg-black px-1.5 py-0.5 rounded ml-1 text-xs font-mono">STOCK</code> security permissions.
           </CardDescription>
           <Button 
@@ -93,17 +117,21 @@ export default function StockDashboard() {
     )
   }
 
-  // --- STANDARD AUTHORIZED RENDER ---
+  // Filter backend products dynamically via frontend search bar
+  const filteredInventory = inventory.filter(item => 
+    item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.category.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
+  // Helper utility to calculate UI badge parameters based on SQL quantity limits
+  const getStockStatus = (qty: number) => {
+    if (qty === 0) return { label: 'Out of Stock', color: 'text-red-500' };
+    if (qty <= 5) return { label: 'Low Stock', color: 'text-amber-500' };
+    return { label: 'In Stock', color: 'text-green-400' };
+  }
+
   return (
     <div className="min-h-screen bg-[#121212] flex overflow-x-hidden text-slate-200">
-      {/* Mobile Sidebar Overlay */}
-      {sidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black/70 z-[51] lg:hidden backdrop-blur-sm" 
-          onClick={() => setSidebarOpen(false)} 
-        />
-      )}
-
       {/* Sidebar Navigation */}
       <aside className={cn(
         "fixed inset-y-0 left-0 z-[52] w-64 bg-zinc-950 border-r border-white/5 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:z-auto",
@@ -114,12 +142,7 @@ export default function StockDashboard() {
             <span className="font-bold text-xl tracking-tight flex items-center gap-2 text-white">
               <Layers className="text-blue-500 h-5 w-5" /> AR<span className="text-blue-500">Stock</span>
             </span>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="lg:hidden text-white hover:bg-white/5" 
-              onClick={() => setSidebarOpen(false)}
-            >
+            <Button variant="ghost" size="icon" className="lg:hidden text-white hover:bg-white/5" onClick={() => setSidebarOpen(false)}>
               <X className="h-6 w-6" />
             </Button>
           </div>
@@ -144,25 +167,16 @@ export default function StockDashboard() {
             ))}
           </nav>
 
-          {/* User Signout Area */}
           <div className="p-4 border-t border-white/5 bg-zinc-900/40">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-full bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-400 font-bold flex-shrink-0">
-                  S
-                </div>
+                <div className="w-9 h-9 rounded-full bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-400 font-bold flex-shrink-0">S</div>
                 <div className="truncate">
                   <p className="text-sm font-medium text-white truncate">Stock Manager</p>
                   <p className="text-[11px] text-zinc-500 font-mono">ID-8849</p>
                 </div>
               </div>
-              
-              {/* Functional Signout Button */}
-              <button 
-                onClick={handleSignOut} 
-                className="p-2 rounded-lg text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-all focus:outline-none"
-                title="Sign Out"
-              >
+              <button onClick={handleSignOut} className="p-2 rounded-lg text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-all focus:outline-none">
                 <LogOut className="h-5 w-5" />
               </button>
             </div>
@@ -172,14 +186,8 @@ export default function StockDashboard() {
 
       {/* Main Panel Content */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Mobile Header Bar */}
         <header className="bg-zinc-950 p-4 flex items-center justify-between border-b border-white/5 lg:hidden">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => setSidebarOpen(true)}
-            className="text-white hover:bg-white/5"
-          >
+          <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)} className="text-white hover:bg-white/5">
             <Menu className="h-6 w-6" />
           </Button>
           <span className="font-bold text-md tracking-tight flex items-center gap-2 text-white">
@@ -188,14 +196,13 @@ export default function StockDashboard() {
           <div className="w-6 h-6" />
         </header>
 
-        {/* Dashboard Actions and Content Views */}
         <main className="p-4 sm:p-6 space-y-6">
           {activeTab === 'inventory' && (
             <>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <h1 className="text-2xl font-bold text-white tracking-tight">Inventory Stock</h1>
-                  <p className="text-sm text-zinc-400">Monitor quantities, SKUs, and items cataloged across local warehouses.</p>
+                  <p className="text-sm text-zinc-400">Monitor quantities, dimensions, and categories linked to your live Render database.</p>
                 </div>
                 <Button className="bg-blue-600 hover:bg-blue-700 text-white font-medium flex items-center gap-2 self-start sm:self-auto shadow-lg shadow-blue-600/10">
                   <Plus className="h-4 w-4" /> Add Stock Item
@@ -207,7 +214,7 @@ export default function StockDashboard() {
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
                   <Input 
-                    placeholder="Search by product name or SKU..." 
+                    placeholder="Search by item title or category..." 
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-9 bg-zinc-900 border-white/10 text-white placeholder-zinc-500 focus-visible:ring-blue-500 focus-visible:ring-offset-0"
@@ -218,43 +225,69 @@ export default function StockDashboard() {
                 </Button>
               </div>
 
-              {/* Grid Render of Stock Elements */}
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
-                {mockInventory
-                  .filter(item => item.name.toLowerCase().includes(searchQuery.toLowerCase()) || item.SKU.toLowerCase().includes(searchQuery.toLowerCase()))
-                  .map(item => (
-                    <Card key={item.id} className="bg-zinc-900 border-none ring-1 ring-white/5 overflow-hidden transition-all hover:ring-white/10 shadow-xl">
-                      <CardContent className="p-5 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
-                        <div className="space-y-1.5 flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-xs font-mono font-semibold text-zinc-500">{item.SKU}</span>
-                            <Badge className="bg-zinc-800 text-zinc-400 hover:bg-zinc-800 border-none text-[10px] uppercase font-bold">{item.category}</Badge>
+              {/* API Loading / Error / Grid Layout Handling */}
+              {isLoading ? (
+                <div className="flex flex-col items-center justify-center py-20 gap-3 text-zinc-500">
+                  <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+                  <p className="text-sm animate-pulse">Synchronizing with Render application services...</p>
+                </div>
+              ) : fetchError ? (
+                <div className="flex flex-col items-center justify-center py-12 bg-red-500/5 rounded-xl border border-red-500/10 p-6 text-center">
+                  <AlertTriangle className="h-10 w-10 text-red-400 mb-2" />
+                  <p className="text-white font-semibold mb-1">Database Sync Error</p>
+                  <p className="text-xs text-zinc-400 max-w-sm">{fetchError}</p>
+                </div>
+              ) : filteredInventory.length === 0 ? (
+                <div className="text-center py-12 bg-zinc-900/30 rounded-xl border border-white/5">
+                  <p className="text-zinc-500 text-sm">No live items matched your search text options.</p>
+                </div>
+              ) : (
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {filteredInventory.map(item => {
+                    const status = getStockStatus(item.quantity);
+                    return (
+                      <Card key={item.id} className="bg-zinc-900 border-none ring-1 ring-white/5 overflow-hidden transition-all hover:ring-white/10 shadow-xl flex flex-col justify-between">
+                        <CardContent className="p-5 space-y-4 flex-1 flex flex-col justify-between">
+                          
+                          {/* Categorization Headers */}
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-xs font-mono font-medium text-zinc-500">ID: #{item.id}</span>
+                              <Badge className="bg-zinc-800 text-zinc-400 hover:bg-zinc-800 border-none text-[10px] uppercase font-bold">{item.category}</Badge>
+                            </div>
+                            <h3 className="font-bold text-base text-white line-clamp-1">{item.name}</h3>
+                            <p className="text-xs text-zinc-400 line-clamp-2 min-h-[2rem] leading-relaxed">{item.description || "No item description configured."}</p>
                           </div>
-                          <h3 className="font-bold text-lg text-white truncate">{item.name}</h3>
-                        </div>
 
-                        <div className="flex flex-row xl:items-center justify-between xl:justify-end gap-6 border-t border-white/5 pt-3 xl:border-none xl:pt-0">
-                          <div>
-                            <p className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider mb-0.5">Unit Value</p>
-                            <p className="font-semibold text-white">{item.price}</p>
+                          {/* Dimensions & Physical Metrics Block */}
+                          <div className="bg-zinc-950/50 rounded-lg p-2.5 border border-white/5 flex items-center justify-between text-[11px] font-mono text-zinc-400">
+                            <div className="flex items-center gap-1"><Maximize2 className="h-3 w-3 text-blue-500" /> Dim:</div>
+                            <div>{item.heigh || 0}H × {item.width || 0}W × {item.depth || 0}D cm</div>
                           </div>
-                          <div className="text-right min-w-[100px]">
-                            <p className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider mb-0.5">Available Stock</p>
-                            <span className={cn(
-                              "text-md font-bold flex items-center justify-end gap-1.5",
-                              item.status === 'in-stock' && "text-green-400",
-                              item.status === 'low-stock' && "text-amber-500",
-                              item.status === 'out-of-stock' && "text-red-500"
-                            )}>
-                              {item.status === 'out-of-stock' ? <AlertTriangle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
-                              {item.stock} units
-                            </span>
+
+                          {/* Live Inventory Status Metrics */}
+                          <div className="border-t border-white/5 pt-3 mt-1">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Metrics Status</p>
+                                <span className={cn("text-xs font-medium", status.color)}>{status.label}</span>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider mb-0.5">Quantity</p>
+                                <span className={cn("text-sm font-bold flex items-center justify-end gap-1", status.color)}>
+                                  {item.quantity === 0 ? <AlertTriangle className="h-3.5 w-3.5" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+                                  {item.quantity} units
+                                </span>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                ))}
-              </div>
+
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
             </>
           )}
 

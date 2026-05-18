@@ -1,10 +1,18 @@
 package com.example.demo.Product;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import jakarta.persistence.CascadeType; 
+
+import com.example.demo.Variants.Variants;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -28,6 +36,10 @@ public class Product {
     private int heigh ;
     private int width ;
     private int depth ; 
+
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Variants> variants = new ArrayList<>();
 
     public Product () {} 
 
@@ -106,6 +118,7 @@ public class Product {
     public void setDepth(int depth) {
         this.depth = depth;
     }
+
 
 
 

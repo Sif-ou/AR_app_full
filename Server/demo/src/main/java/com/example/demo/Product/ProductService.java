@@ -1,5 +1,7 @@
 package com.example.demo.Product;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -27,4 +29,24 @@ public class ProductService {
         
         return productRepository.save(product);
     }
+
+public List<Product> getAllProducts() {
+        return productRepository.findAll();
+    }
+
+
+/**
+ * NEW: Deletes a product from the database by ID.
+ */
+public void deleteProduct(Long id) {
+    if (!productRepository.existsById(id)) {
+        throw new IllegalArgumentException("Product with ID " + id + " does not exist.");
+    }
+    productRepository.deleteById(id);
+}
+
+
+
+
+
 }

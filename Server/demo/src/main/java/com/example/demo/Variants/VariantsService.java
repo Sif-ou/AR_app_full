@@ -4,6 +4,9 @@ import com.example.demo.Color.Color;
 import com.example.demo.Color.ColorRepository;
 import com.example.demo.Product.Product;
 import com.example.demo.Product.ProductRepository;
+
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
 @Service
@@ -58,4 +61,22 @@ public class VariantsService {
 
         return variantsRepository.save(variant);
     }
+
+
+public List<Variants> getAllVariants() {
+        return variantsRepository.findAll();
+    }
+
+    /**
+     * Hard deletes a single variant by ID, cascading removal to its linked media entries.
+     */
+    public void deleteVariant(Long id) {
+        if (!variantsRepository.existsById(id)) {
+            throw new IllegalArgumentException("Variant with ID " + id + " does not exist.");
+        }
+        variantsRepository.deleteById(id);
+    }
+
+
+
 }
