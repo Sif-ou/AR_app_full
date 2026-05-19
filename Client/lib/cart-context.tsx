@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react'
 import { Product } from './data'
 
 export interface CartItem {
@@ -26,6 +26,21 @@ const CartContext = createContext<CartContextType | undefined>(undefined)
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
   const [isOpen, setIsOpen] = useState(false)
+
+useEffect(() => {
+    const savedCart = localStorage.getItem('shopping-cart')
+    if (savedCart) {
+      try {
+        setItems(JSON.parse(savedCart))
+      } catch (error) {
+        console.error("Failed to parse saved cart:", error)
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    localStorage.setItem('shopping-cart', JSON.stringify(items))
+  }, [items])
 
   const addItem = useCallback((product: Product, selectedColor: string, quantity = 1) => {
     setItems(prev => {
