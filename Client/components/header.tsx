@@ -27,12 +27,22 @@ export function Header() {
   }, [])
 
  const handleSearch = (e: React.FormEvent) => {
-  e.preventDefault(); // Prevents the page from refreshing
-  
-  if (!searchQuery.trim()) return; // Don't search if it's empty
+  e.preventDefault();
 
-  // This redirects to /products?search=your_query
-  router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+  if (!searchQuery.trim()) return;
+
+  // Find a product where the name matches what they typed (case-insensitive)
+  const matchedProduct = products.find(
+    (product) => product.name.toLowerCase() === searchQuery.trim().toLowerCase()
+  );
+
+  if (matchedProduct) {
+    // If found, go directly to its page
+    router.push(`/products/${matchedProduct.id}`);
+  } else {
+    // If not found, fallback to search page or show an alert
+    router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+  }
 };
 
   return (
