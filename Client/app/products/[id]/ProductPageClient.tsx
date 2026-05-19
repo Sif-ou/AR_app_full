@@ -386,7 +386,7 @@ const handleWishlistClick = () => {
                   variant="outline"
                   onClick={handleShare}
                 >
-                  
+                  <Share2 className="h-5 w-5" />
                 </Button>
               </div>
 
