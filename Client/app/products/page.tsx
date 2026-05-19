@@ -50,6 +50,12 @@ function ProductsContent() {
     if (category && categories.find(c => c.id === category)) {
       setSelectedCategories([category])
     }
+  const search = searchParams.get('search')
+    if (search) {
+      setSearchQuery(search)
+    } else {
+      setSearchQuery('') // Clear it if no search param exists
+    }
   }, [searchParams])
 
   const filteredProducts = useMemo(() => {
