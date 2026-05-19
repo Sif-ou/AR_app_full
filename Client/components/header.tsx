@@ -10,8 +10,10 @@ import { useCart } from '@/lib/cart-context'
 import { categories } from '@/lib/data'
 import { cn } from '@/lib/utils'
 import { useTheme } from 'next-themes'
+import { useRouter } from 'next/navigation'
 
 export function Header() {
+  const router = useRouter();
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const { totalItems, setIsOpen } = useCart()
@@ -24,12 +26,14 @@ export function Header() {
     setMounted(true)
   }, [])
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (searchQuery.trim()) {
-      window.location.href = `/products?search=${encodeURIComponent(searchQuery)}`
-    }
-  }
+ const handleSearch = (e: React.FormEvent) => {
+  e.preventDefault(); // Prevents the page from refreshing
+  
+  if (!searchQuery.trim()) return; // Don't search if it's empty
+
+  // This redirects to /products?search=your_query
+  router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+};
 
   return (
     <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-border">
