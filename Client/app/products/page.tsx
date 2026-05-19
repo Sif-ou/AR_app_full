@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect, Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { CartDrawer } from '@/components/cart-drawer'
@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { SlidersHorizontal, Search, X, Grid3X3, LayoutGrid, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
+import router from 'next/dist/shared/lib/router/router'
 
 type SortOption = 'featured' | 'price-low' | 'price-high' | 'rating' | 'newest'
 
@@ -106,7 +107,11 @@ function ProductsContent() {
                   placeholder="Search products..." 
                   className="pl-10 h-10 rounded-xl border-slate-200 bg-white"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => setSearchQuery(e.target.value)
+                    if (e.target.value === '') {
+        router.push('/products') 
+      }
+                  }
                 />
               </div>
               
