@@ -67,7 +67,7 @@ const [registeredPassword, setRegisteredPassword] = useState('');
       router.push('/delivery')
     }
     else if ( role == 'MARKETING MANAGER' ) {
-      router.push('/maketing')
+      router.push('/marketing')
     }
     else {
       router.push('/')
@@ -93,7 +93,7 @@ const [registeredPassword, setRegisteredPassword] = useState('');
       return;
     }
         else if (savedRole === 'MARKETING MANAGER') {
-      router.push('/maketing')
+      router.push('/marketing')
       return;
     }
 
