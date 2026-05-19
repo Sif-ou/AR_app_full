@@ -24,28 +24,24 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined)
 
 export function CartProvider({ children }: { children: ReactNode }) {
- const [items, setItems] = useState<CartItem[]>(() => {
+  const [items, setItems] = useState<CartItem[]>(() => {
     if (typeof window !== 'undefined') {
       const savedCart = localStorage.getItem('shopping-cart')
       if (savedCart) {
-        try {
-          return JSON.parse(savedCart)
-        } catch (error) {
-          console.error("Failed to parse saved cart:", error)
-        }
+        console.log("🟢 FOUND SAVED CART ON LOAD:", JSON.parse(savedCart))
+        return JSON.parse(savedCart)
       }
     }
+    console.log("⚪ STARTING WITH EMPTY CART")
     return []
-  })  
+  })
 
   useEffect(() => {
+    console.log("💾 SAVING CART TO STORAGE:", items)
     localStorage.setItem('shopping-cart', JSON.stringify(items))
   }, [items])
-  
   const [isOpen, setIsOpen] = useState(false)
 
-
-  
   const addItem = useCallback((product: Product, selectedColor: string, quantity = 1) => {
     setItems(prev => {
       const existingIndex = prev.findIndex(
