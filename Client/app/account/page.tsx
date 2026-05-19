@@ -56,11 +56,6 @@ const [registeredPassword, setRegisteredPassword] = useState('');
     ],
   })
 
-
-
-  
-
-
   const handleRoleRedirect = (role: string) => {
     if (role === 'ADMIN') {
       router.push('/admin')
