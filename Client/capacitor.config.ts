@@ -5,7 +5,13 @@ const config: CapacitorConfig = {
   appName: 'AR Smart Retail',
   webDir: 'out', 
   server: {
-    androidScheme: 'https'
+    androidScheme: 'https',
+    // 🚀 Explicitly authorize the WebView to hand off AR operations to the OS
+    allowNavigation: [
+      'arvr.google.com',
+      '*.githubusercontent.com',
+      'cdn.jsdelivr.net'
+    ]
   }
 };
 
