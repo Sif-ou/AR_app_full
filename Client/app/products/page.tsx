@@ -94,9 +94,9 @@ function ProductsContent() {
           <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <h1 className="text-3xl font-bold tracking-tight">Furniture Collection</h1>
-              <p className="text-muted-foreground text-sm mt-1">
-                Showing {filteredProducts.length} of {products.length} items
-              </p>
+             <p className="text-foreground text-sm mt-1 font-medium">
+  Showing {filteredProducts.length} of {products.length} items
+</p>
             </div>
             
             <div className="flex flex-wrap items-center gap-2">

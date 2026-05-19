@@ -10,7 +10,7 @@ interface ARViewerProps {
 export default function ARViewer({ product, onClose }: ARViewerProps) {
   const [isMobile, setIsMobile] = useState(false);
   const [loaded, setLoaded] = useState(false);
-
+const [isInAppBrowser, setIsInAppBrowser] = useState(false);  
   useEffect(() => {
     if (typeof window !== 'undefined') {
       import('@google/model-viewer').then(() => {
