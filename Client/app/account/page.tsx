@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { User, Package, Settings, LogIn, UserPlus, Eye, EyeOff } from 'lucide-react'
+import { User, Package, Heart, Settings, LogIn, UserPlus, Eye, EyeOff } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useCart } from '@/lib/cart-context'
 import { useWishlist } from '@/lib/wishlist-context'
@@ -54,7 +54,13 @@ const [registeredPassword, setRegisteredPassword] = useState('');
       { id: 'ORD-001', date: '2024-01-15', status: 'Delivered', total: 1299 },
       { id: 'ORD-002', date: '2024-02-20', status: 'In Transit', total: 649 }
     ],
+    wishlist: ['nordica-sofa', 'aurora-armchair']
   })
+
+
+
+  
+
 
   const handleRoleRedirect = (role: string) => {
     if (role === 'ADMIN') {
@@ -67,7 +73,7 @@ const [registeredPassword, setRegisteredPassword] = useState('');
       router.push('/delivery')
     }
     else if ( role == 'MARKETING MANAGER' ) {
-      router.push('/marketing')
+      router.push('/maketing')
     }
     else {
       router.push('/')
@@ -93,7 +99,7 @@ const [registeredPassword, setRegisteredPassword] = useState('');
       return;
     }
         else if (savedRole === 'MARKETING MANAGER') {
-      router.push('/marketing')
+      router.push('/maketing')
       return;
     }
 
@@ -107,6 +113,13 @@ const [registeredPassword, setRegisteredPassword] = useState('');
 
     setIsCheckingRole(false) 
   }, [])
+
+  const handleRemoveWishlist = (itemToRemove: string) => {
+    setUserState((prev) => ({
+      ...prev,
+      wishlist: prev.wishlist.filter((item) => item !== itemToRemove)
+    }))
+  }
 
   const handleResetPassword = () => {
     alert(`A password reset link has been sent to ${loggedInUser.email || 'your email'}`)
@@ -639,6 +652,7 @@ if (response.ok) {
                     {[
                       { id: 'profile', label: 'Profile', icon: User },
                       { id: 'orders', label: 'Orders', icon: Package },
+                      { id: 'wishlist', label: 'Wishlist', icon: Heart },
                       { id: 'settings', label: 'Settings', icon: Settings },
                     ].map((item) => (
                       <button
@@ -734,6 +748,36 @@ clearWishlist()
                           </div>
                         </div>
                       ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {activeSection === 'wishlist' && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>My Wishlist</CardTitle>
+                    <CardDescription>Products you've saved for later</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {userState.wishlist.length > 0 ? (
+                        userState.wishlist.map((item, index) => (
+                          <div key={index} className="flex items-center justify-between p-4 rounded-lg border">
+                            <p className="font-medium capitalize">{item.replace('-', ' ')}</p>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="text-destructive hover:bg-destructive/10"
+                              onClick={() => handleRemoveWishlist(item)}
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-center text-muted-foreground py-8">Your wishlist is empty.</p>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
