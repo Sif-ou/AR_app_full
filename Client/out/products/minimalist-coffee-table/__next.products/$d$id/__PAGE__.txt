@@ -1,7 +1,7 @@
 1:"$Sreact.fragment"
-2:I[75657,["/_next/static/chunks/03~9bp5yb78x8.js","/_next/static/chunks/12u0cjj.u8s_y.js","/_next/static/chunks/003t5hi3pg5zo.js","/_next/static/chunks/166l.wrda85gf.js","/_next/static/chunks/0r~7-xqgfoepx.js","/_next/static/chunks/0ngw7nck7ubmc.js"],"default"]
-4:I[60646,["/_next/static/chunks/03~9bp5yb78x8.js","/_next/static/chunks/12u0cjj.u8s_y.js"],"OutletBoundary"]
+2:I[75657,["/_next/static/chunks/12z7_n~91d2qb.js","/_next/static/chunks/0czl8doczu-8w.js","/_next/static/chunks/12-joksgfoswy.js","/_next/static/chunks/13ag6z.d5gnn7.js","/_next/static/chunks/0colbyux7zs-f.js","/_next/static/chunks/06v-9_2qwf71f.js","/_next/static/chunks/166l.wrda85gf.js"],"default"]
+4:I[60646,["/_next/static/chunks/12z7_n~91d2qb.js","/_next/static/chunks/0czl8doczu-8w.js"],"OutletBoundary"]
 5:"$Sreact.suspense"
-0:{"rsc":["$","$1","c",{"children":[["$","$L2",null,{"params":"$@3"}],[["$","script","script-0",{"src":"/_next/static/chunks/003t5hi3pg5zo.js","async":true}],["$","script","script-1",{"src":"/_next/static/chunks/166l.wrda85gf.js","async":true}],["$","script","script-2",{"src":"/_next/static/chunks/0r~7-xqgfoepx.js","async":true}],["$","script","script-3",{"src":"/_next/static/chunks/0ngw7nck7ubmc.js","async":true}]],["$","$L4",null,{"children":["$","$5",null,{"name":"Next.MetadataOutlet","children":"$@6"}]}]]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"UT5BM1fRXIzNUDOoIaN1f"}
+0:{"rsc":["$","$1","c",{"children":[["$","$L2",null,{"params":"$@3"}],[["$","script","script-0",{"src":"/_next/static/chunks/12-joksgfoswy.js","async":true}],["$","script","script-1",{"src":"/_next/static/chunks/13ag6z.d5gnn7.js","async":true}],["$","script","script-2",{"src":"/_next/static/chunks/0colbyux7zs-f.js","async":true}],["$","script","script-3",{"src":"/_next/static/chunks/06v-9_2qwf71f.js","async":true}],["$","script","script-4",{"src":"/_next/static/chunks/166l.wrda85gf.js","async":true}]],["$","$L4",null,{"children":["$","$5",null,{"name":"Next.MetadataOutlet","children":"$@6"}]}]]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"vanD9aQsGtBhczujKqrNw"}
 3:{"id":"minimalist-coffee-table"}
 6:null
