@@ -98,10 +98,6 @@ export default function CheckoutPage() {
         toast.error('Please fill in all required fields')
         return
       }
-      if (!isValidEmail(email)) {
-        toast.error('Please enter a valid email')
-        return
-      }
       if (!isValidName(firstName) || !isValidName(lastName)) {
         toast.error('Name must contain at least one letter')
         return
