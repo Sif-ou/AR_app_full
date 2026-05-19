@@ -24,24 +24,28 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined)
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([])
-  const [isOpen, setIsOpen] = useState(false)
-
-useEffect(() => {
-    const savedCart = localStorage.getItem('shopping-cart')
-    if (savedCart) {
-      try {
-        setItems(JSON.parse(savedCart))
-      } catch (error) {
-        console.error("Failed to parse saved cart:", error)
+ const [items, setItems] = useState<CartItem[]>(() => {
+    if (typeof window !== 'undefined') {
+      const savedCart = localStorage.getItem('shopping-cart')
+      if (savedCart) {
+        try {
+          return JSON.parse(savedCart)
+        } catch (error) {
+          console.error("Failed to parse saved cart:", error)
+        }
       }
     }
-  }, [])
+    return []
+  })  
 
   useEffect(() => {
     localStorage.setItem('shopping-cart', JSON.stringify(items))
   }, [items])
+  
+  const [isOpen, setIsOpen] = useState(false)
 
+
+  
   const addItem = useCallback((product: Product, selectedColor: string, quantity = 1) => {
     setItems(prev => {
       const existingIndex = prev.findIndex(
