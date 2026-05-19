@@ -27,23 +27,14 @@ export function Header() {
   }, [])
 
  const handleSearch = (e: React.FormEvent) => {
-  e.preventDefault();
+    e.preventDefault()
+    
+    // 1. Check if the search query is empty or just spaces
+    if (!searchQuery.trim()) return
 
-  if (!searchQuery.trim()) return;
-
-  // Find a product where the name matches what they typed (case-insensitive)
-  const matchedProduct = products.find(
-    (product) => product.name.toLowerCase() === searchQuery.trim().toLowerCase()
-  );
-
-  if (matchedProduct) {
-    // If found, go directly to its page
-    router.push(`/products/${matchedProduct.id}`);
-  } else {
-    // If not found, fallback to search page or show an alert
-    router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+    // 2. Use the Next.js router instead of window.location.href
+    router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`)
   }
-};
 
   return (
     <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-border">
