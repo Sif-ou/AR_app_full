@@ -232,32 +232,7 @@ export default function CheckoutPage() {
                 <CardContent className="p-6">
                   {currentStep === 'information' && (
                     <div className="space-y-6">
-                      <div>
-                        <h2 className="text-xl font-semibold mb-4">Contact Information</h2>
-                        <div className="space-y-4">
-                          <div>
-                            <Label htmlFor="email">Email</Label>
-                            <Input 
-                              id="email"
-                              type="email"
-                              placeholder="your@email.com"
-                              value={email}
-                              onChange={(e) => setEmail(e.target.value)}
-                            />
-                          </div>
-                          <label className="flex items-center gap-2">
-                            <Checkbox 
-                              checked={saveInfo}
-                              onCheckedChange={(checked) => setSaveInfo(checked as boolean)}
-                            />
-                            <span className="text-sm">Email me with news and offers</span>
-                          </label>
-                        </div>
-                      </div>
-
-                      <Separator />
-
-                      <div>
+                     <div>
                         <h2 className="text-xl font-semibold mb-4">Shipping Address</h2>
                         <div className="space-y-4">
                           <div className="grid grid-cols-2 gap-4">
