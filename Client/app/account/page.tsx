@@ -475,37 +475,6 @@ if (response.ok) {
                       }} 
                       className="space-y-4"
                     >
-
-{!showConfirmationMessage && (
-      <>
-        <div className="space-y-2">
-          <Label htmlFor="name">Full Name</Label>
-          <Input id="name" type="text" placeholder="Enter your name" value={username} onChange={(e) => setUsername(e.target.value)} required />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="reg-email">Email</Label>
-          <Input id="reg-email" type="email" placeholder="Enter your email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="reg-phone">Phone Number</Label>
-          <Input id="reg-phone" type="tel" placeholder="0555123456" value={phoneNumber} maxLength={10} onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))} required />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="reg-password">Password</Label>
-          {/* ... Your Password Input with toggle button ... */}
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="confirm-password">Confirm Password</Label>
-          {/* ... Your Confirm Password Input with toggle button ... */}
-        </div>
-        
-        <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? 'Creating Account...' : 'Create Account'}
-        </Button>
-      </>
-    )}
-
-
                       <div className="space-y-2">
                         <Label htmlFor="name">Full Name</Label>
                         <Input 
