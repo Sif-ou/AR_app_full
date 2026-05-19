@@ -42,7 +42,7 @@ export function FeaturedProducts() {
             - Mobile: Horizontal scroll (Snap Carousel)
             - Desktop: Standard Grid 
         */}
-        <div className="relative group">
+        <div className="relative ">
           <div className={cn(
             // Mobile: flex-nowrap + overflow-x-auto
             // Desktop: grid + md:overflow-visible
@@ -51,10 +51,10 @@ export function FeaturedProducts() {
           )}>
             {products.map((product, index) => (
               <div 
-                key={product.id} 
-                className="min-w-[280px] sm:min-w-[320px] md:min-w-0 snap-center animate-in fade-in slide-in-from-bottom-4 duration-500"  
-                style={{ animationDelay: `${index * 100}ms` }} //kol whda tji wra b3daha ykoon binthm delay
-              >
+  key={product.id} 
+  className="group min-w-[280px] sm:min-w-[320px] md:min-w-0 snap-center animate-in fade-in slide-in-from-bottom-4 duration-500"  
+  style={{ animationDelay: `${index * 100}ms` }}
+>
                 <ProductCard product={product} />
               </div>
             ))}
