@@ -10,7 +10,8 @@ interface ARViewerProps {
 export default function ARViewer({ product, onClose }: ARViewerProps) {
   const [isMobile, setIsMobile] = useState(false);
   const [loaded, setLoaded] = useState(false);
-const [isInAppBrowser, setIsInAppBrowser] = useState(false);  
+  const [isInAppBrowser, setIsInAppBrowser] = useState(false);  
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       import('@google/model-viewer').then(() => {
@@ -18,15 +19,19 @@ const [isInAppBrowser, setIsInAppBrowser] = useState(false);
       }).catch(console.error);
     } 
     
-    const checkMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const ua = navigator.userAgent || navigator.vendor || (window as any).opera;
+    const checkMobile = /iPhone|iPad|iPod|Android/i.test(ua);
     setIsMobile(checkMobile);
+
+    // Detect typical In-App Browsers (FB, Instagram, Threads, Twitter/X, Snapchat, TikTok, etc.)
+    const checkInApp = /FBAN|FBAV|Instagram|Twitter|TwitterAndroid|Snapchat|TikTok|MicroMessenger/i.test(ua);
+    setIsInAppBrowser(checkInApp);
 
     document.body.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = 'unset';
     };
   }, []);
-
 
   const modelSrc = product.arModel || "https://cdn.jsdelivr.net/gh/Sif-ou/AR_app_full@main/3d models/3d_model_furni-v1.glb";
 
@@ -41,14 +46,14 @@ const [isInAppBrowser, setIsInAppBrowser] = useState(false);
           </p>
         </div>
 
-         {/* CENTER */}
-  <div className="absolute left-1/2 -translate-x-1/2 text-center">
-    {!isMobile && (
-      <p className="text-xs text-gray-400 font-semibold">
-        AR is only available on mobile
-      </p>
-    )}
-  </div>
+        {/* CENTER */}
+        <div className="absolute left-1/2 -translate-x-1/2 text-center">
+          {!isMobile && (
+            <p className="text-xs text-gray-400 font-semibold">
+              AR is only available on mobile
+            </p>
+          )}
+        </div>
         
         <button onClick={onClose} className="p-3 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -60,6 +65,16 @@ const [isInAppBrowser, setIsInAppBrowser] = useState(false);
 
       {/* Main 3D Stage */}
       <div className="flex-1 relative bg-[#f8f8f8]">
+        {/* In-App Browser Warning Alert */}
+        {isInAppBrowser && (
+          <div className="absolute top-4 left-4 right-4 z-[110] bg-amber-50 border border-amber-200 p-4 rounded-xl shadow-md text-left">
+            <p className="text-xs font-bold text-amber-800 mb-1">⚠️ IN-APP BROWSER DETECTED</p>
+            <p className="text-[11px] text-amber-700 font-medium leading-normal">
+              Camera features might be restricted by this app. For the best AR experience, tap your menu icon (three dots or share button) and select <span className="font-bold">"Open in Browser"</span> or <span className="font-bold">"Open in Safari/Chrome"</span>.
+            </p>
+          </div>
+        )}
+
         {!loaded ? (
           /* Loading State before library or model loads */
           <div className="absolute inset-0 flex items-center justify-center flex-col gap-4">
