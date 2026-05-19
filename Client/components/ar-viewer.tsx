@@ -10,22 +10,21 @@ interface ARViewerProps {
 export default function ARViewer({ product, onClose }: ARViewerProps) {
   const [isMobile, setIsMobile] = useState(false);
   const [loaded, setLoaded] = useState(false);
-  const [isInAppBrowser, setIsInAppBrowser] = useState(false);  
+  const [isNativeApp, setIsNativeApp] = useState(false);  
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       import('@google/model-viewer').then(() => {
-        setLoaded(true); // Only show the viewer once the library is ready
+        setLoaded(true);
       }).catch(console.error);
+
+      const isCapacitor = (window as any).Capacitor !== undefined;
+      setIsNativeApp(isCapacitor);
     } 
     
     const ua = navigator.userAgent || navigator.vendor || (window as any).opera;
     const checkMobile = /iPhone|iPad|iPod|Android/i.test(ua);
     setIsMobile(checkMobile);
-
-    // Detect typical In-App Browsers (FB, Instagram, Threads, Twitter/X, Snapchat, TikTok, etc.)
-    const checkInApp = /FBAN|FBAV|Instagram|Twitter|TwitterAndroid|Snapchat|TikTok|MicroMessenger/i.test(ua);
-    setIsInAppBrowser(checkInApp);
 
     document.body.style.overflow = 'hidden';
     return () => {
@@ -34,6 +33,28 @@ export default function ARViewer({ product, onClose }: ARViewerProps) {
   }, []);
 
   const modelSrc = product.arModel || "https://cdn.jsdelivr.net/gh/Sif-ou/AR_app_full@main/3d models/3d_model_furni-v1.glb";
+  const iosSrc = product.iosModel || "";
+
+  const handleNativeARLaunch = (e: React.MouseEvent) => {
+    if (!isNativeApp) return; 
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+      if (iosSrc) {
+        window.open(iosSrc, '_system');
+      } else {
+        alert("iOS AR USDZ model link is missing for this product.");
+      }
+    } else if (/Android/i.test(navigator.userAgent)) {
+      const title = encodeURIComponent(product.name);
+      const fallbackUrl = encodeURIComponent(window.location.href);
+      const universalARUrl = `https://arvr.google.com/scene-viewer/1.0?file=${encodeURIComponent(modelSrc)}&mode=ar_only&title=${title}&fallback_url=${fallbackUrl}`;
+      
+      window.open(universalARUrl, '_system');
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col bg-white"> 
@@ -65,52 +86,53 @@ export default function ARViewer({ product, onClose }: ARViewerProps) {
 
       {/* Main 3D Stage */}
       <div className="flex-1 relative bg-[#f8f8f8]">
-        {/* In-App Browser Warning Alert */}
-        {isInAppBrowser && (
-          <div className="absolute top-4 left-4 right-4 z-[110] bg-amber-50 border border-amber-200 p-4 rounded-xl shadow-md text-left">
-            <p className="text-xs font-bold text-amber-800 mb-1">⚠️ IN-APP BROWSER DETECTED</p>
-            <p className="text-[11px] text-amber-700 font-medium leading-normal">
-              Camera features might be restricted by this app. For the best AR experience, tap your menu icon (three dots or share button) and select <span className="font-bold">"Open in Browser"</span> or <span className="font-bold">"Open in Safari/Chrome"</span>.
-            </p>
-          </div>
-        )}
-
         {!loaded ? (
-          /* Loading State before library or model loads */
           <div className="absolute inset-0 flex items-center justify-center flex-col gap-4">
             <div className="w-12 h-12 border-4 border-black border-t-transparent rounded-full animate-spin"></div>
             <p className="text-xs font-bold text-gray-400">LOADING 3D ENGINE...</p>
           </div>
         ) : (
-          /* @ts-ignore */
-          <model-viewer
-            src={modelSrc}
-            ios-src={product.iosModel || ""}
-            ar
-            ar-modes="webxr scene-viewer quick-look"
-            ar-placement="floor"
-            camera-controls
-            touch-action="pan-y"
-            auto-rotate
-            shadow-intensity="1.5"
-            shadow-softness="1"
-            environment-image="neutral"
-            exposure="1"
-            alt={`A 3D model of ${product.name}`}
-            style={{ width: '100%', height: '100%' }}
-          >
-            {/* This button only shows on Mobile when the 3D view is ready */}
-            <button 
-              slot="ar-button" 
-              className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-black text-white px-8 py-4 rounded-full font-bold shadow-2xl flex items-center gap-3 active:scale-95 transition-transform"
-            >
-              <span className="text-xl">📷</span>
-              VIEW IN YOUR ROOM
-            </button>
-
-            {/* Custom loader for the 3D model itself */}
-            <div slot="progress-bar" className="hidden"></div> 
-          </model-viewer>
+          /* Safely render model-viewer dynamically to bypass strict TS check errors */
+          React.createElement(
+            'model-viewer',
+            {
+              src: modelSrc,
+              'ios-src': iosSrc,
+              ar: true,
+              'ar-modes': 'webxr scene-viewer quick-look',
+              'ar-placement': 'floor',
+              'camera-controls': true,
+              'touch-action': 'pan-y',
+              'auto-rotate': true,
+              'shadow-intensity': '1.5',
+              'shadow-softness': '1',
+              'environment-image': 'neutral',
+              exposure: '1',
+              alt: `A 3D model of ${product.name}`,
+              style: { width: '100%', height: '100%' }
+            },
+            <>
+              {isNativeApp ? (
+                <button 
+                  slot="ar-button"
+                  onClick={handleNativeARLaunch}
+                  className="absolute bottom-10 left-1/2 -translate-x-1/2 z-[105] bg-black text-white px-8 py-4 rounded-full font-bold shadow-2xl flex items-center gap-3 active:scale-95 transition-transform"
+                >
+                  <span className="text-xl">📷</span>
+                  VIEW IN YOUR ROOM
+                </button>
+              ) : (
+                <button 
+                  slot="ar-button" 
+                  className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-black text-white px-8 py-4 rounded-full font-bold shadow-2xl flex items-center gap-3 active:scale-95 transition-transform"
+                >
+                  <span className="text-xl">📷</span>
+                  VIEW IN YOUR ROOM
+                </button>
+              )}
+              <div slot="progress-bar" className="hidden"></div>
+            </>
+          )
         )}
       </div>
 
