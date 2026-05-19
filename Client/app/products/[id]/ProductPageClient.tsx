@@ -116,12 +116,14 @@ const handleWishlistClick = () => {
   }
 
  const handleShareCustom = (platform: 'facebook' | 'twitter' | 'whatsapp' | 'copy') => {
+    // encodeURIComponent makes sure special characters in your URL don't break the query string
     const shareUrl = encodeURIComponent(window.location.href);
     const shareText = encodeURIComponent(`Check out this ${product.name}!`);
 
     switch (platform) {
       case 'facebook':
-        window.open(`https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`, '_blank');
+        // Modern Facebook SDK-less share dialog endpoint
+        window.open(`https://www.facebook.com/dialog/share?app_id=145634995501895&display=popup&href=${shareUrl}&redirect_uri=${shareUrl}`, '_blank', 'width=600,height=400');
         break;
       case 'twitter':
         window.open(`https://twitter.com/intent/tweet?url=${shareUrl}&text=${shareText}`, '_blank');
