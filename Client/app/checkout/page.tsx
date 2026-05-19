@@ -94,7 +94,7 @@ export default function CheckoutPage() {
 
   const handleContinue = () => {
     if (currentStep === 'information') {
-      if (!email || !firstName || !lastName || !address || !city || !zipCode) {
+      if ( !firstName || !lastName || !address || !city || !zipCode) {
         toast.error('Please fill in all required fields')
         return
       }
