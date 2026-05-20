@@ -97,7 +97,7 @@ const handleGoogleSuccess = async (credentialResponse: any) => {
     } else if (data.role === 'MARKETING MANAGER') {
       router.push('/marketing');
     } else {
-      router.push('/dashboard'); // Standard CLIENT home space
+      router.push('/'); // Standard CLIENT home space
     }
 
   } catch (error) {
