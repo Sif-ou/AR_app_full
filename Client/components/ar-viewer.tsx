@@ -72,7 +72,19 @@ useEffect(() => {
   const modelViewer = modelViewerRef.current;
   if (!modelViewer) return;
 
+  // Force the mobile engine to render at true 1:1 screen pixel density (fixes resolution blur)
+  if ((window as any).customElements?.get('model-viewer')) {
+    const MVClass = (window as any).customElements.get('model-viewer');
+    if (MVClass) MVClass.minimumRenderScale = 1;
+  }
+
   const applyColor = () => {
+    // If your 3D file has native glTF variants built-in, use them first
+    if (selectedColor?.name && modelViewer.availableVariants?.includes(selectedColor.name)) {
+      modelViewer.variantName = selectedColor.name;
+      return;
+    }
+
     if (!modelViewer.model || !selectedColor?.hex) return;
 
     const hex = selectedColor.hex.replace('#', '');
@@ -82,7 +94,16 @@ useEffect(() => {
     const colorArray = [r, g, b, 1.0]; 
 
     modelViewer.model.materials.forEach((material: any) => {
-      if (material.pbrMetallicRoughness) {
+      const matName = (material.name || '').toLowerCase();
+      
+      // PROTECT structural parts from getting flat paint sprayed over them
+      const isStructure = matName.includes('wood') || 
+                          matName.includes('leg') || 
+                          matName.includes('frame') || 
+                          matName.includes('shadow') ||
+                          matName.includes('floor');
+
+      if (material.pbrMetallicRoughness && !isStructure) {
         material.pbrMetallicRoughness.setBaseColorFactor(colorArray);
       }
     });
@@ -95,7 +116,6 @@ useEffect(() => {
     modelViewer.removeEventListener('load', applyColor);
   };
 }, [selectedColor, loaded]);
-
   return (
     <div className="fixed inset-0 z-[100] flex flex-col bg-white"> 
       {/* Header */}
@@ -156,6 +176,7 @@ useEffect(() => {
               'power-preference': 'high-performance', // Tells the phone to use its main GPU, not battery-saver mode
     'interaction-prompt': 'none',          // Frees up processing memory immediately
     'interpolation-decay': '200',           // Smoothes out rendering pixelation on mobile screens
+    'minimum-render-scale': '1',
               style: { width: '100%', height: '100%' }
             },
             <>
