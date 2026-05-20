@@ -577,13 +577,6 @@ const handleWishlistClick = () => {
                           ))}
                         </div>
                       </div>
-                      <input
-                        type="text"
-                        placeholder="Your name"
-                        className="w-full bg-background border border-input p-2.5 rounded-lg focus:ring-2 focus:ring-accent outline-none"
-                        value={newReview.name}
-                        onChange={(e) => setNewReview({ ...newReview, name: e.target.value })}
-                      />
                       <textarea
                         placeholder="Share your thoughts about the product..."
                         rows={4}
