@@ -46,18 +46,24 @@ export default function ARViewer({ product,selectedColor, onClose }: ARViewerPro
     e.stopPropagation();
 
     if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-      if (iosSrc) {
-        window.open(iosSrc, '_system');
-      } else {
-        alert("iOS AR USDZ model link is missing for this product.");
-      }
+  if (iosSrc) {
+    // Appending Apple's specific #allowsContentScaling parameter if needed or the variant target
+    const variantIosUrl = `${iosSrc}#allowsContentScaling=1&applePayButtonType=plain`;
+    window.open(variantIosUrl, '_system');
+  } else {
+    alert("iOS AR USDZ model link is missing for this product.");
+  }
     } else if (/Android/i.test(navigator.userAgent)) {
-      const title = encodeURIComponent(product.name);
-      const fallbackUrl = encodeURIComponent(window.location.href);
-      const universalARUrl = `https://arvr.google.com/scene-viewer/1.0?file=${encodeURIComponent(modelSrc)}&mode=ar_only&title=${title}&fallback_url=${fallbackUrl}`;
-      
-      window.open(universalARUrl, '_system');
-    }
+  const title = encodeURIComponent(`${product.name} - ${selectedColor.name}`);
+  const fallbackUrl = encodeURIComponent(window.location.href);
+  
+  // Appending the variant hash parameter to your file URL instructs the native engine to load it tinted
+  const variantModelUrl = `${modelSrc}#gltf-variant=${encodeURIComponent(selectedColor.name)}`;
+  
+  const universalARUrl = `https://arvr.google.com/scene-viewer/1.0?file=${encodeURIComponent(variantModelUrl)}&mode=ar_only&title=${title}&fallback_url=${fallbackUrl}`;
+  
+  window.open(universalARUrl, '_system');
+}
   };
 
 const modelViewerRef = useRef<any>(null);
@@ -133,6 +139,7 @@ useEffect(() => {
               ref: modelViewerRef,
               src: modelSrc,
               'ios-src': iosSrc,
+              variant: selectedColor?.name,
               ar: true,
               'ar-modes': 'webxr scene-viewer quick-look',
               'ar-placement': 'floor',
