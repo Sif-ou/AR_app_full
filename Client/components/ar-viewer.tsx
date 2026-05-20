@@ -73,8 +73,16 @@ useEffect(() => {
   if (!modelViewer) return;
 
 const applyColor = () => {
-  if (!modelViewer.model || !selectedColor?.hex) return;
+  if (!modelViewer.model) return;
 
+  // 1. TRY THE NATIVE WAY FIRST: If your GLB file has built-in material variants
+  if (selectedColor?.name && modelViewer.availableVariants?.includes(selectedColor.name)) {
+    modelViewer.variantName = selectedColor.name;
+    return; // Exit here if the asset handled it natively!
+  }
+
+  // 2. FALLBACK WAY: Smart programmatic tinting if the file doesn't have internal variants
+  if (!selectedColor?.hex) return;
   const hex = selectedColor.hex.replace('#', '');
   const r = parseInt(hex.substring(0, 2), 16) / 255;
   const g = parseInt(hex.substring(2, 4), 16) / 255;
@@ -82,15 +90,12 @@ const applyColor = () => {
   const colorArray = [r, g, b, 1.0]; 
 
   modelViewer.model.materials.forEach((material: any) => {
-    if (material.pbrMetallicRoughness) {
-      // 1. If the material relies on an image texture for details, don't overwrite it with flat paint!
-      if (material.pbrMetallicRoughness.baseColorTexture) {
-        // This tints the existing texture rather than destroying it entirely
-        material.pbrMetallicRoughness.setBaseColorFactor(colorArray);
-      } else {
-        // 2. If it's a solid part (like a plastic foot or metal frame without textures), change it safely
-        material.pbrMetallicRoughness.setBaseColorFactor(colorArray);
-      }
+    // ONLY color the fabric parts. Don't paint over things named 'wood', 'metal', 'shadow', or 'legs'
+    const name = (material.name || '').toLowerCase();
+    const isStructureElement = name.includes('wood') || name.includes('leg') || name.includes('frame') || name.includes('shadow');
+
+    if (material.pbrMetallicRoughness && !isStructureElement) {
+      material.pbrMetallicRoughness.setBaseColorFactor(colorArray);
     }
   });
 };
