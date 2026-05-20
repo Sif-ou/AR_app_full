@@ -38,33 +38,57 @@ export default function ARViewer({ product, selectedColor, onClose }: ARViewerPr
   }, []);
 
   // Handle color switching safely via your model's native internal variant settings
-  useEffect(() => {
-    const modelViewer = modelViewerRef.current;
-    if (!modelViewer) return;
+ useEffect(() => {
+  const modelViewer = modelViewerRef.current;
+  if (!modelViewer) return;
 
-    // Force the mobile graphics engine to match the sharp desktop screen resolution
-    if ((window as any).customElements?.get('model-viewer')) {
-      const MVClass = (window as any).customElements.get('model-viewer');
-      if (MVClass) MVClass.minimumRenderScale = 1;
+  // Fix resolution blur on high-end phone screens
+  if ((window as any).customElements?.get('model-viewer')) {
+    const MVClass = (window as any).customElements.get('model-viewer');
+    if (MVClass) MVClass.minimumRenderScale = 1;
+  }
+
+  const applyColor = () => {
+    if (!modelViewer.model) return;
+
+    // 1. Try internal variants first
+    if (selectedColor?.name && modelViewer.availableVariants?.includes(selectedColor.name)) {
+      modelViewer.variantName = selectedColor.name;
+      return;
     }
 
-    const applyVariantColor = () => {
-      if (!selectedColor?.name) return;
+    // 2. Fallback: Smart material tinting (This fixes your PC color right now!)
+    if (!selectedColor?.hex) return;
+    const hex = selectedColor.hex.replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16) / 255;
+    const g = parseInt(hex.substring(2, 4), 16) / 255;
+    const b = parseInt(hex.substring(4, 6), 16) / 255;
+    const colorArray = [r, g, b, 1.0]; 
 
-      // Swap the entire material profile cleanly if your file contains variants
-      if (modelViewer.availableVariants?.includes(selectedColor.name)) {
-        modelViewer.variantName = selectedColor.name;
+    modelViewer.model.materials.forEach((material: any) => {
+      const matName = (material.name || '').toLowerCase();
+      
+      // EXCLUDE the wooden parts, table, and shadow from getting spray-painted
+      const isStructure = matName.includes('wood') || 
+                          matName.includes('leg') || 
+                          matName.includes('table') ||
+                          matName.includes('frame') || 
+                          matName.includes('shadow') ||
+                          matName.includes('floor');
+
+      if (material.pbrMetallicRoughness && !isStructure) {
+        material.pbrMetallicRoughness.setBaseColorFactor(colorArray);
       }
-    };
+    });
+  };
 
-    modelViewer.addEventListener('load', applyVariantColor);
-    if (modelViewer.model) applyVariantColor();
+  modelViewer.addEventListener('load', applyColor);
+  if (modelViewer.model) applyColor();
 
-    return () => {
-      modelViewer.removeEventListener('load', applyVariantColor);
-    };
-  }, [selectedColor, loaded]);
-
+  return () => {
+    modelViewer.removeEventListener('load', applyColor);
+  };
+}, [selectedColor, loaded]);
   const modelSrc = product.arModel || "https://cdn.jsdelivr.net/gh/Sif-ou/AR_app_full@main/3d models/3d_model_furni-v1.glb";
   const iosSrc = product.iosModel || "";
 
