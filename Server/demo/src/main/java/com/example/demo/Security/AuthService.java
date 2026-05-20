@@ -5,19 +5,20 @@ import com.example.demo.Role.RoleRepository;
 import com.example.demo.User.EmailVerificationService;
 import com.example.demo.User.User;
 import com.example.demo.User.UserRepository;
-import com.example.demo.User.VerifyCodeRequest ; 
+import com.example.demo.User.VerifyCodeRequest;
+
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
 
 import java.time.LocalDateTime;
+import java.util.Collections; // FIXED: Missing import added
 import java.util.Random;
 
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-
-
-
 
 @Service
 public class AuthService {
@@ -27,7 +28,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final RoleRepository roleRepository;
-    private final EmailVerificationService emailVerificationService; // 1. Inject email service
+    private final EmailVerificationService emailVerificationService;
 
     public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, 
                        JwtService jwtService, AuthenticationManager authenticationManager,
@@ -38,55 +39,43 @@ public class AuthService {
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
         this.roleRepository = roleRepository;
-        this.emailVerificationService = emailVerificationService; // Assign it
+        this.emailVerificationService = emailVerificationService;
     }
 
+    public AuthResponse register(RegisterRequest request) {
+        Role userRole = roleRepository.findByRoleName("CLIENT")
+            .orElseThrow(() -> new RuntimeException("Role not found"));
 
-public AuthResponse register(RegisterRequest request) {
-    Role userRole = roleRepository.findByRoleName("CLIENT")
-        .orElseThrow(() -> new RuntimeException("Role not found"));
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new RuntimeException("Email is already registered.");
+        }
 
-    // Check unique constraints manually to provide clear errors
-    if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-        throw new RuntimeException("Email is already registered.");
+        String code = String.format("%06d", new Random().nextInt(999999));
+
+        var user = User.builder()
+                .username(request.getUsername())
+                .email(request.getEmail())
+                .phoneNum(request.getPhoneNum())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .role(userRole) 
+                .active(false) 
+                .verificationCode(code) 
+                .verificationExpiry(LocalDateTime.now().plusMinutes(15)) 
+                .build();
+
+        userRepository.save(user);
+
+        try {
+            emailVerificationService.sendVerificationEmail(user.getEmail(), code);
+        } catch (Exception e) {
+            System.err.println("WARNING: User saved, but verification email failed to dispatch: " + e.getMessage());
+        }
+
+        return AuthResponse.builder()
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .build();
     }
-
-    // Generate the 6-digit verification code
-    String code = String.format("%06d", new Random().nextInt(999999));
-
-    var user = User.builder()
-            .username(request.getUsername())
-            .email(request.getEmail())
-            .phoneNum(request.getPhoneNum())
-            .password(passwordEncoder.encode(request.getPassword()))
-            .role(userRole) 
-            .active(false) // Set to FALSE initially
-            .verificationCode(code) 
-            .verificationExpiry(LocalDateTime.now().plusMinutes(15)) 
-            .build();
-
-    // 1. This saves the user to your database
-    userRepository.save(user);
-
-    // 2. CRITICAL PROTECTION: catch email errors so they don't erase the database record!
-    try {
-        emailVerificationService.sendVerificationEmail(user.getEmail(), code);
-    } catch (Exception e) {
-        // This prints the error to your logs but allows the method to finish successfully!
-        System.err.println("WARNING: User saved, but verification email failed to dispatch: " + e.getMessage());
-    }
-
-    // 3. Return response so the frontend knows registration was successful
-    return AuthResponse.builder()
-            .username(user.getUsername())
-            .email(user.getEmail())
-            .build();
-}
-
-
-
-
-
 
     public AuthResponse authenticate(AuthRequest request) {
         String identifier = request.getIdentifier();
@@ -124,9 +113,6 @@ public AuthResponse register(RegisterRequest request) {
                    .email(user.getEmail())
                    .build();
     }
-
-
-
 
     public boolean verifyEmailCode(VerifyCodeRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
@@ -140,7 +126,6 @@ public AuthResponse register(RegisterRequest request) {
             throw new RuntimeException("Verification code has expired.");
         }
 
-        // Activate user and clear tracking data
         user.setActive(true);
         user.setVerificationCode(null);
         user.setVerificationExpiry(null);
@@ -149,264 +134,53 @@ public AuthResponse register(RegisterRequest request) {
         return true;
     }
 
+    // Remember to replace this with your real Developer Console credential string!
+    private static final String GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
 
+    public AuthResponse authenticateGoogleUser(String tokenId) {
+        try {
+            GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
+                    .setAudience(Collections.singletonList(GOOGLE_CLIENT_ID))
+                    .build();
 
-}
+            GoogleIdToken idToken = verifier.verify(tokenId);
+            if (idToken == null) {
+                throw new RuntimeException("Invalid Google ID Token.");
+            }
 
+            GoogleIdToken.Payload payload = idToken.getPayload();
+            String email = payload.getEmail();
+            String name = (String) payload.get("name");
 
+            User user = userRepository.findByEmail(email).orElse(null);
 
-/* 
-@Service
-public class AuthService {
+            if (user == null) {
+                Role userRole = roleRepository.findByRoleName("CLIENT")
+                        .orElseThrow(() -> new RuntimeException("Default CLIENT role not configured in database."));
 
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtService jwtService;
-    private final AuthenticationManager authenticationManager;
-    private final RoleRepository roleRepository ;
+                user = User.builder()
+                        .username(name)
+                        .email(email)
+                        .phoneNum(null) 
+                        .password(passwordEncoder.encode("OAUTH2_FEDERATED_ACCOUNT_PASSWORD_PLACEHOLDER"))
+                        .role(userRole)
+                        .active(true) // Google handles the user validation, bypass registration OTP check
+                        .build();
 
-public AuthService (UserRepository userRepository, PasswordEncoder passwordEncoder, 
-                    JwtService jwtService, AuthenticationManager authenticationManager,
-                    RoleRepository roleRepository) 
-{
-    this.userRepository = userRepository;
-    this.passwordEncoder = passwordEncoder;
-    this.jwtService = jwtService;
-    this.authenticationManager = authenticationManager;
-    this.roleRepository = roleRepository; 
-}
+                userRepository.save(user);
+            }
 
+            String jwt = jwtService.generateToken(user);
+            
+            return AuthResponse.builder()
+                    .token(jwt)
+                    .role(user.getRole().getRoleName())
+                    .username(user.getUsername())
+                    .email(user.getEmail())
+                    .build();
 
-public AuthResponse register(RegisterRequest request) {
-    Role userRole = roleRepository.findByRoleName("CLIENT")
-        .orElseThrow(() -> new RuntimeException("Role not found"));
-
-    var user = User.builder()
-            .username(request.getUsername())
-            .email(request.getEmail())
-            .phoneNum(request.getPhoneNum())
-            .password(passwordEncoder.encode(request.getPassword()))
-            .role(userRole) 
-            .active(true)
-            .build();
-
-    userRepository.save(user);
-    var jwt = jwtService.generateToken(user);
-    return AuthResponse.builder().token(jwt).build();
-}
-
-
-public AuthResponse authenticate(AuthRequest request) {
-    String identifier = request.getIdentifier();
-    
-    // 1. Find user by Email or Phone using type-safe parsing in Java
-    User user = userRepository.findByEmail(identifier)
-            .orElseGet(() -> {
-                // If not found by email, check if the identifier string is entirely numbers
-                if (identifier != null && identifier.matches("\\d+")) {
-                    try {
-                        int phone = Integer.parseInt(identifier);
-                        return userRepository.findByPhoneNum(phone).orElse(null);
-                    } catch (NumberFormatException e) {
-                        return null; // Fallback protection if number is too massive for an int
-                    }
-                }
-                return null;
-            });
-
-    // 2. If neither search finds a record, throw the explicit exception
-    if (user == null) {
-        throw new RuntimeException("User not found");
-    }
-
-
-// 2. CRITICAL FIX: Match the raw password against the encrypted database password
-    if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-        throw new RuntimeException("Invalid credentials");
-    }
-
-    // 4. Everything matches! Generate and return your JWT token payload
-    var jwt = jwtService.generateToken(user);
-    return AuthResponse.builder()
-                       .token(jwt)
-                       .role(user.getRole().getRoleName()) 
-                       .username(user.getUsername())       
-                       .email(user.getEmail())
-                       .build();
-}
-*/
-/*public AuthResponse authenticate(AuthRequest request) {
-        // Find user by Email or Phone
-        var user = userRepository.findByIdentifier(request.getIdentifier())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        // Authenticate using the username associated with that account
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        user.getUsername(),
-                        request.getPassword()
-                )
-        );
-
-        var jwt = jwtService.generateToken(user);
-        return AuthResponse.builder().token(jwt).build();
-    }
+        } catch (Exception e) {
+            throw new RuntimeException("Google authentication failed: " + e.getMessage());
         }
-*/
-
-
-/* 
-    public AuthResponse register(RegisterRequest request) {
-        Role userRole = roleRepository.findByRoleName("CLIENT")
-            .orElseThrow(() -> new RuntimeException("Role not found"));
-
-        // 2. Generate the 6-digit verification code
-        String code = String.format("%06d", new Random().nextInt(999999));
-
-        var user = User.builder()
-                .username(request.getUsername())
-                .email(request.getEmail())
-                .phoneNum(request.getPhoneNum())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .role(userRole) 
-                .active(false) // 3. Set to FALSE initially
-                .verificationCode(code) // Set code (Make sure these setters exist in User entity)
-                .verificationExpiry(LocalDateTime.now().plusMinutes(15)) // Set 15 min expiry
-                .build();
-
-        userRepository.save(user);
-
-        // 4. Send the verification code via email
-        emailVerificationService.sendVerificationEmail(user.getEmail(), code);
-
-        // 5. Return an empty token or a message indicating registration success pending verification
-        return AuthResponse.builder()
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .build();
     }
-
-
-    public AuthResponse authenticate(AuthRequest request) {
-        String identifier = request.getIdentifier();
-        
-        User user = userRepository.findByEmail(identifier)
-                .orElseGet(() -> {
-                    if (identifier != null && identifier.matches("\\d+")) {
-                        try {
-                            int phone = Integer.parseInt(identifier);
-                            return userRepository.findByPhoneNum(phone).orElse(null);
-                        } catch (NumberFormatException e) {
-                            return null; 
-                        }
-                    }
-                    return null;
-                });
-
-        if (user == null) {
-            throw new RuntimeException("User not found");
-        }
-
-        // 6. CRITICAL CHECK: Block authentication if account is not active
-        if (!user.isActive()) {
-            throw new RuntimeException("Account is inactive. Please verify your email first.");
-        }
-
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid credentials");
-        }
-
-        var jwt = jwtService.generateToken(user);
-        return AuthResponse.builder()
-                   .token(jwt)
-                   .role(user.getRole().getRoleName()) 
-                   .username(user.getUsername())       
-                   .email(user.getEmail())
-                   .build();
-    }
-
-
-/* 
-public AuthResponse authenticate(AuthRequest request) {
-    String identifier = request.getIdentifier();
-    
-    User user = userRepository.findByEmail(identifier)
-            .orElseGet(() -> {
-                if (identifier != null && identifier.matches("\\d+")) {
-                    try {
-                        int phone = Integer.parseInt(identifier);
-                        return userRepository.findByPhoneNum(phone).orElse(null);
-                    } catch (NumberFormatException e) {
-                        return null; 
-                    }
-                }
-                return null;
-            });
-
-    if (user == null) {
-        throw new org.springframework.security.core.userdetails.UsernameNotFoundException("User not found");
-    }
-
-    // 1. CRITICAL CHECK: Block authentication if account is not active
-    // Using DisabledException tells Spring Security explicitly that the credentials might be okay, but the account is locked.
-    if (!user.isActive()) {
-        throw new org.springframework.security.authentication.DisabledException("Account is inactive. Please verify your email first.");
-    }
-
-    // 2. Check password ONLY if they are active
-    if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-        throw new org.springframework.security.authentication.BadCredentialsException("Invalid credentials");
-    }
-
-    // 3. Issue Token
-    var jwt = jwtService.generateToken(user);
-    return AuthResponse.builder()
-               .token(jwt)
-               .role(user.getRole().getRoleName()) 
-               .username(user.getUsername())       
-               .email(user.getEmail())
-               .build();
 }
-*/
-
-/*
-
-
-    public AuthResponse register(RegisterRequest request) {
-        Role userRole = roleRepository.findByRoleName("CLIENT")
-            .orElseThrow(() -> new RuntimeException("Role not found"));
-
-        // 2. Generate the 6-digit verification code
-        String code = String.format("%06d", new Random().nextInt(999999));
-
-        var user = User.builder()
-                .username(request.getUsername())
-                .email(request.getEmail())
-                .phoneNum(request.getPhoneNum())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .role(userRole) 
-                .active(false) // 3. Set to FALSE initially
-                .verificationCode(code) // Set code (Make sure these setters exist in User entity)
-                .verificationExpiry(LocalDateTime.now().plusMinutes(15)) // Set 15 min expiry
-                .build();
-
-        userRepository.save(user);
-
-        // 4. Send the verification code via email
-        emailVerificationService.sendVerificationEmail(user.getEmail(), code);
-
-        // 5. Return an empty token or a message indicating registration success pending verification
-        return AuthResponse.builder()
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .build();
-    }
-
-
-
-
-
-
-
-
-*/
