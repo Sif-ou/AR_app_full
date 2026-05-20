@@ -1,13 +1,17 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 
 interface ARViewerProps {
   product: any; 
+  selectedColor: {
+    name: string;
+    hex: string;
+  };
   onClose: () => void;
 } 
 
-export default function ARViewer({ product, onClose }: ARViewerProps) {
+export default function ARViewer({ product,selectedColor, onClose }: ARViewerProps) {
   const [isMobile, setIsMobile] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [isNativeApp, setIsNativeApp] = useState(false);  
@@ -56,6 +60,36 @@ export default function ARViewer({ product, onClose }: ARViewerProps) {
     }
   };
 
+const modelViewerRef = useRef<any>(null);
+
+useEffect(() => {
+  const modelViewer = modelViewerRef.current;
+  if (!modelViewer) return;
+
+  const applyColor = () => {
+    if (!modelViewer.model || !selectedColor?.hex) return;
+
+    const hex = selectedColor.hex.replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16) / 255;
+    const g = parseInt(hex.substring(2, 4), 16) / 255;
+    const b = parseInt(hex.substring(4, 6), 16) / 255;
+    const colorArray = [r, g, b, 1.0]; 
+
+    modelViewer.model.materials.forEach((material: any) => {
+      if (material.pbrMetallicRoughness) {
+        material.pbrMetallicRoughness.setBaseColorFactor(colorArray);
+      }
+    });
+  };
+
+  modelViewer.addEventListener('load', applyColor);
+  if (modelViewer.model) applyColor();
+
+  return () => {
+    modelViewer.removeEventListener('load', applyColor);
+  };
+}, [selectedColor, loaded]);
+
   return (
     <div className="fixed inset-0 z-[100] flex flex-col bg-white"> 
       {/* Header */}
@@ -96,6 +130,7 @@ export default function ARViewer({ product, onClose }: ARViewerProps) {
           React.createElement(
             'model-viewer',
             {
+              ref: modelViewerRef,
               src: modelSrc,
               'ios-src': iosSrc,
               ar: true,

@@ -123,7 +123,7 @@ const handleWishlistClick = () => {
     switch (platform) {
       case 'facebook':
         // Modern Facebook SDK-less share dialog endpoint
-        window.open(`https://www.facebook.com/dialog/share?app_id=145634995501895&display=popup&href=${shareUrl}&redirect_uri=${shareUrl}`, '_blank', 'width=600,height=400');
+        window.open(`https://www.facebook.com/dialog/share?app_id=145634995501895&display=popup&href=${shareUrl}&redirect_uri=${shareUrl}`, '_blank');
         break;
       case 'twitter':
         window.open(`https://twitter.com/intent/tweet?url=${shareUrl}&text=${shareText}`, '_blank');
@@ -641,9 +641,13 @@ const handleWishlistClick = () => {
       <ChatbotWidget />
       
       {/* AR Viewer Modal */}
-      {isAROpen && (
-        <ARViewer product={product} onClose={() => setIsAROpen(false)} />
-      )}
+{isAROpen && (
+  <ARViewer 
+    product={product} 
+    selectedColor={product.colors[selectedColor]} 
+    onClose={() => setIsAROpen(false)} 
+  />
+)}
     </div>
   )
 }
