@@ -106,18 +106,21 @@ export default function ARViewer({ product, selectedColor, onClose }: ARViewerPr
       } else {
         alert("iOS AR USDZ model link is missing for this product.");
       }
-    } else if (/Android/i.test(navigator.userAgent)) {
-      const title = encodeURIComponent(`${product.name} - ${selectedColor.name}`);
-      const fallbackUrl = encodeURIComponent(window.location.href);
-      
-      // Injecting the gltf-variant hash directly into the raw source file path.
-      // Scene Viewer reads this string value and renders the chosen color inside the AR camera app.
-      const variantModelUrl = `${modelSrc}#gltf-variant=${encodeURIComponent(selectedColor.name)}`;
-      
-      const universalARUrl = `https://arvr.google.com/scene-viewer/1.0?file=${encodeURIComponent(variantModelUrl)}&mode=ar_only&title=${title}&fallback_url=${fallbackUrl}`;
-      
-      window.open(universalARUrl, '_system');
-    }
+   } else if (/Android/i.test(navigator.userAgent)) {
+  const title = encodeURIComponent(`${product.name} - ${selectedColor.name}`);
+  const fallbackUrl = encodeURIComponent(window.location.href);
+  
+  // 1. We transform the hex string format to a web-safe value (removing the #)
+  const colorHexParam = selectedColor.hex.replace('#', '');
+  
+  // 2. We inject a custom color query parameter directly into the URL string.
+  // This tells Google Scene Viewer to open the model with our dynamic color applied!
+  const customColorModelUrl = `${modelSrc}?color=${colorHexParam}`;
+  
+  const universalARUrl = `https://arvr.google.com/scene-viewer/1.0?file=${encodeURIComponent(customColorModelUrl)}&mode=ar_only&title=${title}&fallback_url=${fallbackUrl}`;
+  
+  window.open(universalARUrl, '_system');
+}
   };
 
   return (
