@@ -161,7 +161,7 @@ public class AuthService {
                 user = User.builder()
                         .username(name)
                         .email(email)
-                        .phoneNum(null) 
+                        .phoneNum(0) 
                         .password(passwordEncoder.encode("OAUTH2_FEDERATED_ACCOUNT_PASSWORD_PLACEHOLDER"))
                         .role(userRole)
                         .active(true) // Google handles the user validation, bypass registration OTP check
