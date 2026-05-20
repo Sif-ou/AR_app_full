@@ -170,7 +170,6 @@ export function Header() {
                         />
                       </div>
                       <h3 className="font-medium text-sm">{category.name}</h3>
-                      <p className="text-xs text-muted-foreground">{category.productCount} products</p>
                     </Link>
                   ))} 
                 </div>

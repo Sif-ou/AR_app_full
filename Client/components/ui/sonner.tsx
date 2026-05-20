@@ -1,5 +1,5 @@
 'use client'
-
+//الإعدادات الأساسية لحركات رسائل التنبيه العائمة.
 import { useTheme } from 'next-themes'
 import { Toaster as Sonner, ToasterProps } from 'sonner'
 

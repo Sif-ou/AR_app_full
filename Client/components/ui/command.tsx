@@ -1,5 +1,5 @@
 'use client'
-
+//Search menus or command-palette shortcuts.
 import * as React from 'react'
 import { Command as CommandPrimitive } from 'cmdk'
 import { SearchIcon } from 'lucide-react'

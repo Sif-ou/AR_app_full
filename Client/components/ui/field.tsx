@@ -1,5 +1,5 @@
 'use client'
-
+//حاوية لربط حقول الإدخال بالعناوين ورسائل الخطأ.
 import { useMemo } from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
 

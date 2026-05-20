@@ -1,5 +1,5 @@
 'use client'
-
+//تبويبات للفصل بين محتويات مختلفة في نفس المساحة.
 import * as React from 'react'
 import * as TabsPrimitive from '@radix-ui/react-tabs'
 

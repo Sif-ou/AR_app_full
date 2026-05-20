@@ -1,5 +1,5 @@
 'use client'
-
+//صناديق عائمة صغيرة تظهر بجانب عنصر محدد.
 import * as React from 'react'
 import * as PopoverPrimitive from '@radix-ui/react-popover'
 

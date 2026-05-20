@@ -193,13 +193,13 @@ export default function ARExperiencePage() {
                 <div className="absolute top-6 left-6 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                    <span className="text-sm font-medium text-foreground">AR Active</span>
+                    <span className="text-sm font-medium text-black dark:text-white">AR Active</span>
                   </div>
                 </div>
                 <div className="absolute bottom-6 left-6 right-6 bg-white/90 backdrop-blur-sm rounded-lg p-4 shadow-lg">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-semibold text-foreground">Nordica Sofa</p>
+                      <p className="font-semibold text-foreground dark:text-white">Nordica Sofa</p>
                       <p className="text-sm text-muted-foreground">Fits perfectly in this space</p>
                     </div>
                     <Button size="sm">Add to Cart</Button>

@@ -1,5 +1,5 @@
 'use client'
-
+//نصوص إرشادية صغيرة تظهر مؤقتاً عند الوقوف على عنصر.
 import * as React from 'react'
 import * as TooltipPrimitive from '@radix-ui/react-tooltip'
 

@@ -1,5 +1,5 @@
 import { cva, type VariantProps } from 'class-variance-authority'
-
+//Placeholder views when no data is available.
 import { cn } from '@/lib/utils'
 
 function Empty({ className, ...props }: React.ComponentProps<'div'>) {

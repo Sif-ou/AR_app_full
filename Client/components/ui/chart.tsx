@@ -1,5 +1,5 @@
 'use client'
-
+//Data visualization tools (graphs, bars, lines).
 import * as React from 'react'
 import * as RechartsPrimitive from 'recharts'
 

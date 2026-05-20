@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils'
-
+//هياكل رمادية مؤقتة تحاكي شكل المحتوى أثناء التحميل.
 function Skeleton({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div

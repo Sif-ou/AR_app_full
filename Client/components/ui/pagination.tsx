@@ -1,4 +1,5 @@
 import * as React from 'react'
+//Controls for navigating between multi-page data.
 import {
   ChevronLeftIcon,
   ChevronRightIcon,

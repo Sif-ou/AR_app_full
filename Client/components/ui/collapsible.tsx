@@ -1,5 +1,5 @@
 'use client'
-
+//مفاتيح بسيطة لتوسيع أو طي أي عنصر.
 import * as CollapsiblePrimitive from '@radix-ui/react-collapsible'
 
 function Collapsible({

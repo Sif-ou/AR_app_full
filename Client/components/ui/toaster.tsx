@@ -1,5 +1,5 @@
 'use client'
-
+//الحاوية المسؤولة عن إدارة وعرض رسائل التنبيه المتتالية.
 import { useToast } from '@/hooks/use-toast'
 import {
   Toast,

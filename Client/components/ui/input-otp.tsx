@@ -1,5 +1,5 @@
 'use client'
-
+//Multi-box inputs for security verification codes.
 import * as React from 'react'
 import { OTPInput, OTPInputContext } from 'input-otp'
 import { MinusIcon } from 'lucide-react'

@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils'
-
+//Styling tags representing physical keyboard keys.
 function Kbd({ className, ...props }: React.ComponentProps<'kbd'>) {
   return (
     <kbd

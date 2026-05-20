@@ -1,5 +1,5 @@
 'use client'
-
+//Track bar selectors for range values.
 import * as React from 'react'
 import * as SliderPrimitive from '@radix-ui/react-slider'
 

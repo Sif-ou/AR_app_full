@@ -1,5 +1,5 @@
 import { Loader2Icon } from 'lucide-react'
-
+//رموز دائرية متحركة تشير إلى استمرار التحميل.
 import { cn } from '@/lib/utils'
 
 function Spinner({ className, ...props }: React.ComponentProps<'svg'>) {

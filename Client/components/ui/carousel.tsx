@@ -1,5 +1,5 @@
 'use client'
-
+//شريط متحرك لعرض الصور أو العناصر بالتمرير.
 import * as React from 'react'
 import useEmblaCarousel, {
   type UseEmblaCarouselType,

@@ -1,5 +1,5 @@
 'use client'
-
+//لوحات تحكم يمكن للمستخدم تعديل حجمها بالسحب.
 import * as React from 'react'
 import { GripVerticalIcon } from 'lucide-react'
 import * as ResizablePrimitive from 'react-resizable-panels'
