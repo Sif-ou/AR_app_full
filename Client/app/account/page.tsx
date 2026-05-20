@@ -669,7 +669,7 @@ if (response.ok) {
     </span>
   </div>
 
-  {/* Button Container - Formatted cleanly to match modern input fields */}
+  {/* Button Container */}
   <div className="mt-2 w-full max-w-sm flex items-center justify-center px-1">
     {isGoogleLoading ? (
       <div className="text-sm text-muted-foreground text-center animate-pulse py-2 flex items-center gap-2">
@@ -677,19 +677,22 @@ if (response.ok) {
         Connecting to secure servers...
       </div>
     ) : (
-      // Inline wrapper style to explicitly force Google's script layout engine to center perfectly
-      <div className="w-full flex justify-center [&>div]:!mx-auto">
+      /* FIXES: 
+        - Added `overflow-hidden` and matching `rounded-full` to clip the iframe's white corners.
+        - Kept the centered mx-auto layout rule.
+      */
+      <div className="w-full flex justify-center rounded-full overflow-hidden [&>div]:!mx-auto [&>div]:flex [&>div]:justify-center">
         <GoogleLogin
           onSuccess={handleGoogleSuccess}
           onError={() => {
             alert('Google Login Popup window closed or failed to initialize.');
           }}
           useOneTap
-          theme="outline"     // Clean, modern border style that matches shadcn designs beautifully
-          shape="pill"        // Premium rounded corner profile
-          width="360px"       // Explicit size target to perfectly balance your email/password form factor
-          logo_alignment="left" // Clean left alignment makes the text feel balanced and professional
-          size="large"        // Increases padding and font definition slightly for better visual hierarchy
+          theme="filled_black" // FIX: Changes the internal iframe background to dark to match your UI
+          shape="pill"         // Keeps the clean rounded-capsule profile
+          width="360px"        // Explicit size target to match your form factor
+          logo_alignment="left"
+          size="large"         
         />
       </div>
     )}
