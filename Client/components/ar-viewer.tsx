@@ -167,7 +167,6 @@ export default function ARViewer({ product, selectedColor, onClose }: ARViewerPr
               ar: true,
               'ar-modes': 'webxr scene-viewer quick-look',
               'ar-placement': 'floor',
-              'ar-scale': 'fixed', 
               scale: '1 1 1',      
               'camera-controls': true,
               'touch-action': 'pan-y',
