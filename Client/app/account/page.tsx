@@ -9,9 +9,12 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { User, Package, Heart, Settings, LogIn, UserPlus, Eye, EyeOff } from 'lucide-react'
-import { useRouter } from 'next/navigation'
 import { useCart } from '@/lib/cart-context'
 import { useWishlist } from '@/lib/wishlist-context'
+import { GoogleLogin } from '@react-oauth/google';
+import { useRouter } from 'next/navigation'; // For redirecting after login
+
+
 
 export default function AccountPage() {
   const { clearCart } = useCart()
@@ -59,6 +62,51 @@ const [registeredPassword, setRegisteredPassword] = useState('');
 
 
 
+const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
+const handleGoogleSuccess = async (credentialResponse: any) => {
+  setIsGoogleLoading(true);
+  try {
+    // credentialResponse.credential contains the raw ID Token your Spring Boot app needs
+    const response = await fetch('https://ar-app-back-end.onrender.com/api/auth/google', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token: credentialResponse.credential }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Backend failed to authenticate Google account.');
+    }
+
+    const data = await response.json(); // Map with token, role, username, email
+
+    // Save token data locally for session persistence
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('username', data.username);
+    localStorage.setItem('role', data.role);
+    localStorage.setItem('email', data.email);
+
+    // Provide immediate user feedback (adjust to use toast() if available)
+    alert(`Welcome back, ${data.username}!`);
+    
+    // Redirect based on user privilege role
+    if (data.role === 'ADMIN') {
+      router.push('/admin');
+    } else if (data.role === 'MARKETING MANAGER') {
+      router.push('/marketing');
+    } else {
+      router.push('/dashboard'); // Standard CLIENT home space
+    }
+
+  } catch (error) {
+    console.error('Google Auth Error:', error);
+    alert('Could not link your Google account with our servers. Please try again.');
+  } finally {
+    setIsGoogleLoading(false);
+  }
+};
   
 
 

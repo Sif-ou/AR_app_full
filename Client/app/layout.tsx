@@ -4,10 +4,9 @@ import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 import { CartProvider } from '@/lib/cart-context'
 import { Toaster } from '@/components/ui/sonner'
-// 1. Import your ThemeProvider
 import { ThemeProvider } from '@/components/theme-provider'
 import { WishlistProvider } from '@/lib/wishlist-context'
-
+import { GoogleAuthProvider } from "@/components/GoogleAuthProvider"
 
 const inter = Inter({ subsets: ["latin"], variable: '--font-inter' })
 const playfair = Playfair_Display({ subsets: ["latin"], variable: '--font-playfair' })
@@ -32,29 +31,29 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    // 2. Added suppressHydrationWarning here
     <html lang="en" className={`${inter.variable} ${playfair.variable}`} suppressHydrationWarning>
-     <body className="font-sans antialiased">
-  <ThemeProvider
-    attribute="class"
-    defaultTheme="system"
-    enableSystem
-    disableTransitionOnChange
-  >
-    <CartProvider>
-      <WishlistProvider>
+      <body className="font-sans antialiased">
+        {/* We place GoogleAuthProvider at the top level so your whole app has access to it */}
+        <GoogleAuthProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <CartProvider>
+              <WishlistProvider>
+                <main className="min-h-screen w-full overflow-x-hidden">
+                  {children}
+                </main>
+                <Toaster />
+              </WishlistProvider>
+            </CartProvider>
 
-        <main className="min-h-screen w-full overflow-x-hidden ">
-    {children}
-  </main>
-        <Toaster />
-
-      </WishlistProvider>
-    </CartProvider>
-
-    {process.env.NODE_ENV === 'production' && <Analytics />}
-  </ThemeProvider>
-</body>
+            {process.env.NODE_ENV === 'production' && <Analytics />}
+          </ThemeProvider>
+        </GoogleAuthProvider>
+      </body>
     </html>
   )
 }

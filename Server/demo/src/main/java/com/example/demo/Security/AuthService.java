@@ -135,7 +135,7 @@ public class AuthService {
     }
 
     // Remember to replace this with your real Developer Console credential string!
-    private static final String GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
+    private static final String GOOGLE_CLIENT_ID = "987952981330-rd2224he91nnobm8sd9fdeegcpj9e2t7.apps.googleusercontent.com";
 
     public AuthResponse authenticateGoogleUser(String tokenId) {
         try {
