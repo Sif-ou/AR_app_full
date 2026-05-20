@@ -668,18 +668,26 @@ if (response.ok) {
     </span>
   </div>
 
-  <div className="mt-4 w-full flex justify-center">
+  {/* Wrapping the component in a full-width container 
+    and matching Shadcn/Radix maximum input width profiles 
+  */}
+  <div className="mt-4 w-full max-w-sm flex flex-col justify-center px-1">
     {isGoogleLoading ? (
-      <div className="text-sm text-muted-foreground animate-pulse">Connecting to servers...</div>
+      <div className="text-sm text-muted-foreground text-center animate-pulse py-2">
+        Connecting to servers...
+      </div>
     ) : (
       <GoogleLogin
         onSuccess={handleGoogleSuccess}
         onError={() => {
           alert('Google Login Popup window closed or failed to initialize.');
         }}
-        useOneTap // Optional: shows a clean prompt if logged into Google on browser
-theme="outline" // FIXED: Options are "outline", "filled_blue", or "filled_black"
-  shape="pill"
+        useOneTap
+        theme="outline" 
+        shape="pill"
+        // --- ADD THESE LAYOUT ATTRIBUTES ---
+        width="100%"       // Instructs the underlying iframe to stretch across its parent container
+                // Ensures standard language alignment constraints
       />
     )}
   </div>
