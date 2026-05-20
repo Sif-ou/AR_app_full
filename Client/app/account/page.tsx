@@ -669,34 +669,33 @@ if (response.ok) {
     </span>
   </div>
 
-  {/* Button Container */}
-  <div className="mt-2 w-full max-w-sm flex items-center justify-center">
+  {/* Button Container - Formatted cleanly to match modern input fields */}
+  <div className="mt-2 w-full max-w-sm flex items-center justify-center px-1">
     {isGoogleLoading ? (
       <div className="text-sm text-muted-foreground text-center animate-pulse py-2 flex items-center gap-2">
         <span className="h-4 w-4 rounded-full border-2 border-muted border-t-primary animate-spin" />
         Connecting to secure servers...
       </div>
     ) : (
-      /* 
-        1. Removed explicit width constraints from the wrapper.
-        2. Kept the flex centering trick that overrides Google's internal iframe positioning.
-      */
-      <div className="flex justify-center items-center w-full [&>div]:!mx-auto">
+      // Inline wrapper style to explicitly force Google's script layout engine to center perfectly
+      <div className="w-full flex justify-center [&>div]:!mx-auto">
         <GoogleLogin
           onSuccess={handleGoogleSuccess}
           onError={() => {
             alert('Google Login Popup window closed or failed to initialize.');
           }}
           useOneTap
-          type="icon"          // CHANGED: Tells Google to only render the logo icon
-          shape="circle"       // CHANGED: Tells Google to make the iframe button a perfect circle
-          theme="outline"      // Keeps your clean, modern border style
-          size="large"         // Ensures the circular icon button is prominent and easy to tap
+          theme="outline"     // Clean, modern border style that matches shadcn designs beautifully
+          shape="pill"        // Premium rounded corner profile
+          width="360px"       // Explicit size target to perfectly balance your email/password form factor
+          logo_alignment="left" // Clean left alignment makes the text feel balanced and professional
+          size="large"        // Increases padding and font definition slightly for better visual hierarchy
         />
       </div>
     )}
   </div>
 </div>
+
               </CardContent>
             </Card>
           </div>
