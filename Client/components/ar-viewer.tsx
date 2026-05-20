@@ -11,10 +11,11 @@ interface ARViewerProps {
   onClose: () => void;
 } 
 
-export default function ARViewer({ product,selectedColor, onClose }: ARViewerProps) {
+export default function ARViewer({ product, selectedColor, onClose }: ARViewerProps) {
   const [isMobile, setIsMobile] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [isNativeApp, setIsNativeApp] = useState(false);  
+  const modelViewerRef = useRef<any>(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -36,6 +37,34 @@ export default function ARViewer({ product,selectedColor, onClose }: ARViewerPro
     };
   }, []);
 
+  // Handle color switching safely via your model's native internal variant settings
+  useEffect(() => {
+    const modelViewer = modelViewerRef.current;
+    if (!modelViewer) return;
+
+    // Force the mobile graphics engine to match the sharp desktop screen resolution
+    if ((window as any).customElements?.get('model-viewer')) {
+      const MVClass = (window as any).customElements.get('model-viewer');
+      if (MVClass) MVClass.minimumRenderScale = 1;
+    }
+
+    const applyVariantColor = () => {
+      if (!selectedColor?.name) return;
+
+      // Swap the entire material profile cleanly if your file contains variants
+      if (modelViewer.availableVariants?.includes(selectedColor.name)) {
+        modelViewer.variantName = selectedColor.name;
+      }
+    };
+
+    modelViewer.addEventListener('load', applyVariantColor);
+    if (modelViewer.model) applyVariantColor();
+
+    return () => {
+      modelViewer.removeEventListener('load', applyVariantColor);
+    };
+  }, [selectedColor, loaded]);
+
   const modelSrc = product.arModel || "https://cdn.jsdelivr.net/gh/Sif-ou/AR_app_full@main/3d models/3d_model_furni-v1.glb";
   const iosSrc = product.iosModel || "";
 
@@ -46,76 +75,27 @@ export default function ARViewer({ product,selectedColor, onClose }: ARViewerPro
     e.stopPropagation();
 
     if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-  if (iosSrc) {
-    // Appending Apple's specific #allowsContentScaling parameter if needed or the variant target
-    const variantIosUrl = `${iosSrc}#allowsContentScaling=1&applePayButtonType=plain`;
-    window.open(variantIosUrl, '_system');
-  } else {
-    alert("iOS AR USDZ model link is missing for this product.");
-  }
-    } else if (/Android/i.test(navigator.userAgent)) {
-  const title = encodeURIComponent(`${product.name} - ${selectedColor.name}`);
-  const fallbackUrl = encodeURIComponent(window.location.href);
-  
-  // Appending the variant hash parameter to your file URL instructs the native engine to load it tinted
-  const variantModelUrl = `${modelSrc}#gltf-variant=${encodeURIComponent(selectedColor.name)}`;
-  
-  const universalARUrl = `https://arvr.google.com/scene-viewer/1.0?file=${encodeURIComponent(variantModelUrl)}&mode=ar_only&title=${title}&fallback_url=${fallbackUrl}`;
-  
-  window.open(universalARUrl, '_system');
-}
-  };
-
-const modelViewerRef = useRef<any>(null);
-
-useEffect(() => {
-  const modelViewer = modelViewerRef.current;
-  if (!modelViewer) return;
-
-  // Force the mobile engine to render at true 1:1 screen pixel density (fixes resolution blur)
-  if ((window as any).customElements?.get('model-viewer')) {
-    const MVClass = (window as any).customElements.get('model-viewer');
-    if (MVClass) MVClass.minimumRenderScale = 1;
-  }
-
-  const applyColor = () => {
-    // If your 3D file has native glTF variants built-in, use them first
-    if (selectedColor?.name && modelViewer.availableVariants?.includes(selectedColor.name)) {
-      modelViewer.variantName = selectedColor.name;
-      return;
-    }
-
-    if (!modelViewer.model || !selectedColor?.hex) return;
-
-    const hex = selectedColor.hex.replace('#', '');
-    const r = parseInt(hex.substring(0, 2), 16) / 255;
-    const g = parseInt(hex.substring(2, 4), 16) / 255;
-    const b = parseInt(hex.substring(4, 6), 16) / 255;
-    const colorArray = [r, g, b, 1.0]; 
-
-    modelViewer.model.materials.forEach((material: any) => {
-      const matName = (material.name || '').toLowerCase();
-      
-      // PROTECT structural parts from getting flat paint sprayed over them
-      const isStructure = matName.includes('wood') || 
-                          matName.includes('leg') || 
-                          matName.includes('frame') || 
-                          matName.includes('shadow') ||
-                          matName.includes('floor');
-
-      if (material.pbrMetallicRoughness && !isStructure) {
-        material.pbrMetallicRoughness.setBaseColorFactor(colorArray);
+      if (iosSrc) {
+        // Appending the color configuration profile for the iOS QuickLook engine
+        const variantIosUrl = `${iosSrc}#allowsContentScaling=1&canonicalWebPageUrl=${encodeURIComponent(window.location.href)}`;
+        window.open(variantIosUrl, '_system');
+      } else {
+        alert("iOS AR USDZ model link is missing for this product.");
       }
-    });
+    } else if (/Android/i.test(navigator.userAgent)) {
+      const title = encodeURIComponent(`${product.name} - ${selectedColor.name}`);
+      const fallbackUrl = encodeURIComponent(window.location.href);
+      
+      // Injecting the gltf-variant hash directly into the raw source file path.
+      // Scene Viewer reads this string value and renders the chosen color inside the AR camera app.
+      const variantModelUrl = `${modelSrc}#gltf-variant=${encodeURIComponent(selectedColor.name)}`;
+      
+      const universalARUrl = `https://arvr.google.com/scene-viewer/1.0?file=${encodeURIComponent(variantModelUrl)}&mode=ar_only&title=${title}&fallback_url=${fallbackUrl}`;
+      
+      window.open(universalARUrl, '_system');
+    }
   };
 
-  modelViewer.addEventListener('load', applyColor);
-  if (modelViewer.model) applyColor();
-
-  return () => {
-    modelViewer.removeEventListener('load', applyColor);
-  };
-}, [selectedColor, loaded]);
   return (
     <div className="fixed inset-0 z-[100] flex flex-col bg-white"> 
       {/* Header */}
@@ -127,7 +107,6 @@ useEffect(() => {
           </p>
         </div>
 
-        {/* CENTER */}
         <div className="absolute left-1/2 -translate-x-1/2 text-center">
           {!isMobile && (
             <p className="text-xs text-gray-400 font-semibold">
@@ -152,19 +131,17 @@ useEffect(() => {
             <p className="text-xs font-bold text-gray-400">LOADING 3D ENGINE...</p>
           </div>
         ) : (
-          /* Safely render model-viewer dynamically to bypass strict TS check errors */
           React.createElement(
             'model-viewer',
             {
               ref: modelViewerRef,
               src: modelSrc,
               'ios-src': iosSrc,
-              variant: selectedColor?.name,
               ar: true,
               'ar-modes': 'webxr scene-viewer quick-look',
               'ar-placement': 'floor',
-              'ar-scale': 'fixed', // Stops the model from shrinking/scaling down automatically
-    scale: '1 1 1',      // Forces the model to render at its true 100% dimensions
+              'ar-scale': 'fixed', 
+              scale: '1 1 1',      
               'camera-controls': true,
               'touch-action': 'pan-y',
               'auto-rotate': true,
@@ -173,31 +150,21 @@ useEffect(() => {
               'environment-image': 'neutral',
               exposure: '1',
               alt: `A 3D model of ${product.name}`,
-              'power-preference': 'high-performance', // Tells the phone to use its main GPU, not battery-saver mode
-    'interaction-prompt': 'none',          // Frees up processing memory immediately
-    'interpolation-decay': '200',           // Smoothes out rendering pixelation on mobile screens
-    'minimum-render-scale': '1',
+              'power-preference': 'high-performance', 
+              'interaction-prompt': 'none',          
+              'interpolation-decay': '200',           
+              'minimum-render-scale': '1', 
               style: { width: '100%', height: '100%' }
             },
             <>
-              {isNativeApp ? (
-                <button 
-                  slot="ar-button"
-                  onClick={handleNativeARLaunch}
-                  className="absolute bottom-10 left-1/2 -translate-x-1/2 z-[105] bg-black text-white px-8 py-4 rounded-full font-bold shadow-2xl flex items-center gap-3 active:scale-95 transition-transform"
-                >
-                  <span className="text-xl">📷</span>
-                  VIEW IN YOUR ROOM
-                </button>
-              ) : (
-                <button 
-                  slot="ar-button" 
-                  className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-black text-white px-8 py-4 rounded-full font-bold shadow-2xl flex items-center gap-3 active:scale-95 transition-transform"
-                >
-                  <span className="text-xl">📷</span>
-                  VIEW IN YOUR ROOM
-                </button>
-              )}
+              <button 
+                slot="ar-button"
+                onClick={isNativeApp ? handleNativeARLaunch : undefined}
+                className="absolute bottom-10 left-1/2 -translate-x-1/2 z-[105] bg-black text-white px-8 py-4 rounded-full font-bold shadow-2xl flex items-center gap-3 active:scale-95 transition-transform"
+              >
+                <span className="text-xl">📷</span>
+                VIEW IN YOUR ROOM
+              </button>
               <div slot="progress-bar" className="hidden"></div>
             </>
           )
