@@ -72,33 +72,21 @@ useEffect(() => {
   const modelViewer = modelViewerRef.current;
   if (!modelViewer) return;
 
-const applyColor = () => {
-  if (!modelViewer.model) return;
+  const applyColor = () => {
+    if (!modelViewer.model || !selectedColor?.hex) return;
 
-  // 1. TRY THE NATIVE WAY FIRST: If your GLB file has built-in material variants
-  if (selectedColor?.name && modelViewer.availableVariants?.includes(selectedColor.name)) {
-    modelViewer.variantName = selectedColor.name;
-    return; // Exit here if the asset handled it natively!
-  }
+    const hex = selectedColor.hex.replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16) / 255;
+    const g = parseInt(hex.substring(2, 4), 16) / 255;
+    const b = parseInt(hex.substring(4, 6), 16) / 255;
+    const colorArray = [r, g, b, 1.0]; 
 
-  // 2. FALLBACK WAY: Smart programmatic tinting if the file doesn't have internal variants
-  if (!selectedColor?.hex) return;
-  const hex = selectedColor.hex.replace('#', '');
-  const r = parseInt(hex.substring(0, 2), 16) / 255;
-  const g = parseInt(hex.substring(2, 4), 16) / 255;
-  const b = parseInt(hex.substring(4, 6), 16) / 255;
-  const colorArray = [r, g, b, 1.0]; 
-
-  modelViewer.model.materials.forEach((material: any) => {
-    // ONLY color the fabric parts. Don't paint over things named 'wood', 'metal', 'shadow', or 'legs'
-    const name = (material.name || '').toLowerCase();
-    const isStructureElement = name.includes('wood') || name.includes('leg') || name.includes('frame') || name.includes('shadow');
-
-    if (material.pbrMetallicRoughness && !isStructureElement) {
-      material.pbrMetallicRoughness.setBaseColorFactor(colorArray);
-    }
-  });
-};
+    modelViewer.model.materials.forEach((material: any) => {
+      if (material.pbrMetallicRoughness) {
+        material.pbrMetallicRoughness.setBaseColorFactor(colorArray);
+      }
+    });
+  };
 
   modelViewer.addEventListener('load', applyColor);
   if (modelViewer.model) applyColor();
@@ -165,6 +153,9 @@ const applyColor = () => {
               'environment-image': 'neutral',
               exposure: '1',
               alt: `A 3D model of ${product.name}`,
+              'power-preference': 'high-performance', // Tells the phone to use its main GPU, not battery-saver mode
+    'interaction-prompt': 'none',          // Frees up processing memory immediately
+    'interpolation-decay': '200',           // Smoothes out rendering pixelation on mobile screens
               style: { width: '100%', height: '100%' }
             },
             <>
