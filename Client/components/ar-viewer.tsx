@@ -71,7 +71,9 @@ const modelViewerRef = useRef<any>(null);
 useEffect(() => {
   const modelViewer = modelViewerRef.current;
   if (!modelViewer) return;
-
+if ((window as any).customElements?.get('model-viewer')) {
+    (window as any).customElements.get('model-viewer').minimumRenderScale = 1;
+  }
   const applyColor = () => {
     if (!modelViewer.model || !selectedColor?.hex) return;
 
@@ -150,9 +152,11 @@ useEffect(() => {
               'shadow-softness': '1',
               'environment-image': 'neutral',
               exposure: '1',
-              alt: `A 3D model of ${product.name}`,
-              style: { width: '100%', height: '100%' }
-            },
+                alt: `A 3D model of ${product.name}`,
+             'interaction-prompt': 'none',
+    'interpolation-decay': '200', 
+    style: { width: '100%', height: '100%', backgroundColor: '#f8f8f8' }
+  },
             <>
               {isNativeApp ? (
                 <button 
