@@ -661,38 +661,40 @@ if (response.ok) {
                   </TabsContent>
                 </Tabs>
 
-<div className="flex flex-col items-center justify-center w-full my-4">
-  <div className="w-full border-t border-muted my-2 text-center relative">
-    <span className="bg-background px-2 text-xs text-muted-foreground absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-      OR CONTINUE WITH
+<div className="flex flex-col items-center justify-center w-full my-6">
+  {/* The "OR CONTINUE WITH" Divider Line */}
+  <div className="w-full max-w-sm border-t border-muted my-4 text-center relative">
+    <span className="bg-background px-3 text-[10px] font-semibold tracking-wider text-muted-foreground/80 uppercase absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+      Or continue with
     </span>
   </div>
 
-  {/* Wrapping the component in a full-width container 
-    and matching Shadcn/Radix maximum input width profiles 
-  */}
-  <div className="mt-4 w-full max-w-sm flex flex-col justify-center px-1">
+  {/* Button Container - Formatted cleanly to match modern input fields */}
+  <div className="mt-2 w-full max-w-sm flex items-center justify-center px-1">
     {isGoogleLoading ? (
-      <div className="text-sm text-muted-foreground text-center animate-pulse py-2">
-        Connecting to servers...
+      <div className="text-sm text-muted-foreground text-center animate-pulse py-2 flex items-center gap-2">
+        <span className="h-4 w-4 rounded-full border-2 border-muted border-t-primary animate-spin" />
+        Connecting to secure servers...
       </div>
     ) : (
-      <GoogleLogin
-        onSuccess={handleGoogleSuccess}
-        onError={() => {
-          alert('Google Login Popup window closed or failed to initialize.');
-        }}
-        useOneTap
-        theme="outline" 
-        shape="pill"
-        // --- ADD THESE LAYOUT ATTRIBUTES ---
-        width="100%"       // Instructs the underlying iframe to stretch across its parent container
-                // Ensures standard language alignment constraints
-      />
+      // Inline wrapper style to explicitly force Google's script layout engine to center perfectly
+      <div className="w-full flex justify-center [&>div]:!mx-auto">
+        <GoogleLogin
+          onSuccess={handleGoogleSuccess}
+          onError={() => {
+            alert('Google Login Popup window closed or failed to initialize.');
+          }}
+          useOneTap
+          theme="outline"     // Clean, modern border style that matches shadcn designs beautifully
+          shape="pill"        // Premium rounded corner profile
+          width="360px"       // Explicit size target to perfectly balance your email/password form factor
+          logo_alignment="left" // Clean left alignment makes the text feel balanced and professional
+          size="large"        // Increases padding and font definition slightly for better visual hierarchy
+        />
+      </div>
     )}
   </div>
 </div>
-
 
               </CardContent>
             </Card>
