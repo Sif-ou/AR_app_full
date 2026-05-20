@@ -71,24 +71,29 @@ const modelViewerRef = useRef<any>(null);
 useEffect(() => {
   const modelViewer = modelViewerRef.current;
   if (!modelViewer) return;
-if ((window as any).customElements?.get('model-viewer')) {
-    (window as any).customElements.get('model-viewer').minimumRenderScale = 1;
-  }
-  const applyColor = () => {
-    if (!modelViewer.model || !selectedColor?.hex) return;
 
-    const hex = selectedColor.hex.replace('#', '');
-    const r = parseInt(hex.substring(0, 2), 16) / 255;
-    const g = parseInt(hex.substring(2, 4), 16) / 255;
-    const b = parseInt(hex.substring(4, 6), 16) / 255;
-    const colorArray = [r, g, b, 1.0]; 
+const applyColor = () => {
+  if (!modelViewer.model || !selectedColor?.hex) return;
 
-    modelViewer.model.materials.forEach((material: any) => {
-      if (material.pbrMetallicRoughness) {
+  const hex = selectedColor.hex.replace('#', '');
+  const r = parseInt(hex.substring(0, 2), 16) / 255;
+  const g = parseInt(hex.substring(2, 4), 16) / 255;
+  const b = parseInt(hex.substring(4, 6), 16) / 255;
+  const colorArray = [r, g, b, 1.0]; 
+
+  modelViewer.model.materials.forEach((material: any) => {
+    if (material.pbrMetallicRoughness) {
+      // 1. If the material relies on an image texture for details, don't overwrite it with flat paint!
+      if (material.pbrMetallicRoughness.baseColorTexture) {
+        // This tints the existing texture rather than destroying it entirely
+        material.pbrMetallicRoughness.setBaseColorFactor(colorArray);
+      } else {
+        // 2. If it's a solid part (like a plastic foot or metal frame without textures), change it safely
         material.pbrMetallicRoughness.setBaseColorFactor(colorArray);
       }
-    });
-  };
+    }
+  });
+};
 
   modelViewer.addEventListener('load', applyColor);
   if (modelViewer.model) applyColor();
@@ -145,6 +150,8 @@ if ((window as any).customElements?.get('model-viewer')) {
               ar: true,
               'ar-modes': 'webxr scene-viewer quick-look',
               'ar-placement': 'floor',
+              'ar-scale': 'fixed', // Stops the model from shrinking/scaling down automatically
+    scale: '1 1 1',      // Forces the model to render at its true 100% dimensions
               'camera-controls': true,
               'touch-action': 'pan-y',
               'auto-rotate': true,
@@ -152,11 +159,9 @@ if ((window as any).customElements?.get('model-viewer')) {
               'shadow-softness': '1',
               'environment-image': 'neutral',
               exposure: '1',
-                alt: `A 3D model of ${product.name}`,
-             'interaction-prompt': 'none',
-    'interpolation-decay': '200', 
-    style: { width: '100%', height: '100%', backgroundColor: '#f8f8f8' }
-  },
+              alt: `A 3D model of ${product.name}`,
+              style: { width: '100%', height: '100%' }
+            },
             <>
               {isNativeApp ? (
                 <button 
