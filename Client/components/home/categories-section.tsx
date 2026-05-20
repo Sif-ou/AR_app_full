@@ -71,9 +71,6 @@ export function CategoriesSection() {
                   </p>
 
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] md:text-xs font-medium uppercase tracking-widest text-white/70 bg-white/10 backdrop-blur-md px-3 py-1 rounded-full border border-white/20">
-                      {category.productCount} Products
-                    </span>
                     <div className="h-8 w-8 rounded-full bg-white text-black flex items-center justify-center opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 hidden md:flex">
                       <ArrowRight className="h-4 w-4" />
                     </div>
