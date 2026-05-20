@@ -50,6 +50,12 @@ function ProductsContent() {
     if (category && categories.find(c => c.id === category)) {
       setSelectedCategories([category])
     }
+  const search = searchParams.get('search')
+    if (search) {
+      setSearchQuery(search)
+    } else {
+      setSearchQuery('') // Clear it if no search param exists
+    }
   }, [searchParams])
 
   const filteredProducts = useMemo(() => {
@@ -88,9 +94,9 @@ function ProductsContent() {
           <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <h1 className="text-3xl font-bold tracking-tight">Furniture Collection</h1>
-              <p className="text-muted-foreground text-sm mt-1">
-                Showing {filteredProducts.length} of {products.length} items
-              </p>
+             <p className="text-foreground text-sm mt-1 font-medium">
+  Showing {filteredProducts.length} of {products.length} items
+</p>
             </div>
             
             <div className="flex flex-wrap items-center gap-2">
@@ -100,7 +106,9 @@ function ProductsContent() {
                   placeholder="Search products..." 
                   className="pl-10 h-10 rounded-xl border-slate-200 bg-white"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => setSearchQuery(e.target.value)
+                    
+                  }
                 />
               </div>
               

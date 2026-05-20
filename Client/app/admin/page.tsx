@@ -635,10 +635,10 @@ export default function AdminDashboard() {
                 <Card className="bg-slate-900 border-slate-800/80 shadow-2xl overflow-hidden">
                   <Tabs defaultValue="all" className="w-full">
                     <div className="px-5 pt-4 bg-slate-950/20 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <TabsList className="bg-slate-950 border border-slate-800/60 p-1 rounded-lg self-start mb-3 sm:mb-0">
-                        <TabsTrigger value="all" className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white text-xs px-4 py-1.5 font-semibold">System Registry ({filteredAccounts.length})</TabsTrigger>
-                        <TabsTrigger value="clients" className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white text-xs px-4 py-1.5 font-semibold">Clients ({clientAccounts.length})</TabsTrigger>
-                        <TabsTrigger value="workers" className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white text-xs px-4 py-1.5 font-semibold">Staff & Operations ({workerAccounts.length})</TabsTrigger>
+                      <TabsList className="bg-slate-950 border border-slate-800/60 p-1 rounded-lg self-start mb-3 sm:mb-0 max-w-full overflow-x-auto justify-start flex whitespace-nowrap [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                        <TabsTrigger value="all" className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white text-xs px-4 py-1.5 font-semibold shrink-0">System Registry ({filteredAccounts.length})</TabsTrigger>
+                        <TabsTrigger value="clients" className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white text-xs px-4 py-1.5 font-semibold shrink-0">Clients ({clientAccounts.length})</TabsTrigger>
+                        <TabsTrigger value="workers" className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white text-xs px-4 py-1.5 font-semibold shrink-0">Staff & Operations ({workerAccounts.length})</TabsTrigger>
                       </TabsList>
                     </div>
 
@@ -685,7 +685,7 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-400 tracking-wider uppercase">Electronic Mail Routing Interface</label>
+                  <label className="text-xs font-semibold text-slate-400 tracking-wider uppercase">Email</label>
                   <Input 
                     required
                     type="email"
@@ -697,7 +697,7 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-400 tracking-wider uppercase">System Security Cryptographic Credentials</label>
+                  <label className="text-xs font-semibold text-slate-400 tracking-wider uppercase">Password</label>
                   <Input 
                     required
                     type="password"
@@ -709,7 +709,7 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-400 tracking-wider uppercase">Contact Parameter String (Integer Schema)</label>
+                  <label className="text-xs font-semibold text-slate-400 tracking-wider uppercase">Telephone Number</label>
                   <Input 
                     required
                     type="tel"
@@ -728,7 +728,6 @@ export default function AdminDashboard() {
                     </SelectTrigger>
                     <SelectContent className="bg-slate-950 border-slate-800 text-slate-300">
                       <SelectItem value="CLIENT" className="focus:bg-indigo-600 focus:text-white text-sm">CLIENT (User)</SelectItem>
-                      <SelectItem value="ADMIN" className="focus:bg-indigo-600 focus:text-white text-sm">ADMIN (Full Authority)</SelectItem>
                       <SelectItem value="DELIVERY" className="focus:bg-indigo-600 focus:text-white text-sm">DELIVERY (Logistics Operations)</SelectItem>
                       <SelectItem value="STOCK" className="focus:bg-indigo-600 focus:text-white text-sm">STOCK (Warehouse & Inventory)</SelectItem>
                       <SelectItem value="MARKETING MANAGER" className="focus:bg-indigo-600 focus:text-white text-sm">MARKETING MANAGER (Campaign Strategy)</SelectItem>

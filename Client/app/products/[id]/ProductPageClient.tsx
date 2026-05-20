@@ -31,6 +31,7 @@ import {
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import router from 'next/router'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 
 
 
@@ -114,18 +115,29 @@ const handleWishlistClick = () => {
     toast.success(wasFavorited ? 'Removed from wishlist' : 'Added to wishlist')
   }
 
-  const handleShare = async () => {
-    try {
-      await navigator.share({
-        title: product.name,
-        text: product.description,
-        url: window.location.href
-      })
-    } catch {
-      await navigator.clipboard.writeText(window.location.href)
-      toast.success('Link copied to clipboard')
+ const handleShareCustom = (platform: 'facebook' | 'twitter' | 'whatsapp' | 'copy') => {
+    // encodeURIComponent makes sure special characters in your URL don't break the query string
+    const shareUrl = encodeURIComponent(window.location.href);
+    const shareText = encodeURIComponent(`Check out this ${product.name}!`);
+
+    switch (platform) {
+      case 'facebook':
+        // Modern Facebook SDK-less share dialog endpoint
+        window.open(`https://www.facebook.com/dialog/share?app_id=145634995501895&display=popup&href=${shareUrl}&redirect_uri=${shareUrl}`, '_blank');
+        break;
+      case 'twitter':
+        window.open(`https://twitter.com/intent/tweet?url=${shareUrl}&text=${shareText}`, '_blank');
+        break;
+      case 'whatsapp':
+        window.open(`https://api.whatsapp.com/send?text=${shareText}%20${shareUrl}`, '_blank');
+        break;
+      case 'copy':
+      default:
+        navigator.clipboard.writeText(window.location.href);
+        toast.success('Link copied to clipboard');
+        break;
     }
-  }
+  };
 
   const relatedProducts = products
     .filter(p => p.category === product.category && p.id !== product.id)
@@ -381,13 +393,27 @@ const handleWishlistClick = () => {
                 >
                   <Heart className={cn("h-5 w-5", isFavorited && "fill-accent text-accent")} />
                 </Button>
-                <Button 
-                  size="lg" 
-                  variant="outline"
-                  onClick={handleShare}
-                >
-                  <Share2 className="h-5 w-5" />
-                </Button>
+                <Popover>
+  <PopoverTrigger asChild>
+    <Button size="lg" variant="outline">
+      <Share2 className="h-5 w-5" />
+    </Button>
+  </PopoverTrigger>
+  <PopoverContent className="w-48 p-2 flex flex-col gap-1">
+    <button onClick={() => handleShareCustom('facebook')} className="text-left px-3 py-2 text-sm hover:bg-muted rounded-md transition-colors">
+      Share on Facebook
+    </button>
+    <button onClick={() => handleShareCustom('twitter')} className="text-left px-3 py-2 text-sm hover:bg-muted rounded-md transition-colors">
+      Share on X (Twitter)
+    </button>
+    <button onClick={() => handleShareCustom('whatsapp')} className="text-left px-3 py-2 text-sm hover:bg-muted rounded-md transition-colors">
+      Share on WhatsApp
+    </button>
+    <button onClick={() => handleShareCustom('copy')} className="text-left px-3 py-2 text-sm hover:bg-muted rounded-md transition-colors border-t mt-1 pt-2">
+      Copy Link
+    </button>
+  </PopoverContent>
+</Popover>
               </div>
 
               {/* AR Button */}
@@ -615,9 +641,13 @@ const handleWishlistClick = () => {
       <ChatbotWidget />
       
       {/* AR Viewer Modal */}
-      {isAROpen && (
-        <ARViewer product={product} onClose={() => setIsAROpen(false)} />
-      )}
+{isAROpen && (
+  <ARViewer 
+    product={product} 
+    selectedColor={product.colors[selectedColor]} 
+    onClose={() => setIsAROpen(false)} 
+  />
+)}
     </div>
   )
 }

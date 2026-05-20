@@ -10,8 +10,10 @@ import { useCart } from '@/lib/cart-context'
 import { categories } from '@/lib/data'
 import { cn } from '@/lib/utils'
 import { useTheme } from 'next-themes'
+import { useRouter } from 'next/navigation'
 
 export function Header() {
+  const router = useRouter();
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const { totalItems, setIsOpen } = useCart()
@@ -24,11 +26,14 @@ export function Header() {
     setMounted(true)
   }, [])
 
-  const handleSearch = (e: React.FormEvent) => {
+ const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
-    if (searchQuery.trim()) {
-      window.location.href = `/products?search=${encodeURIComponent(searchQuery)}`
-    }
+    
+    // 1. Check if the search query is empty or just spaces
+    if (!searchQuery.trim()) return
+
+    // 2. Use the Next.js router instead of window.location.href
+    router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`)
   }
 
   return (
