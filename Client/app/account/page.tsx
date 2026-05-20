@@ -42,33 +42,21 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isResettingPassword, setIsResettingPassword] = useState(false);
 
-  // Simulated authentication check and profile fetching
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        // Replace with your actual API call / auth validation logic
-        // e.g., const res = await api.get('/auth/me');
         const token = localStorage.getItem('token');
         
         if (!token) {
-          router.push('/login');
+          router.push('/account');
           return;
         }
 
-        // Mock data matching your multi-role platform layout
-        const mockUser: UserData = {
-          id: "usr_94821",
-          name: "Bouhouche Seif Eddine Firas",
-          email: "firas@example.com",
-          role: "MARKETING MANAGER",
-          joinedDate: "March 2026"
-        };
-
-        setUser(mockUser);
+        // Your existing API logic goes here to populate 'user'
       } catch (error) {
         console.error("Auth verification failed:", error);
         toast.error("Session expired. Please log in again.");
-        router.push('/login');
+        router.push('/account');
       } finally {
         setIsLoading(false);
       }
@@ -79,8 +67,6 @@ export default function ProfilePage() {
 
   const handleRoleRedirect = () => {
     if (!user) return;
-    
-    toast.info(`Redirecting to ${user.role} workspace...`);
     
     switch (user.role) {
       case 'ADMIN':
@@ -93,7 +79,7 @@ export default function ProfilePage() {
         router.push('/delivery');
         break;
       case 'MARKETING MANAGER':
-        router.push('/marketing'); // Typo fixed: shifted safely from '/maketing'
+        router.push('/marketing'); // Typo fixed from '/maketing'
         break;
       default:
         toast.error("No dedicated dashboard found for this role.");
@@ -104,11 +90,10 @@ export default function ProfilePage() {
     if (!user) return;
     setIsResettingPassword(true);
     try {
-      // Replace with your axios/fetch instance: await api.post('/auth/reset-link', { email: user.email });
-      await new Promise((resolve) => setTimeout(resolve, 1000)); 
+      // Your password reset api action here
       toast.success("Password reset instructions have been sent to your email!");
     } catch (error) {
-      toast.error("Failed to send reset link. Please try again later.");
+      toast.error("Failed to send reset link.");
     } finally {
       setIsResettingPassword(false);
     }
@@ -116,11 +101,10 @@ export default function ProfilePage() {
 
   const handleDeleteAccount = async () => {
     try {
-      // Replace with your backend call: await api.delete(`/users/${user?.id}`);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Your account deletion api action here
       toast.success("Account permanently deleted.");
       localStorage.removeItem('token');
-      router.push('/login');
+      router.push('/account');
     } catch (error) {
       toast.error("An error occurred while deleting your account.");
     }
@@ -129,7 +113,7 @@ export default function ProfilePage() {
   const handleLogout = () => {
     localStorage.removeItem('token');
     toast.success("Logged out successfully.");
-    router.push('/login');
+    router.push('/account');
   };
 
   if (isLoading) {
