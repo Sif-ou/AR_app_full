@@ -284,26 +284,7 @@ export default function StockDashboard() {
     router.push('/account')
   }
 
-if (isAuthorized === null || isLoading) {
-    return (
-      <div className="min-h-screen bg-[#121212] flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-      </div>
-    )
-  }
 
-  if (isAuthorized === false) {
-    return (
-      <div className="min-h-screen bg-[#121212] flex flex-col items-center justify-center p-6 text-center">
-        <Card className="bg-zinc-900 border-none p-8 max-w-sm">
-          <Lock className="h-8 w-8 text-red-500 mx-auto mb-4" />
-          <CardTitle className="text-white mb-2">Access Denied</CardTitle>
-          <CardDescription className="text-zinc-400 mb-6">{fetchError}</CardDescription>
-          <Button onClick={() => { localStorage.clear(); router.push('/account'); }} className="w-full bg-blue-600">Go to Login</Button>
-        </Card>
-      </div>
-    )
-  }
   const filteredInventory = inventory.filter(item => 
     item.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
     item.category?.toLowerCase().includes(searchQuery.toLowerCase())
