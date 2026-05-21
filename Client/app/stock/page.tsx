@@ -284,36 +284,24 @@ export default function StockDashboard() {
     router.push('/account')
   }
 
-// 1. Check for failed authorization FIRST.
-// If authorization explicitly failed, stop loading and show the Denied screen immediately.
-if (isAuthorized === false) {
-  return (
-    <div className="min-h-screen bg-[#121212] flex flex-col items-center justify-center p-6 text-center">
-      <Card className="bg-zinc-900 border-none p-8 max-w-sm">
-        <Lock className="h-8 w-8 text-red-500 mx-auto mb-4" />
-        <CardTitle className="text-white mb-2">Access Denied</CardTitle>
-        <CardDescription className="text-zinc-400 mb-6">
-          {fetchError || "Your account lacks permissions to view the stock management panel."}
-        </CardDescription>
-        <Button 
-          onClick={() => { localStorage.clear(); router.push('/account'); }} 
-          className="w-full bg-blue-600"
-        >
-          Go to Login
-        </Button>
-      </Card>
-    </div>
-  )
-}
-
-// 2. Only show the spinner if the authorization state is still pending (null) or actively fetching.
-if (isAuthorized === null || isLoading) {
-  return (
-    <div className="min-h-screen bg-[#121212] flex items-center justify-center">
-      <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-    </div>
-  )
-}
+  if (isAuthorized === false) {
+    return (
+      <div className="min-h-screen bg-[#121212] flex flex-col items-center justify-center p-6">
+        <Card className="bg-zinc-900 border-none ring-1 ring-white/10 p-8 max-w-sm text-center shadow-2xl">
+          <div className="inline-flex p-4 bg-red-500/10 text-red-400 border border-red-500/20 rounded-full mb-4">
+            <Lock className="h-8 w-8" />
+          </div>
+          <CardTitle className="text-xl font-bold text-white mb-2">Access Denied</CardTitle>
+          <CardDescription className="text-zinc-400 text-sm mb-6">
+            {fetchError || "You lack inventory control clearance or your session expired."}
+          </CardDescription>
+          <Button onClick={() => { localStorage.clear(); router.push('/account'); }} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium">
+            Go to Login Page
+          </Button>
+        </Card>
+      </div>
+    )
+  }
 
   const filteredInventory = inventory.filter(item => 
     item.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
