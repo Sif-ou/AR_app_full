@@ -465,10 +465,7 @@ const handleVerifyCode = async () => {
                           {statusMessage}
                         </p>
                       )}
-
-                      <p className="text-center text-sm text-muted-foreground">
-                        <a href="#" className="text-accent hover:underline">Forgot your password?</a>
-                      </p>
+                      
                     </form>
                   </TabsContent>
 
