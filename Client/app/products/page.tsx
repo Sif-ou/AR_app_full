@@ -16,20 +16,28 @@ export default function ProductsPage() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
 
+
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await fetch('https://ar-app-back-end.onrender.com/products')
-        const data = await response.json()
-        setProducts(data)
-      } catch (error) {
-        console.error("Error fetching products:", error)
-      } finally {
-        setLoading(false)
+  const fetchProducts = async () => {
+    try {
+      const response = await fetch('https://ar-app-back-end.onrender.com/products')
+      
+      // Check if the response is actually OK before parsing
+      if (!response.ok) {
+        throw new Error(`Server responded with ${response.status}`)
       }
+      
+      const data = await response.json()
+      setProducts(data)
+    } catch (error) {
+      console.error("Error fetching products:", error)
+      // Optional: set a state to show an error message to the user
+    } finally {
+      setLoading(false)
     }
-    fetchProducts()
-  }, [])
+  }
+  fetchProducts()
+}, [])
 
   // Filter logic based on the backend data structure
   const filteredProducts = products.filter(p => 
