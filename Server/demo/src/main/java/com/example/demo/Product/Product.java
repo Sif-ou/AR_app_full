@@ -121,7 +121,8 @@ public class Product {
         this.depth = depth;
     }
 
-
+@OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
+@com.fasterxml.jackson.annotation.JsonManagedReference
 public List<Variants> getVariants() {
     return this.variants;
 }

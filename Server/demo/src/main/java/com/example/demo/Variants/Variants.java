@@ -26,8 +26,9 @@ public class Variants {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne 
-    @JoinColumn(name = "product_id", referencedColumnName = "id" )
+@ManyToOne 
+    @JoinColumn(name = "product_id")
+    @com.fasterxml.jackson.annotation.JsonBackReference
     private Product product ;
 
     @ManyToOne 
