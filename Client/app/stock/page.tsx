@@ -82,16 +82,16 @@ export default function StockDashboard() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [deletingId, setDeletingId] = useState<number | null>(null)
 
-const [productForm, setProductForm] = useState({ 
-  name: '', 
-  quantity: 0, 
-  price: 0, // ADD THIS
-  category: '', 
-  description: '', 
-  heigh: 0, 
-  width: 0, 
-  depth: 0 
-})
+  const [productForm, setProductForm] = useState({ 
+    name: '', 
+    quantity: 0, 
+    price: 0, 
+    category: '', 
+    description: '', 
+    heigh: 0, 
+    width: 0, 
+    depth: 0 
+  })
   const [colorForm, setColorForm] = useState({ name: '', hexCode: '#3b82f6' })
   const [variantForm, setVariantForm] = useState({ productId: '', colorId: '', name: '', sku: '', percentage: 0, quantity: 0, description: '' })
   const [mediaForm, setMediaForm] = useState({ variantId: '', staticImage: '', model3d: '' })
@@ -111,7 +111,7 @@ const [productForm, setProductForm] = useState({
   const fetchAllData = useCallback(async () => {
     const token = getCleanAuthToken();
     if (!token) {
-      setFetchError("No valid authentication token found.");
+      setFetchError("No valid authentication token found. Please log in.");
       setIsAuthorized(false);
       setIsLoading(false);
       return;
@@ -130,7 +130,7 @@ const [productForm, setProductForm] = useState({
 
       if (resProducts.status === 403 || resColors.status === 403 || resVariants.status === 403 || resMedia.status === 403) {
         localStorage.removeItem("token");
-        setFetchError("Access Denied (403): Your token is expired or lacks permissions.");
+        setFetchError("Access Denied (403): Your account lacks permissions or your session expired.");
         setIsAuthorized(false); 
         setIsLoading(false);
         return;
@@ -163,6 +163,7 @@ const [productForm, setProductForm] = useState({
   useEffect(() => {
     const token = getCleanAuthToken();
     if (!token) {
+      setFetchError("No token found. Please sign in.");
       setIsAuthorized(false);
       setIsLoading(false);
     } else {
@@ -292,33 +293,6 @@ const [productForm, setProductForm] = useState({
     localStorage.clear() 
     setIsAuthorized(false)
     router.push('/account')
-  }
-
-if ( isLoading) {
-  
-    return (
-      <div className="min-h-screen bg-[#121212] flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-      </div>
-    )
-  }
-
-  if (isAuthorized ){
-    router.push('/') ;
-    return ;
-  }
-
-  if (isAuthorized === false) {
-    return (
-      <div className="min-h-screen bg-[#121212] flex flex-col items-center justify-center p-6 text-center">
-        <Card className="bg-zinc-900 border-none p-8 max-w-sm">
-          <Lock className="h-8 w-8 text-red-500 mx-auto mb-4" />
-          <CardTitle className="text-white mb-2">Access Denied</CardTitle>
-          <CardDescription className="text-zinc-400 mb-6">{fetchError}</CardDescription>
-          <Button onClick={() => { localStorage.clear(); router.push('/account'); }} className="w-full bg-blue-600">Go to Login</Button>
-        </Card>
-      </div>
-    )
   }
   const filteredInventory = inventory.filter(item => 
     item.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
