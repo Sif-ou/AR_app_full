@@ -21,7 +21,7 @@ interface Product {
 // Fetch products directly from your Spring Boot backend on the server
 async function getProducts(): Promise<Product[]> {
   try {
-    const res = await fetch("https://ar-app-back-end.onrender.com/api/products/", {
+    const res = await fetch("https://ar-app-back-end.onrender.com/api/products/product/", {
       cache: "no-store", // Ensures fresh data on every load
     });
 
