@@ -29,7 +29,6 @@ interface Product {
   id: number;
   name: string;
   quantity: number;
-  price: number;
   category: string;
   description: string;
   heigh: number; 
@@ -82,16 +81,7 @@ export default function StockDashboard() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [deletingId, setDeletingId] = useState<number | null>(null)
 
-  const [productForm, setProductForm] = useState({ 
-    name: '', 
-    quantity: 0, 
-    price: 0, 
-    category: '', 
-    description: '', 
-    heigh: 0, 
-    width: 0, 
-    depth: 0 
-  })
+  const [productForm, setProductForm] = useState({ name: '', quantity: 0, category: '', description: '', heigh: 0, width: 0, depth: 0 })
   const [colorForm, setColorForm] = useState({ name: '', hexCode: '#3b82f6' })
   const [variantForm, setVariantForm] = useState({ productId: '', colorId: '', name: '', sku: '', percentage: 0, quantity: 0, description: '' })
   const [mediaForm, setMediaForm] = useState({ variantId: '', staticImage: '', model3d: '' })
@@ -111,7 +101,7 @@ export default function StockDashboard() {
   const fetchAllData = useCallback(async () => {
     const token = getCleanAuthToken();
     if (!token) {
-      setFetchError("No valid authentication token found. Please log in.");
+      setFetchError("No valid authentication token found.");
       setIsAuthorized(false);
       setIsLoading(false);
       return;
@@ -130,7 +120,7 @@ export default function StockDashboard() {
 
       if (resProducts.status === 403 || resColors.status === 403 || resVariants.status === 403 || resMedia.status === 403) {
         localStorage.removeItem("token");
-        setFetchError("Access Denied (403): Your account lacks permissions or your session expired.");
+        setFetchError("Access Denied (403): Your token is expired or lacks permissions.");
         setIsAuthorized(false); 
         setIsLoading(false);
         return;
@@ -163,7 +153,6 @@ export default function StockDashboard() {
   useEffect(() => {
     const token = getCleanAuthToken();
     if (!token) {
-      setFetchError("No token found. Please sign in.");
       setIsAuthorized(false);
       setIsLoading(false);
     } else {
@@ -211,7 +200,7 @@ export default function StockDashboard() {
       })
       if (res.ok) {
         setActiveModal(null)
-        setProductForm({ name: '', price : 0 ,quantity: 0, category: '', description: '', heigh: 0, width: 0, depth: 0 })
+        setProductForm({ name: '', quantity: 0, category: '', description: '', heigh: 0, width: 0, depth: 0 })
         fetchAllData()
       } else alert(await res.text())
     } catch (err) { console.error(err) }
@@ -294,6 +283,38 @@ export default function StockDashboard() {
     setIsAuthorized(false)
     router.push('/account')
   }
+
+// 1. Check for failed authorization FIRST.
+// If authorization explicitly failed, stop loading and show the Denied screen immediately.
+if (isAuthorized === false) {
+  return (
+    <div className="min-h-screen bg-[#121212] flex flex-col items-center justify-center p-6 text-center">
+      <Card className="bg-zinc-900 border-none p-8 max-w-sm">
+        <Lock className="h-8 w-8 text-red-500 mx-auto mb-4" />
+        <CardTitle className="text-white mb-2">Access Denied</CardTitle>
+        <CardDescription className="text-zinc-400 mb-6">
+          {fetchError || "Your account lacks permissions to view the stock management panel."}
+        </CardDescription>
+        <Button 
+          onClick={() => { localStorage.clear(); router.push('/account'); }} 
+          className="w-full bg-blue-600"
+        >
+          Go to Login
+        </Button>
+      </Card>
+    </div>
+  )
+}
+
+// 2. Only show the spinner if the authorization state is still pending (null) or actively fetching.
+if (isAuthorized === null || isLoading) {
+  return (
+    <div className="min-h-screen bg-[#121212] flex items-center justify-center">
+      <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+    </div>
+  )
+}
+
   const filteredInventory = inventory.filter(item => 
     item.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
     item.category?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -394,7 +415,7 @@ export default function StockDashboard() {
             </div>
           ) : (
             <>
-{activeTab === 'inventory' && (
+              {activeTab === 'inventory' && (
                 <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
                   {filteredInventory.map(item => {
                     const status = getStockStatus(item.quantity);
@@ -421,7 +442,6 @@ export default function StockDashboard() {
                           </div>
                           <div className="flex justify-between items-center pt-2 border-t border-white/5">
                             <span className={cn("text-xs font-bold", status.color)}>{status.label}</span>
-                            <span className="text-sm font-bold text-white">${item.price ? item.price.toFixed(2) : '0.00'}</span>
                             <span className="text-sm font-bold text-white">{item.quantity} units</span>
                           </div>
                         </CardContent>
