@@ -42,7 +42,7 @@ export default function DownloadPage() {
               </h3>
 
               <Button size="lg" variant="secondary" className="w-full justify-start py-7 px-6 border border-muted" asChild>
-                <Link href="https://play.google.com" target="_blank" rel="noopener noreferrer">
+                <Link href="https://wormhole.app/3ooWNW#-ncuNyZFujZfdprgFGiZqg" target="_blank" rel="noopener noreferrer">
                   <Download className="mr-3 h-6 w-6 shrink-0" />
                   <div className="text-left">
                     <h1>Download From The Link</h1>
@@ -53,11 +53,6 @@ export default function DownloadPage() {
 
             {/* Right Side: QR Code Capture */}
             <div className="flex flex-col items-center justify-center border-t md:border-t-0 md:border-l border-accent-foreground/20 pt-8 md:pt-0 md:pl-8">
-              <h3 className="font-sans text-xl font-semibold mb-4 flex items-center gap-2">
-                <QrCode className="h-5 w-5" />
-                Scan to Download
-              </h3>
-              
               {/* QR Code Placeholder Wrapper */}
               <div className="bg-white p-4 rounded-2xl shadow-inner inline-block mb-3">
                 {/* Replace this div with an actual <img> tag pointing to your generated QR code SVG/PNG */}
