@@ -284,6 +284,13 @@ export default function StockDashboard() {
     router.push('/account')
   }
 
+if (isAuthorized === null || isLoading) {
+    return (
+      <div className="min-h-screen bg-[#121212] flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+      </div>
+    )
+  }
 
   if (isAuthorized === false) {
     return (
