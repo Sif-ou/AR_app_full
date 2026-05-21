@@ -122,7 +122,13 @@ public class Product {
     }
 
 
+public List<Variants> getVariants() {
+    return this.variants;
+}
 
+public void setVariants(List<Variants> variants) {
+    this.variants = variants;
+}
 
     
 

@@ -1,7 +1,6 @@
-package com.example.demo.Chat_Bot ;
+package com.example.demo.Chat_Bot;
 
-import java.util.Map;
-
+import java.util.List;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -15,29 +14,16 @@ import org.springframework.web.bind.annotation.RestController;
 public class ChatController {
 
     private final AI_ModelService AI_Service;
-    
 
-    public ChatController(AI_ModelService openRouterService) {
-        this.AI_Service = openRouterService;
+    public ChatController(AI_ModelService AI_Service) {
+        this.AI_Service = AI_Service;
     }
 
-@PostMapping
-    public String testStrawberryReasoning(@RequestBody Map<String, String> payload) {
-        // Extract the "prompt" field from the JSON body
-        String prompt = payload.get("prompt");
-        
-        // Handle cases where the prompt might be null or empty
-        if (prompt == null || prompt.trim().isEmpty()) {
-            return "No prompt provided.";
+    @PostMapping
+    public String handleChatWorkflow(@RequestBody List<AI_Model.Message> chatHistory) {
+        if (chatHistory == null || chatHistory.isEmpty()) {
+            return "No chat history provided.";
         }
-        
-        return AI_Service.executeReasoningWorkflow(prompt);
+        return AI_Service.executeReasoningWorkflow(chatHistory);
     }
-
 }
-
-    /*@GetMapping("/strawberry-test")
-    public String testStrawberryReasoning() {
-        return openRouterService.executeReasoningWorkflow();
-
-    }*/

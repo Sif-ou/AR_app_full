@@ -1,10 +1,16 @@
 package com.example.demo.Chat_Bot;
 
+import java.util.ArrayList;
 import java.util.List;
-
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+
+// Import your actual entity and repository classes
+import com.example.demo.Product.Product;
+import com.example.demo.Product.ProductRepository;
+import com.example.demo.Variants.Variants;
 
 @Service
 public class AI_ModelService {
@@ -12,192 +18,146 @@ public class AI_ModelService {
     private final String apiKey;
     private final RestClient restClient;
     private final AI_Model internalModel = new AI_Model();
+    private final ProductRepository productRepository;
 
-    public AI_ModelService(@Value("${api.key}") String apiKey) {
+    // Spring boot automatically injects your Render-connected ProductRepository here
+    public AI_ModelService(@Value("${api.key}") String apiKey, ProductRepository productRepository) {
         this.apiKey = apiKey;
+        this.productRepository = productRepository;
         this.restClient = RestClient.builder()
                 .defaultHeader("Content-Type", "application/json")
                 .build();
     }
 
-    public AI_Model.ChatResponse API_Message(String prompt) {
-        // 1. Structure the request body
-        AI_Model.Message userMessage = new AI_Model.Message(
-                "user", 
-                List.of(new AI_Model.Part(prompt))
+    // Declares the database tool properties so Gemini knows what inputs it can send
+    private List<AI_Model.Tool> getAvailableTools() {
+        AI_Model.Property queryProp = new AI_Model.Property("STRING", 
+                "The product name, keyword, or category the user wants to see (e.g., 'sofa', 'table', 'chair').");
+        
+        AI_Model.Schema parameters = new AI_Model.Schema(
+                "OBJECT",
+                Map.of("query", queryProp),
+                List.of("query")
         );
 
-        AI_Model.Message systemInstruction = new AI_Model.Message(
-                "system", 
-                List.of(new AI_Model.Part(internalModel.getMyPrompt()))
+        AI_Model.FunctionDeclaration searchDeclaration = new AI_Model.FunctionDeclaration(
+                "searchProducts",
+                "Queries the live PostgreSQL database on Render to fetch product specifications, dimensions, variants, and store links.",
+                parameters
         );
 
-        AI_Model.ChatRequest request = new AI_Model.ChatRequest(
-                List.of(userMessage),
-                systemInstruction
-        );
-
-    String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=" + apiKey;
-
-        return restClient.post()
-                .uri(url)
-                .body(request)
-                .retrieve()
-                .body(AI_Model.ChatResponse.class);
+        return List.of(new AI_Model.Tool(List.of(searchDeclaration)));
     }
 
-    public String executeReasoningWorkflow(String prompt) {
-
+    // Queries your live database and processes the entities into lightweight maps
+    private List<Map<String, Object>> executeRealDatabaseQuery(String queryTerm) {
+        System.out.println("--> [JACK ENGINE] Searching Render PostgreSQL for: " + queryTerm);
+        List<Map<String, Object>> structuredResults = new ArrayList<>();
+        
         try {
-            AI_Model.ChatResponse response = API_Message(prompt);
-            if (response != null && response.choices() != null && !response.choices().isEmpty()) {
-                return response.choices().get(0).message().content();
+            // Leverage your ignore-case containing query method
+            List<Product> databaseProducts = productRepository.findByNameContainingIgnoreCase(queryTerm);
+            
+            // Fallback: If searching by name yielded nothing, attempt a fallback lookup using the category field
+            if (databaseProducts.isEmpty()) {
+                databaseProducts = productRepository.findByCategory(queryTerm);
+            }
+
+            for (Product prod : databaseProducts) {
+                // Safely find a default price or variant description if variants exist
+                String priceString = "Price upon request";
+                if (prod.getQuantity() > 0 && prod.getVariants() != null && !prod.getVariants().isEmpty()) {
+                     priceString = "Available in stock"; 
+                }
+
+                // Map database values directly into clean JSON arguments for Gemini
+                structuredResults.add(Map.of(
+                    "name", prod.getName(),
+                    "category", prod.getCategory(),
+                    "dimensions", prod.getWidth() + "x" + prod.getHeigh() + "x" + prod.getDepth() + " cm",
+                    "status", prod.getQuantity() > 0 ? "In Stock (" + prod.getQuantity() + ")" : "Out of Stock",
+                    "description", prod.getDescription() != null ? prod.getDescription() : "",
+                    // This creates a reliable absolute router link path matching your Next.js application scheme
+                    "link", "/products/" + prod.getId() 
+                ));
             }
         } catch (Exception e) {
-            System.err.println("API ERROR: " + e.getMessage());
+            System.err.println("DATABASE TRANSACTION ERROR: " + e.getMessage());
             e.printStackTrace();
         }
-        return "ERROR: AI failed to respond please try again later";
-
-    }
-}
-
-/* 
-@Service
-public class AI_ModelService {
-
-    private AI_Model open_router_model = new AI_Model() ;                  // google/gemma-4-26b-a4b-it:free
-    private final RestClient restClient;
-    private static final String MODEL = "gemini-2.5-flash";  // google/gemma-4-26b-a4b-it:free // deepseek-ai/deepseek-v3.2 // google/gemma-4-31b-it:free
-    private String content  ;
-
-    /* model prompt here  */
-    // private String ModelPrompt = open_router_model.getMyPrompt() ;
-/* 
-    private Message  PromptMessage = new Message( 
-                                                  "system"
-                                                  , ModelPrompt                                                
-                                                  , null 
-                                                );*/
-
-                                                /* Update this line in your class variables area */
-/*private Message PromptMessage = new Message(
-        "user",
-        List.of(new AI_Model.Part(ModelPrompt)), 
-        null
-);
-*/
-    /* #################################################################### */
-
-  /*  public void setContent( String content )
-    {
-        this.content = content ;
+        
+        return structuredResults;
     }
 
-*/
+    // Handles the conversational pipeline loop
+    public String executeReasoningWorkflow(List<AI_Model.Message> incomingHistory) {
+        try {
+            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=" + apiKey;
 
-    /*public AI_ModelService(@Value("${api.key}") String apiKey) {       // https://openrouter.ai/api/v1
-        this.restClient = RestClient.builder()
-                .baseUrl("https://generativelanguage.googleapis.com/v1beta")  // https://openrouter.ai/api/v1 // https://integrate.api.nvidia.com/v1
-                .defaultHeader("Authorization", "Bearer " + apiKey)
-                .defaultHeader("Content-Type", "application/json")
-                .build();
-    }*/
+            AI_Model.Message systemInstruction = new AI_Model.Message(
+                    "system", 
+                    List.of(new AI_Model.Part(internalModel.getMyPrompt()))
+            );
 
-  /*public AI_ModelService(@Value("${api.key}") String apiKey) {
-    this.restClient = RestClient.builder()
-            .baseUrl("https://generativelanguage.googleapis.com/v1beta/models")
-            .defaultHeader("Content-Type", "application/json")
-            .build();
-}*/
+            List<AI_Model.Message> conversationHistory = new ArrayList<>(incomingHistory);
 
-/*
-public AI_ModelService(@Value("${api.key}") String apiKey) {
-    this.restClient = RestClient.builder()
-            .baseUrl("https://generativelanguage.googleapis.com/v1beta/models")
-            .defaultHeader("Content-Type", "application/json")
-            .build();
-}
-*/
-/* 
-public ChatResponse API_Message(String prompt) { 
+            AI_Model.ChatRequest firstRequest = new AI_Model.ChatRequest(
+                    conversationHistory,
+                    systemInstruction,
+                    getAvailableTools()
+            );
 
-    Message userMessage = new Message("user", prompt, null);
-    
-    ChatRequest request = new ChatRequest(
-            MODEL,
-            List.of(PromptMessage, userMessage), 
-            null 
-    );
+            AI_Model.ChatResponse firstResponse = restClient.post()
+                    .uri(url)
+                    .body(firstRequest)
+                    .retrieve()
+                    .body(AI_Model.ChatResponse.class);
 
-    return restClient.post()
-            .uri("/chat/completions")
-            // CHANGE THIS: Use your actual production URL
-            .header("HTTP-Referer", "https://ar-app-back-end.onrender.com") 
-            .header("X-Title", "Smart Retail AR App") // Optional: Shows your app name in OpenRouter/AI logs
-            .body(request) 
-            .retrieve()
-            .body(ChatResponse.class);
-}
-*/
-/* 
-public ChatResponse API_Message(String prompt) { 
+            if (firstResponse == null || firstResponse.choices() == null || firstResponse.choices().isEmpty()) {
+                return "ERROR: Chatbot pipeline lost connection to processing agent.";
+            }
 
-    Message userMessage = new Message("user", prompt, null);
-    
-    ChatRequest request = new ChatRequest(
-            null, 
-            List.of(PromptMessage, userMessage), 
-            null 
-    );
+            AI_Model.Message modelMessage = firstResponse.choices().get(0).message();
+            AI_Model.Part firstPart = modelMessage.parts().get(0);
 
-    return restClient.post()
-            .uri("/gemini-1.5-flash:generateContent?key=" + System.getProperty("api.key")) 
-            .body(request) 
-            .retrieve()
-            .body(ChatResponse.class);
-}
-*/
+            // Turn 2 Interception: Triggered if Gemini requested tool access
+            if (firstPart.functionCall() != null) {
+                AI_Model.FunctionCall call = firstPart.functionCall();
+                String queryValue = (String) call.args().get("query");
 
-/* 
-public ChatResponse API_Message(String prompt) { 
-    Message userMessage = new Message(
-            "user", 
-            List.of(new AI_Model.Part(prompt)), 
-            null
-    );
+                // Fetch real data from PostgreSQL on Render
+                List<Map<String, Object>> dbResults = executeRealDatabaseQuery(queryValue);
 
-    
-    ChatRequest request = new ChatRequest(
-            null, 
-            List.of(userMessage), 
-            null 
-    );
+                if (dbResults.isEmpty()) {
+                    return "I couldn't find any products matching '" + queryValue + "' in our inventory right now.";
+                }
 
-    return restClient.post()
-            .uri("/gemini-1.5-flash:generateContent?key=" + apikey ) 
-            .body(request) 
-            .retrieve()
-            .body(ChatResponse.class);
-}*/
+                // Format the real items into a beautiful markdown list under the JACK Engine persona
+                StringBuilder markdownResponse = new StringBuilder("### JACK Retail Assistant\n");
+                markdownResponse.append("I found the following items matching your request:\n\n");
 
+                for (Map<String, Object> item : dbResults) {
+                    markdownResponse.append("🔹 **").append(item.get("name")).append("** (").append(item.get("category")).append(")\n")
+                                    .append("   - **Dimensions:** ").append(item.get("dimensions")).append("\n")
+                                    .append("   - **Status:** ").append(item.get("status")).append("\n");
+                    
+                    if (!((String)item.get("description")).isEmpty()) {
+                        markdownResponse.append("   - **Details:** ").append(item.get("description")).append("\n");
+                    }
+                    
+                    markdownResponse.append("   - 🔗 [View Product Specifications in 3D Architecture](").append(item.get("link")).append(")\n\n");
+                }
 
-/* 
+                return markdownResponse.toString();
+            }
 
-public String executeReasoningWorkflow(String prompt) { 
-    ChatResponse response = null; 
-    try {
-        response = API_Message(prompt); 
+            // Fallback for regular greetings or non-database queries
+            return firstPart.text();
 
-        if (response != null && response.choices() != null && !response.choices().isEmpty()) {
-            return response.choices().get(0).message().content();
+        } catch (Exception e) {
+            System.err.println("CRITICAL SYSTEM EXECUTION ERROR: " + e.getMessage());
+            e.printStackTrace();
+            return "ERROR: Chatbot failed to calculate output.";
         }
-    } catch (Exception e) {
-        // Change this to print the FULL error details
-        e.printStackTrace(); 
-        System.out.println("FULL JAVA ERROR: " + e.toString());
     }
-    return "ERROR: AI failed to respond";
 }
-
-}*/
