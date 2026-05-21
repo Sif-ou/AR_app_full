@@ -148,7 +148,7 @@ const handleSend = async (text?: string) => {
                         ul: ({ children }) => <ul className="list-disc pl-4 space-y-1 mb-2">{children}</ul>,
                         a: ({ href, children }) => (
                           <Link 
-                            href={href || '#'} 
+                            href={href || '/products'} 
                             onClick={() => setIsOpen(false)}
                             className="block mt-2 w-full text-center bg-accent text-accent-foreground rounded-lg py-2 text-xs font-bold hover:opacity-90 shadow-sm"
                           >
