@@ -41,6 +41,8 @@ public class Product {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Variants> variants = new ArrayList<>();
 
+    
+
     public Product () {} 
 
     public Product(Long id, String name, int quantity, String category, String description, int heigh, int width,
