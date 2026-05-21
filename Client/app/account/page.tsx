@@ -336,7 +336,7 @@ const handleVerifyCode = async () => {
           <div className="container mx-auto px-4 max-w-md">
             <Card>
               <CardHeader className="text-center">
-                <CardTitle className="font-serif text-2xl">Welcome to ARFURN</CardTitle>
+                <CardTitle className="font-serif text-2xl">Welcome to ARSmart</CardTitle>
                 <CardDescription>Sign in to your account or create a new one</CardDescription>
               </CardHeader>
               <CardContent>
@@ -466,9 +466,6 @@ const handleVerifyCode = async () => {
                         </p>
                       )}
 
-                      <p className="text-center text-sm text-muted-foreground">
-                        <a href="#" className="text-accent hover:underline">Forgot your password?</a>
-                      </p>
                     </form>
                   </TabsContent>
 
@@ -677,21 +674,20 @@ if (response.ok) {
         Connecting to secure servers...
       </div>
     ) : (
-      /* FIXES: 
-        - Added `overflow-hidden` and matching `rounded-full` to clip the iframe's white corners.
-        - Kept the centered mx-auto layout rule.
+      /* FIX: Added `rounded-full` and `overflow-hidden` to mask the iframe container's sharp corners.
+        Added `bg-transparent` and target styles to clear the iframe background.
       */
-      <div className="w-full flex justify-center rounded-full overflow-hidden [&>div]:!mx-auto [&>div]:flex [&>div]:justify-center">
+      <div className="w-full flex justify-center rounded-full overflow-hidden bg-transparent [&>div]:!mx-auto [&>div]:bg-transparent [&>div>iframe]:bg-transparent">
         <GoogleLogin
           onSuccess={handleGoogleSuccess}
           onError={() => {
             alert('Google Login Popup window closed or failed to initialize.');
           }}
           useOneTap
-          theme="filled_black" // FIX: Changes the internal iframe background to dark to match your UI
-          shape="pill"         // Keeps the clean rounded-capsule profile
-          width="360px"        // Explicit size target to match your form factor
-          logo_alignment="left"
+          theme="outline"       // This makes the button body itself white/transparent with a clean border
+          shape="pill"          // Keeps your capsule shape perfectly intact
+          width="360px"         // Maintains your ideal form width
+          logo_alignment="left" 
           size="large"         
         />
       </div>
