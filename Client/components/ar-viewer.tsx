@@ -89,8 +89,20 @@ export default function ARViewer({ product, selectedColor, onClose }: ARViewerPr
     modelViewer.removeEventListener('load', applyColor);
   };
 }, [selectedColor, loaded]);
-  const modelSrc = product.modelGlbPath || "https://cdn.jsdelivr.net/gh/Sif-ou/AR_app_full@main/3d models/3d_model_furni-v1.glb";
-const iosSrc = product.modelUsdzPath || "";
+  const getAbsoluteModelUrl = (path: string) => {
+  if (!path) return "https://cdn.jsdelivr.net/gh/Sif-ou/AR_app_full@main/3d models/3d_model_furni-v1.glb";
+  if (path.startsWith('http')) return path;
+  
+  // If running on a live browser or inside a native mobile webview wrapper container,
+  // this automatically appends your active hosting network IP/origin (like http://localhost:3000 or http://192.168.1.X)
+  if (typeof window !== 'undefined') {
+    return `${window.location.origin}${path}`;
+  }
+  return path;
+};
+
+const modelSrc = getAbsoluteModelUrl(product.modelGlbPath);
+const iosSrc = product.modelUsdzPath ? getAbsoluteModelUrl(product.modelUsdzPath) : "";
 
   const handleNativeARLaunch = (e: React.MouseEvent) => {
     if (!isNativeApp) return; 
