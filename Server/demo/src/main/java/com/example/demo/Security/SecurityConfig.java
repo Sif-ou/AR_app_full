@@ -43,7 +43,7 @@ public class SecurityConfig {
 
                 // Public endpoints
                 .requestMatchers("/api/auth/**", "/api/auth").permitAll()
-                .requestMatchers("/api/auth/google").permitAll()
+                .requestMatchers("/api/auth/google", "/api/auth/google/").permitAll()
                 .requestMatchers("/api/public/**", "/api/public").permitAll()
                 .requestMatchers("/api/chat/**", "/api/chat").permitAll()
                 
