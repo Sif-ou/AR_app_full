@@ -89,8 +89,8 @@ export default function ARViewer({ product, selectedColor, onClose }: ARViewerPr
     modelViewer.removeEventListener('load', applyColor);
   };
 }, [selectedColor, loaded]);
-  const modelSrc = product.arModel || "https://cdn.jsdelivr.net/gh/Sif-ou/AR_app_full@main/3d models/3d_model_furni-v1.glb";
-  const iosSrc = product.iosModel || "";
+  const modelSrc = product.modelGlbPath || "https://cdn.jsdelivr.net/gh/Sif-ou/AR_app_full@main/3d models/3d_model_furni-v1.glb";
+const iosSrc = product.modelUsdzPath || "";
 
   const handleNativeARLaunch = (e: React.MouseEvent) => {
     if (!isNativeApp) return; 
