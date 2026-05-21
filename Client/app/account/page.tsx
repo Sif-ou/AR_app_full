@@ -336,7 +336,7 @@ const handleVerifyCode = async () => {
           <div className="container mx-auto px-4 max-w-md">
             <Card>
               <CardHeader className="text-center">
-                <CardTitle className="font-serif text-2xl">Welcome to ARFURN</CardTitle>
+                <CardTitle className="font-serif text-2xl">Welcome to ARSmart</CardTitle>
                 <CardDescription>Sign in to your account or create a new one</CardDescription>
               </CardHeader>
               <CardContent>
@@ -465,7 +465,7 @@ const handleVerifyCode = async () => {
                           {statusMessage}
                         </p>
                       )}
-                      
+
                     </form>
                   </TabsContent>
 
