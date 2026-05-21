@@ -102,8 +102,8 @@ export const products: Product[] = [
     arEnabled: true,
     features: ['Removable cushion covers', '10-year frame warranty', 'Easy assembly', 'Pet-friendly fabric'],
 
-    modelGlbPath: '/models/products/nordica-sofa/model.glb',
-    modelUsdzPath: '/models/products/nordica-sofa/model.usdz'
+    modelGlbPath: '/models/nordica-sofa/model.glb',
+    modelUsdzPath: '/models/nordica-sofa/model.usdz'
   },
   {
     id: 'aurora-armchair',
@@ -128,8 +128,8 @@ export const products: Product[] = [
     isNew: true,
     arEnabled: true,
     features: ['Ergonomic design', 'Handcrafted details', 'Swivel base option'],
-    modelGlbPath: '/models/products/aurora-armchair/model.glb',
-    modelUsdzPath: '/models/products/aurora-armchair/model.usdz'
+    modelGlbPath: '/models/aurora-armchair/model.glb',
+    modelUsdzPath: '/models/aurora-armchair/model.usdz'
   },
   {
     id: 'minimalist-coffee-table',
@@ -153,8 +153,8 @@ export const products: Product[] = [
     inStock: true,
     arEnabled: true,
     features: ['Genuine marble', 'Anti-scratch pads', 'Easy to clean'],
-    modelGlbPath: '/models/products/minimalist-coffee-table/model.glb',
-    modelUsdzPath: '/models/products/minimalist-coffee-table/model.usdz'
+    modelGlbPath: '/models/minimalist-coffee-table/model.glb',
+    modelUsdzPath: '/models/minimalist-coffee-table/model.usdz'
   },
   {
     id: 'haven-bed-frame',
@@ -180,8 +180,8 @@ export const products: Product[] = [
     isBestseller: true,
     arEnabled: true,
     features: ['No box spring needed', 'Under-bed storage space', 'Easy assembly', 'Noise-free design'],
-    modelGlbPath: '/models/products/haven-bed-frame/model.glb',
-    modelUsdzPath: '/models/products/haven-bed-frame/model.usdz'
+    modelGlbPath: '/models/haven-bed-frame/model.glb',
+    modelUsdzPath: '/models/haven-bed-frame/model.usdz'
   },
   {
     id: 'serene-nightstand',
@@ -205,8 +205,8 @@ export const products: Product[] = [
     inStock: true,
     arEnabled: true,
     features: ['Two spacious drawers', 'Cable management hole', 'Anti-tip hardware'],
-    modelGlbPath: '/models/products/serene-nightstand/model.glb',
-    modelUsdzPath: '/models/products/serene-nightstand/model.usdz'
+    modelGlbPath: '/models/serene-nightstand/model.glb',
+    modelUsdzPath: '/models/serene-nightstand/model.usdz'
   },
   {
     id: 'harvest-dining-table',
@@ -230,8 +230,8 @@ export const products: Product[] = [
     isNew: true,
     arEnabled: true,
     features: ['Seats 6-8', 'Live edge detail', 'Protective lacquer finish'],
-    modelGlbPath: '/models/products/harvest-dining-table/model.glb',
-    modelUsdzPath: '/models/products/harvest-dining-table/model.usdz'
+    modelGlbPath: '/models/harvest-dining-table/model.glb',
+    modelUsdzPath: '/models/harvest-dining-table/model.usdz'
   },
   {
     id: 'modern-dining-chair',
@@ -255,8 +255,8 @@ export const products: Product[] = [
     inStock: true,
     arEnabled: true,
     features: ['Set of 2', 'Stackable', 'Stain-resistant fabric'],
-    modelGlbPath: '/models/products/modern-dining-chair/model.glb',
-    modelUsdzPath: '/models/products/modern-dining-chair/model.usdz'
+    modelGlbPath: '/models/modern-dining-chair/model.glb',
+    modelUsdzPath: '/models/modern-dining-chair/model.usdz'
   },
   {
     id: 'executive-desk',
@@ -281,8 +281,8 @@ export const products: Product[] = [
     isBestseller: true,
     arEnabled: true,
     features: ['Electric height adjustment', 'Memory presets', 'Anti-collision system', 'Built-in USB ports'],
-    modelGlbPath: '/models/products/executive-desk/model.glb',
-    modelUsdzPath: '/models/products/executive-desk/model.usdz'
+    modelGlbPath: '/models/executive-desk/model.glb',
+    modelUsdzPath: '/models/executive-desk/model.usdz'
   },
   {
     id: 'ergonomic-chair',
@@ -305,8 +305,8 @@ export const products: Product[] = [
     inStock: true,
     arEnabled: true,
     features: ['12-year warranty', 'Adjustable armrests', 'Tilt lock mechanism', 'Lumbar support'],
-    modelGlbPath: '/models/products/ergonomic-chair/model.glb',
-    modelUsdzPath: '/models/products/ergonomic-chair/model.usdz'
+    modelGlbPath: '/models/ergonomic-chair/model.glb',
+    modelUsdzPath: '/models/ergonomic-chair/model.usdz'
   },
   {
     id: 'pendant-light',
@@ -331,8 +331,8 @@ export const products: Product[] = [
     isNew: true,
     arEnabled: true,
     features: ['Dimmable', 'E27 bulb compatible', '150cm adjustable cord'],
-    modelGlbPath: '/models/products/pendant-light/model.glb',
-    modelUsdzPath: '/models/products/pendant-light/model.usdz'
+    modelGlbPath: '/models/pendant-light/model.glb',
+    modelUsdzPath: '/models/pendant-light/model.usdz'
   },
   {
     id: 'floor-lamp',
@@ -355,8 +355,8 @@ export const products: Product[] = [
     inStock: true,
     arEnabled: true,
     features: ['Foot switch', 'Adjustable arm', 'Weighted base for stability'],
-    modelGlbPath: '/models/products/floor-lamp/model.glb',
-    modelUsdzPath: '/models/products/floor-lamp/model.usdz'
+    modelGlbPath: '/models/floor-lamp/model.glb',
+    modelUsdzPath: '/models/floor-lamp/model.usdz'
   },
   {
     id: 'outdoor-lounge-set',
@@ -380,8 +380,8 @@ export const products: Product[] = [
     inStock: true,
     arEnabled: true,
     features: ['UV resistant', 'Water-resistant cushions', 'Quick-dry foam', '5-year warranty'],
-    modelGlbPath: '/models/products/outdoor-lounge-set/model.glb',
-    modelUsdzPath: '/models/products/outdoor-lounge-set/model.usdz'
+    modelGlbPath: '/models/outdoor-lounge-set/model.glb',
+    modelUsdzPath: '/models/outdoor-lounge-set/model.usdz'
   },
   {
     id: 'modern-bookshelf',
@@ -405,8 +405,8 @@ export const products: Product[] = [
     inStock: true,
     arEnabled: true,
     features: ['5 adjustable shelves', 'Wall-mount hardware included', 'Anti-tip straps'],
-    modelGlbPath: '/models/products/modern-bookshelf/model.glb',
-    modelUsdzPath: '/models/products/modern-bookshelf/model.usdz'
+    modelGlbPath: '/models/modern-bookshelf/model.glb',
+    modelUsdzPath: '/models/modern-bookshelf/model.usdz'
   }
 ]
 
