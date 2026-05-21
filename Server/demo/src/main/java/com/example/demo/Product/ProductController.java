@@ -43,7 +43,7 @@ public class ProductController {
         }
     }
 
-    @PreAuthorize("hasAuthority('STOCK') or hasRole('STOCK')")
+   //PreAuthorize("hasAuthority('STOCK') or hasRole('STOCK')") */
     @DeleteMapping("/products/{id}")
     public ResponseEntity<?> deleteProduct(@PathVariable Long id) {
         try {
