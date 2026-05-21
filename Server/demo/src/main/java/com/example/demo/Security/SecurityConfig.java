@@ -37,7 +37,7 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
 
-            // 2. Configure endpoint rules safely
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 // Allow all pre-flight OPTIONS requests to pass through cleanly
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()

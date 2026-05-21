@@ -35,6 +35,10 @@ const initialMessages: Message[] = [
   }
 ]
 
+
+
+
+
 export function ChatbotWidget() {
   const [isOpen, setIsOpen] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
@@ -56,46 +60,40 @@ export function ChatbotWidget() {
     }
   }, [isOpen])
 
-  const handleSend = async (text?: string) => {
+const handleSend = async (text?: string) => {
     const messageText = text || inputValue.trim() 
     if (!messageText) return 
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: messageText
-    } 
+    // Add user message to UI
+    const userMessage: Message = { id: Date.now().toString(), role: 'user', content: messageText }
     setMessages(prev => [...prev, userMessage])
     setInputValue('')
-    setIsTyping(true)  
+    setIsTyping(true)
 
     try {
+      // Send the entire conversation history to the backend
       const response = await fetch(`${BASE_URL}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: messageText })
+        body: JSON.stringify([
+          {
+            role: 'user',
+            parts: [{ text: messageText }]
+          }
+        ])
       })
 
       if (!response.ok) throw new Error(`Server Error: ${response.status}`)
 
       const botReply = await response.text()
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: botReply
-      } 
-      setMessages(prev => [...prev, assistantMessage])
+      setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), role: 'assistant', content: botReply }])
     } catch (error) {
-      setMessages(prev => [...prev, {
-        id: 'error',
-        role: 'assistant',
-        content: "I'm having trouble reaching the server. If this is the first message, Render might be waking up (please wait 30s)."
-      }])
+      console.error("Error:", error)
+      setMessages(prev => [...prev, { id: 'error', role: 'assistant', content: "Server connection failed." }])
     } finally {
       setIsTyping(false)
     }
-  }
-
+}
   return (
     <>
       {!isOpen && (

@@ -161,7 +161,7 @@ public class AuthService {
                 user = User.builder()
                         .username(name)
                         .email(email)
-                        .phoneNum(0) 
+                        .phoneNum(null) 
                         .password(passwordEncoder.encode("OAUTH2_FEDERATED_ACCOUNT_PASSWORD_PLACEHOLDER"))
                         .role(userRole)
                         .active(true) 

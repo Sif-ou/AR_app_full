@@ -47,9 +47,9 @@ public class User implements UserDetails {
 
     private String email;
     
-    @Column( nullable = true )    
-    private int phoneNum;
-
+// In your User.java entity class
+@Column(name = "phone_num", nullable = true) // Explicitly set nullable to true
+private Integer phoneNum;
 
 @Column(name = "verification_code")
 private String verificationCode;

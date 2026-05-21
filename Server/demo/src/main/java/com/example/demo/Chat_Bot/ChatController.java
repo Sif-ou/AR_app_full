@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/chat")
+@RequestMapping("/api")
 @CrossOrigin(origins = "*", allowedHeaders = {"Content-Type", "Accept"}, methods = {RequestMethod.POST, RequestMethod.OPTIONS})
 public class ChatController {
 
@@ -19,7 +19,7 @@ public class ChatController {
         this.AI_Service = AI_Service;
     }
 
-    @PostMapping
+    @PostMapping("/chat")
     public String handleChatWorkflow(@RequestBody List<AI_Model.Message> chatHistory) {
         if (chatHistory == null || chatHistory.isEmpty()) {
             return "No chat history provided.";
