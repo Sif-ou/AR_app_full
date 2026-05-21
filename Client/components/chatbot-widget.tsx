@@ -172,7 +172,7 @@ const handleSend = async (text?: string) => {
                 </div>
               </div>
             ))} 
-            {isTyping && <div className="text-xs text-muted-foreground animate-pulse px-12">JACK is checking inventory...</div>}
+            {isTyping && <div className="text-xs text-muted-foreground animate-pulse px-12">JACK is thinking ...</div>}
           </div>
 
           <form onSubmit={(e) => { e.preventDefault(); handleSend() }} className="p-4 border-t flex gap-2">
