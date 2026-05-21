@@ -8,3 +8,9 @@ export async function generateStaticParams() {
 export default function Page({ params }: any) {
   return <MyOriginalPage params={params} />;
 }
+
+
+
+
+
+

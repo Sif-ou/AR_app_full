@@ -55,4 +55,12 @@ public class ProductController {
             return new ResponseEntity<>("An error occurred while deleting the product.", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+
+@GetMapping("/products/{id}")
+    public ResponseEntity<Product> getProductById(@PathVariable Long id) {
+        return productService.findById(id)
+                .map(product -> ResponseEntity.ok().body(product))          // Returns 200 OK with product data
+                .orElseGet(() -> ResponseEntity.notFound().build());         // Returns 404 Not Found if missing
+    }
 }

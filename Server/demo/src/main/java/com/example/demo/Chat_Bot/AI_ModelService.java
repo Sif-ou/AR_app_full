@@ -78,7 +78,7 @@ public class AI_ModelService {
                     "status", prod.getQuantity() > 0 ? "In Stock (" + prod.getQuantity() + ")" : "Out of Stock",
                     "description", prod.getDescription() != null ? prod.getDescription() : "",
                     // This creates a reliable absolute router link path matching your Next.js application scheme
-                    "link", "/products/" + prod.getId() 
+                    "link", "/products/product/" + prod.getId() 
                 ));
             }
         } catch (Exception e) {

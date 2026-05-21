@@ -1,6 +1,7 @@
 package com.example.demo.Product;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -46,7 +47,12 @@ public void deleteProduct(Long id) {
 }
 
 
-
+public Optional<Product> findById(Long id) {
+    if (!productRepository.existsById(id)) {
+        throw new IllegalArgumentException("Product with ID " + id + " does not exist.");
+    }
+    return productRepository.findById(id) ;
+}
 
 
 }
