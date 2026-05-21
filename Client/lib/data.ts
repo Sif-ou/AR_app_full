@@ -17,6 +17,9 @@ export interface Product {
   isBestseller?: boolean
   arEnabled: boolean
   features: string[]
+
+  modelGlbPath?: string
+modelUsdzPath?: string
 }
 
 export interface Category {
@@ -97,7 +100,10 @@ export const products: Product[] = [
     inStock: true,
     isBestseller: true,
     arEnabled: true,
-    features: ['Removable cushion covers', '10-year frame warranty', 'Easy assembly', 'Pet-friendly fabric']
+    features: ['Removable cushion covers', '10-year frame warranty', 'Easy assembly', 'Pet-friendly fabric'],
+
+    modelGlbPath: '/models/products/nordica-sofa/model.glb',
+    modelUsdzPath: '/models/products/nordica-sofa/model.usdz'
   },
   {
     id: 'aurora-armchair',
@@ -121,7 +127,9 @@ export const products: Product[] = [
     inStock: true,
     isNew: true,
     arEnabled: true,
-    features: ['Ergonomic design', 'Handcrafted details', 'Swivel base option']
+    features: ['Ergonomic design', 'Handcrafted details', 'Swivel base option'],
+    modelGlbPath: '/models/products/aurora-armchair/model.glb',
+    modelUsdzPath: '/models/products/aurora-armchair/model.usdz'
   },
   {
     id: 'minimalist-coffee-table',
@@ -144,7 +152,9 @@ export const products: Product[] = [
     reviews: 89,
     inStock: true,
     arEnabled: true,
-    features: ['Genuine marble', 'Anti-scratch pads', 'Easy to clean']
+    features: ['Genuine marble', 'Anti-scratch pads', 'Easy to clean'],
+    modelGlbPath: '/models/products/minimalist-coffee-table/model.glb',
+    modelUsdzPath: '/models/products/minimalist-coffee-table/model.usdz'
   },
   {
     id: 'haven-bed-frame',
@@ -169,7 +179,9 @@ export const products: Product[] = [
     inStock: true,
     isBestseller: true,
     arEnabled: true,
-    features: ['No box spring needed', 'Under-bed storage space', 'Easy assembly', 'Noise-free design']
+    features: ['No box spring needed', 'Under-bed storage space', 'Easy assembly', 'Noise-free design'],
+    modelGlbPath: '/models/products/haven-bed-frame/model.glb',
+    modelUsdzPath: '/models/products/haven-bed-frame/model.usdz'
   },
   {
     id: 'serene-nightstand',
@@ -192,7 +204,9 @@ export const products: Product[] = [
     reviews: 78,
     inStock: true,
     arEnabled: true,
-    features: ['Two spacious drawers', 'Cable management hole', 'Anti-tip hardware']
+    features: ['Two spacious drawers', 'Cable management hole', 'Anti-tip hardware'],
+    modelGlbPath: '/models/products/serene-nightstand/model.glb',
+    modelUsdzPath: '/models/products/serene-nightstand/model.usdz'
   },
   {
     id: 'harvest-dining-table',
@@ -215,7 +229,9 @@ export const products: Product[] = [
     inStock: true,
     isNew: true,
     arEnabled: true,
-    features: ['Seats 6-8', 'Live edge detail', 'Protective lacquer finish']
+    features: ['Seats 6-8', 'Live edge detail', 'Protective lacquer finish'],
+    modelGlbPath: '/models/products/harvest-dining-table/model.glb',
+    modelUsdzPath: '/models/products/harvest-dining-table/model.usdz'
   },
   {
     id: 'modern-dining-chair',
@@ -238,7 +254,9 @@ export const products: Product[] = [
     reviews: 203,
     inStock: true,
     arEnabled: true,
-    features: ['Set of 2', 'Stackable', 'Stain-resistant fabric']
+    features: ['Set of 2', 'Stackable', 'Stain-resistant fabric'],
+    modelGlbPath: '/models/products/modern-dining-chair/model.glb',
+    modelUsdzPath: '/models/products/modern-dining-chair/model.usdz'
   },
   {
     id: 'executive-desk',
@@ -262,7 +280,9 @@ export const products: Product[] = [
     inStock: true,
     isBestseller: true,
     arEnabled: true,
-    features: ['Electric height adjustment', 'Memory presets', 'Anti-collision system', 'Built-in USB ports']
+    features: ['Electric height adjustment', 'Memory presets', 'Anti-collision system', 'Built-in USB ports'],
+    modelGlbPath: '/models/products/executive-desk/model.glb',
+    modelUsdzPath: '/models/products/executive-desk/model.usdz'
   },
   {
     id: 'ergonomic-chair',
@@ -284,7 +304,9 @@ export const products: Product[] = [
     reviews: 567,
     inStock: true,
     arEnabled: true,
-    features: ['12-year warranty', 'Adjustable armrests', 'Tilt lock mechanism', 'Lumbar support']
+    features: ['12-year warranty', 'Adjustable armrests', 'Tilt lock mechanism', 'Lumbar support'],
+    modelGlbPath: '/models/products/ergonomic-chair/model.glb',
+    modelUsdzPath: '/models/products/ergonomic-chair/model.usdz'
   },
   {
     id: 'pendant-light',
@@ -308,7 +330,9 @@ export const products: Product[] = [
     inStock: true,
     isNew: true,
     arEnabled: true,
-    features: ['Dimmable', 'E27 bulb compatible', '150cm adjustable cord']
+    features: ['Dimmable', 'E27 bulb compatible', '150cm adjustable cord'],
+    modelGlbPath: '/models/products/pendant-light/model.glb',
+    modelUsdzPath: '/models/products/pendant-light/model.usdz'
   },
   {
     id: 'floor-lamp',
@@ -330,7 +354,9 @@ export const products: Product[] = [
     reviews: 89,
     inStock: true,
     arEnabled: true,
-    features: ['Foot switch', 'Adjustable arm', 'Weighted base for stability']
+    features: ['Foot switch', 'Adjustable arm', 'Weighted base for stability'],
+    modelGlbPath: '/models/products/floor-lamp/model.glb',
+    modelUsdzPath: '/models/products/floor-lamp/model.usdz'
   },
   {
     id: 'outdoor-lounge-set',
@@ -353,7 +379,9 @@ export const products: Product[] = [
     reviews: 76,
     inStock: true,
     arEnabled: true,
-    features: ['UV resistant', 'Water-resistant cushions', 'Quick-dry foam', '5-year warranty']
+    features: ['UV resistant', 'Water-resistant cushions', 'Quick-dry foam', '5-year warranty'],
+    modelGlbPath: '/models/products/outdoor-lounge-set/model.glb',
+    modelUsdzPath: '/models/products/outdoor-lounge-set/model.usdz'
   },
   {
     id: 'modern-bookshelf',
@@ -376,7 +404,9 @@ export const products: Product[] = [
     reviews: 145,
     inStock: true,
     arEnabled: true,
-    features: ['5 adjustable shelves', 'Wall-mount hardware included', 'Anti-tip straps']
+    features: ['5 adjustable shelves', 'Wall-mount hardware included', 'Anti-tip straps'],
+    modelGlbPath: '/models/products/modern-bookshelf/model.glb',
+    modelUsdzPath: '/models/products/modern-bookshelf/model.usdz'
   }
 ]
 
