@@ -29,6 +29,7 @@ interface Product {
   id: number;
   name: string;
   quantity: number;
+  price: number;
   category: string;
   description: string;
   heigh: number; 
@@ -81,7 +82,16 @@ export default function StockDashboard() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [deletingId, setDeletingId] = useState<number | null>(null)
 
-  const [productForm, setProductForm] = useState({ name: '', quantity: 0, category: '', description: '', heigh: 0, width: 0, depth: 0 })
+const [productForm, setProductForm] = useState({ 
+  name: '', 
+  quantity: 0, 
+  price: 0, // ADD THIS
+  category: '', 
+  description: '', 
+  heigh: 0, 
+  width: 0, 
+  depth: 0 
+})
   const [colorForm, setColorForm] = useState({ name: '', hexCode: '#3b82f6' })
   const [variantForm, setVariantForm] = useState({ productId: '', colorId: '', name: '', sku: '', percentage: 0, quantity: 0, description: '' })
   const [mediaForm, setMediaForm] = useState({ variantId: '', staticImage: '', model3d: '' })
@@ -200,7 +210,7 @@ export default function StockDashboard() {
       })
       if (res.ok) {
         setActiveModal(null)
-        setProductForm({ name: '', quantity: 0, category: '', description: '', heigh: 0, width: 0, depth: 0 })
+        setProductForm({ name: '', price : 0 ,quantity: 0, category: '', description: '', heigh: 0, width: 0, depth: 0 })
         fetchAllData()
       } else alert(await res.text())
     } catch (err) { console.error(err) }
@@ -404,7 +414,7 @@ if (isAuthorized === null || isLoading) {
             </div>
           ) : (
             <>
-              {activeTab === 'inventory' && (
+{activeTab === 'inventory' && (
                 <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
                   {filteredInventory.map(item => {
                     const status = getStockStatus(item.quantity);
@@ -431,6 +441,7 @@ if (isAuthorized === null || isLoading) {
                           </div>
                           <div className="flex justify-between items-center pt-2 border-t border-white/5">
                             <span className={cn("text-xs font-bold", status.color)}>{status.label}</span>
+                            <span className="text-sm font-bold text-white">${item.price ? item.price.toFixed(2) : '0.00'}</span>
                             <span className="text-sm font-bold text-white">{item.quantity} units</span>
                           </div>
                         </CardContent>

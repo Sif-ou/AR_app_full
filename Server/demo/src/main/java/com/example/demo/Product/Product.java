@@ -36,6 +36,7 @@ public class Product {
     private int heigh ;
     private int width ;
     private int depth ; 
+    private int price ;
 
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
