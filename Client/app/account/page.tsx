@@ -466,8 +466,55 @@ const handleVerifyCode = async () => {
                         </p>
                       )}
 
+
+<div className="flex flex-col items-center justify-center w-full my-6">
+  {/* The "OR CONTINUE WITH" Divider Line */}
+  <div className="w-full max-w-sm border-t border-muted my-4 text-center relative">
+    <span className="bg-background px-3 text-[10px] font-semibold tracking-wider text-muted-foreground/80 uppercase absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+      Or continue with
+    </span>
+  </div>
+
+  {/* Button Container */}
+  <div className="mt-2 w-full max-w-sm flex items-center justify-center px-1">
+    {isGoogleLoading ? (
+      <div className="text-sm text-muted-foreground text-center animate-pulse py-2 flex items-center gap-2">
+        <span className="h-4 w-4 rounded-full border-2 border-muted border-t-primary animate-spin" />
+        Connecting to secure servers...
+      </div>
+    ) : (
+      /* FIX: Added `rounded-full` and `overflow-hidden` to mask the iframe container's sharp corners.
+        Added `bg-transparent` and target styles to clear the iframe background.
+      */
+      <div className="w-full flex justify-center rounded-full overflow-hidden bg-transparent [&>div]:!mx-auto [&>div]:bg-transparent [&>div>iframe]:bg-transparent">
+        <GoogleLogin
+          onSuccess={handleGoogleSuccess}
+          onError={() => {
+            alert('Google Login Popup window closed or failed to initialize.');
+          }}
+          useOneTap
+          theme="outline"       // This makes the button body itself white/transparent with a clean border
+          shape="pill"          // Keeps your capsule shape perfectly intact
+          width="360px"         // Maintains your ideal form width
+          logo_alignment="left" 
+          size="large"         
+        />
+      </div>
+    )}
+  </div>
+</div>
+
                     </form>
+
+
+
+
+
                   </TabsContent>
+
+
+
+
 
                   <TabsContent value="register">
                     <form 
@@ -658,42 +705,7 @@ if (response.ok) {
                   </TabsContent>
                 </Tabs>
 
-<div className="flex flex-col items-center justify-center w-full my-6">
-  {/* The "OR CONTINUE WITH" Divider Line */}
-  <div className="w-full max-w-sm border-t border-muted my-4 text-center relative">
-    <span className="bg-background px-3 text-[10px] font-semibold tracking-wider text-muted-foreground/80 uppercase absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-      Or continue with
-    </span>
-  </div>
 
-  {/* Button Container */}
-  <div className="mt-2 w-full max-w-sm flex items-center justify-center px-1">
-    {isGoogleLoading ? (
-      <div className="text-sm text-muted-foreground text-center animate-pulse py-2 flex items-center gap-2">
-        <span className="h-4 w-4 rounded-full border-2 border-muted border-t-primary animate-spin" />
-        Connecting to secure servers...
-      </div>
-    ) : (
-      /* FIX: Added `rounded-full` and `overflow-hidden` to mask the iframe container's sharp corners.
-        Added `bg-transparent` and target styles to clear the iframe background.
-      */
-      <div className="w-full flex justify-center rounded-full overflow-hidden bg-transparent [&>div]:!mx-auto [&>div]:bg-transparent [&>div>iframe]:bg-transparent">
-        <GoogleLogin
-          onSuccess={handleGoogleSuccess}
-          onError={() => {
-            alert('Google Login Popup window closed or failed to initialize.');
-          }}
-          useOneTap
-          theme="outline"       // This makes the button body itself white/transparent with a clean border
-          shape="pill"          // Keeps your capsule shape perfectly intact
-          width="360px"         // Maintains your ideal form width
-          logo_alignment="left" 
-          size="large"         
-        />
-      </div>
-    )}
-  </div>
-</div>
 
               </CardContent>
             </Card>

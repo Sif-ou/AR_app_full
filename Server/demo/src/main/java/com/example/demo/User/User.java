@@ -47,7 +47,7 @@ public class User implements UserDetails {
 
     private String email;
     
-    @Column( nullable = true , unique = false  )    
+    @Column( nullable = true )    
     private int phoneNum;
 
 
