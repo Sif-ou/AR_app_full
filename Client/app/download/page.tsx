@@ -51,21 +51,6 @@ export default function DownloadPage() {
               </Button>
             </div>
 
-            {/* Right Side: QR Code Capture */}
-            <div className="flex flex-col items-center justify-center border-t md:border-t-0 md:border-l border-accent-foreground/20 pt-8 md:pt-0 md:pl-8">
-              {/* QR Code Placeholder Wrapper */}
-              <div className="bg-white p-4 rounded-2xl shadow-inner inline-block mb-3">
-                {/* Replace this div with an actual <img> tag pointing to your generated QR code SVG/PNG */}
-                <div className="w-40 h-40 bg-slate-200 flex items-center justify-center text-slate-500 rounded-lg border-2 border-dashed border-slate-300">
-                  <span className="text-xs font-mono font-semibold">[ QR Code Image ]</span>
-                </div>
-              </div>
-              
-              <p className="text-xs opacity-70 max-w-[200px]">
-                Point your phone camera at the code to instantly download.
-              </p>
-            </div>
-
           </div>
 
         </div>
